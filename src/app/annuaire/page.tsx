@@ -4,12 +4,15 @@ import Link from 'next/link';
 import SearchBar from '@/components/SearchBar';
 
 async function getDomainFromHost(host: string) {
-  // Extract domain from host (remove port if present)
-  const domain = host.split(':')[0];
-
-  return await prisma.domain.findUnique({
-    where: { name: domain },
-  });
+  try {
+    const domain = host.split(':')[0];
+    return await prisma.domain.findUnique({
+      where: { name: domain },
+    });
+  } catch (error) {
+    console.error('Database error in getDomainFromHost:', error);
+    return null;
+  }
 }
 
 export default async function AnnuairePage({
@@ -17,21 +20,36 @@ export default async function AnnuairePage({
 }: {
   searchParams: Promise<{ q?: string; category?: string; city?: string }>;
 }) {
-  const headersList = await headers();
-  const host = headersList.get('host') || 'haguenau.pro';
+  let headersList;
+  let host;
+  
+  try {
+    headersList = await headers();
+    host = headersList.get('host') || 'multi-tenant-directory.vercel.app';
+  } catch (error) {
+    console.error('Headers error:', error);
+    host = 'multi-tenant-directory.vercel.app';
+  }
 
   const currentDomain = await getDomainFromHost(host);
 
   if (!currentDomain) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Domain non configuré
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8">
+          <div className="text-6xl mb-4">🏗️</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Site en Construction
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-6">
             Ce domaine n&apos;est pas encore configuré.
           </p>
+          <Link
+            href="/admin/login"
+            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Accéder à l&apos;Administration
+          </Link>
         </div>
       </div>
     );
@@ -39,94 +57,114 @@ export default async function AnnuairePage({
 
   const params = await searchParams;
 
-  // Build query filters
-  const where: any = {
-    content: {
-      some: {
-        domainId: currentDomain.id,
-        isVisible: true,
-      },
-    },
-  };
+  let companies = [];
+  let cities: string[] = [];
+  let categories: string[] = [];
 
-  if (params.q) {
-    where.OR = [
-      { name: { contains: params.q, mode: 'insensitive' } },
-      { address: { contains: params.q, mode: 'insensitive' } },
-      { categories: { hasSome: [params.q] } },
-    ];
-  }
-
-  if (params.city) {
-    where.city = { equals: params.city, mode: 'insensitive' };
-  }
-
-  if (params.category) {
-    where.categories = { has: params.category };
-  }
-
-  const companies = await prisma.company.findMany({
-    where,
-    include: {
-      content: {
-        where: {
-          domainId: currentDomain.id,
-          isVisible: true,
-        },
-      },
-      _count: {
-        select: {
-          reviews: true,
-        },
-      },
-    },
-    orderBy: {
-      name: 'asc',
-    },
-  });
-
-  // Calculate average rating for each company
-  const companiesWithRatings = await Promise.all(
-    companies.map(async (company) => {
-      const reviews = await prisma.googleReview.findMany({
-        where: { companyId: company.id },
-        select: { rating: true },
-      });
-
-      const avgRating =
-        reviews.length > 0
-          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-          : null;
-
-      return {
-        ...company,
-        avgRating,
-      };
-    })
-  );
-
-  // Get unique cities and categories for filters
-  const allCompanies = await prisma.company.findMany({
-    where: {
+  try {
+    // Build query filters
+    const where: any = {
       content: {
         some: {
           domainId: currentDomain.id,
           isVisible: true,
         },
       },
-    },
-    select: {
-      city: true,
-      categories: true,
-    },
-  });
+    };
 
-  const cities = [
-    ...new Set(allCompanies.map((c) => c.city).filter(Boolean)),
-  ].sort();
-  const categories = [
-    ...new Set(allCompanies.flatMap((c) => c.categories)),
-  ].sort();
+    if (params.q) {
+      where.OR = [
+        { name: { contains: params.q, mode: 'insensitive' } },
+        { address: { contains: params.q, mode: 'insensitive' } },
+        { categories: { hasSome: [params.q] } },
+      ];
+    }
+
+    if (params.city) {
+      where.city = { equals: params.city, mode: 'insensitive' };
+    }
+
+    if (params.category) {
+      where.categories = { has: params.category };
+    }
+
+    companies = await prisma.company.findMany({
+      where,
+      include: {
+        content: {
+          where: {
+            domainId: currentDomain.id,
+            isVisible: true,
+          },
+        },
+        _count: {
+          select: {
+            reviews: true,
+          },
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+
+    // Calculate average rating for each company
+    const companiesWithRatings = await Promise.all(
+      companies.map(async (company) => {
+        try {
+          const reviews = await prisma.googleReview.findMany({
+            where: { companyId: company.id },
+            select: { rating: true },
+          });
+
+          const avgRating =
+            reviews.length > 0
+              ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+              : null;
+
+          return {
+            ...company,
+            avgRating,
+          };
+        } catch (error) {
+          console.error(`Error fetching reviews for company ${company.id}:`, error);
+          return {
+            ...company,
+            avgRating: null,
+          };
+        }
+      })
+    );
+
+    companies = companiesWithRatings;
+
+    // Get unique cities and categories for filters
+    const allCompanies = await prisma.company.findMany({
+      where: {
+        content: {
+          some: {
+            domainId: currentDomain.id,
+            isVisible: true,
+          },
+        },
+      },
+      select: {
+        city: true,
+        categories: true,
+      },
+    });
+
+    cities = [
+      ...new Set(allCompanies.map((c) => c.city).filter(Boolean)),
+    ].sort() as string[];
+    
+    categories = [
+      ...new Set(allCompanies.flatMap((c) => c.categories)),
+    ].sort();
+  } catch (error) {
+    console.error('Database error in annuaire page:', error);
+    // Continue with empty arrays
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -232,14 +270,20 @@ export default async function AnnuairePage({
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
-            <p className="text-gray-600 text-lg">Aucun résultat trouvé</p>
-            <p className="text-gray-500 mt-2">
-              Essayez de modifier vos critères de recherche
+            <p className="text-gray-600 text-lg mb-2">Aucun résultat trouvé</p>
+            <p className="text-gray-500 mb-6">
+              Aucune entreprise n&apos;est encore référencée sur ce site.
             </p>
+            <Link
+              href="/admin/login"
+              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Ajouter une Entreprise
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {companiesWithRatings.map((company) => (
+            {companies.map((company: any) => (
               <Link
                 key={company.id}
                 href={`/companies/${company.slug}`}
@@ -261,7 +305,7 @@ export default async function AnnuairePage({
 
                 {company.categories.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {company.categories.slice(0, 2).map((category) => (
+                    {company.categories.slice(0, 2).map((category: string) => (
                       <span
                         key={category}
                         className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
