@@ -25,37 +25,33 @@ export default function AdminLoginPage() {
 
       if (result?.error) {
         setError('Email veya şifre hatalı');
-      } else {
+      } else if (result?.ok) {
         router.push('/admin/dashboard');
         router.refresh();
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Login error:', err);
       setError('Bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn('google', {
+        callbackUrl: '/admin/dashboard',
+      });
+    } catch (err) {
+      console.error('Google sign in error:', err);
+      setError('Google ile giriş yapılamadı.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {/* Logo ve Başlık */}
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-4">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Admin Panel
           </h1>
@@ -64,74 +60,66 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                placeholder="admin@haguenau.pro"
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="admin@haguenau.pro"
+            />
+          </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Şifre
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                placeholder="••••••••"
-              />
-            </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              Şifre
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="••••••••"
+            />
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
-            </button>
-          </form>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+          </button>
+        </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
+        <div className="mt-6">
+          <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Veya</span>
+              <span className="px-2 bg-white text-gray-500">veya</span>
             </div>
           </div>
 
-          {/* Google Sign In */}
           <button
-            onClick={() => signIn('google', { callbackUrl: '/admin/dashboard' })}
-            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+            onClick={handleGoogleSignIn}
+            type="button"
+            className="mt-6 w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -151,20 +139,17 @@ export default function AdminLoginPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Google ile Giriş Yap
+            <span className="text-gray-700 font-medium">Google ile Giriş Yap</span>
           </button>
-
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>Varsayılan Giriş Bilgileri:</p>
-            <p className="font-mono text-xs mt-2">
-              admin@haguenau.pro / changeme123
-            </p>
-          </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-600">
-          <p>© 2025 Multi-Tenant Directory Platform</p>
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-600">
+            Test Hesabı: <span className="font-mono text-blue-600">admin@haguenau.pro</span>
+          </p>
+          <p className="text-sm text-gray-600">
+            Şifre: <span className="font-mono text-blue-600">changeme123</span>
+          </p>
         </div>
       </div>
     </div>
