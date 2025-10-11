@@ -57,7 +57,7 @@ export default async function AnnuairePage({
 
   const params = await searchParams;
 
-  let companies = [];
+  let companies: any[] = [];
   let cities: string[] = [];
   let categories: string[] = [];
 
