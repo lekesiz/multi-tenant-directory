@@ -2,13 +2,15 @@ import { headers } from 'next/headers';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import SearchBar from '@/components/SearchBar';
+import FilterBar from '@/components/FilterBar';
+import Pagination from '@/components/Pagination';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
+
+const RESULTS_PER_PAGE = 12;
 
 async function getDomainFromHost(host: string) {
   try {
     let domain = host.split(':')[0];
-    // www prefix'ini kaldır
     domain = domain.replace('www.', '');
     return await prisma.domain.findUnique({
       where: { name: domain },
@@ -64,7 +66,13 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AnnuairePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; city?: string }>;
+  searchParams: Promise<{ 
+    q?: string; 
+    category?: string; 
+    city?: string;
+    sort?: string;
+    page?: string;
+  }>;
 }) {
   let headersList;
   let host;
@@ -102,8 +110,11 @@ export default async function AnnuairePage({
   }
 
   const params = await searchParams;
+  const currentPage = parseInt(params.page || '1', 10);
+  const sortBy = params.sort || 'name-asc';
 
   let companies: any[] = [];
+  let totalCount = 0;
   let cities: string[] = [];
   let categories: string[] = [];
 
@@ -134,6 +145,26 @@ export default async function AnnuairePage({
       where.categories = { has: params.category };
     }
 
+    // Get total count
+    totalCount = await prisma.company.count({ where });
+
+    // Build orderBy
+    let orderBy: any = {};
+    switch (sortBy) {
+      case 'name-desc':
+        orderBy = { name: 'desc' };
+        break;
+      case 'newest':
+        orderBy = { createdAt: 'desc' };
+        break;
+      case 'oldest':
+        orderBy = { createdAt: 'asc' };
+        break;
+      default:
+        orderBy = { name: 'asc' };
+    }
+
+    // Get paginated companies
     companies = await prisma.company.findMany({
       where,
       include: {
@@ -149,42 +180,12 @@ export default async function AnnuairePage({
           },
         },
       },
-      orderBy: {
-        name: 'asc',
-      },
+      orderBy,
+      skip: (currentPage - 1) * RESULTS_PER_PAGE,
+      take: RESULTS_PER_PAGE,
     });
 
-    // Calculate average rating for each company
-    const companiesWithRatings = await Promise.all(
-      companies.map(async (company) => {
-        try {
-          const reviews = await prisma.googleReview.findMany({
-            where: { companyId: company.id },
-            select: { rating: true },
-          });
-
-          const avgRating =
-            reviews.length > 0
-              ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-              : null;
-
-          return {
-            ...company,
-            avgRating,
-          };
-        } catch (error) {
-          console.error(`Error fetching reviews for company ${company.id}:`, error);
-          return {
-            ...company,
-            avgRating: null,
-          };
-        }
-      })
-    );
-
-    companies = companiesWithRatings;
-
-    // Get unique cities and categories for filters
+    // Get all cities and categories for filters
     const allCompanies = await prisma.company.findMany({
       where: {
         content: {
@@ -200,222 +201,282 @@ export default async function AnnuairePage({
       },
     });
 
-    cities = [
-      ...new Set(allCompanies.map((c) => c.city).filter(Boolean)),
-    ].sort() as string[];
-    
-    categories = [
-      ...new Set(allCompanies.flatMap((c) => c.categories)),
-    ].sort();
+    // Extract unique cities
+    cities = Array.from(
+      new Set(
+        allCompanies
+          .map((c) => c.city)
+          .filter((city): city is string => city !== null)
+      )
+    ).sort();
+
+    // Extract unique categories
+    const categorySet = new Set<string>();
+    allCompanies.forEach((c) => {
+      c.categories.forEach((cat) => categorySet.add(cat));
+    });
+    categories = Array.from(categorySet).sort();
+
   } catch (error) {
-    console.error('Database error in annuaire page:', error);
-    // Continue with empty arrays
+    console.error('Database error:', error);
   }
+
+  const cityName = currentDomain.name.split('.')[0];
+  const displayName = cityName.charAt(0).toUpperCase() + cityName.slice(1);
+
+  const totalPages = Math.ceil(totalCount / RESULTS_PER_PAGE);
+
+  // Generate structured data
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Accueil', url: `https://${currentDomain.name}` },
+    { name: 'Annuaire', url: `https://${currentDomain.name}/annuaire` },
+  ]);
+
+  const itemListSchema = generateItemListSchema(companies, currentDomain.name);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {currentDomain.siteTitle || currentDomain.name}
-              </h1>
-              <p className="text-gray-600 mt-1">
-                {currentDomain.siteDescription ||
-                  `Annuaire des professionnels à ${
-                    currentDomain.name.split('.')[0]
-                  }`}
-              </p>
-            </div>
-            <Link
-              href="/"
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Accueil
+            <Link href="/" className="flex items-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                {displayName.charAt(0)}
+              </div>
+              <div className="ml-3">
+                <h1 className="text-xl font-bold text-gray-900">
+                  {displayName}.PRO
+                </h1>
+              </div>
             </Link>
+            <nav className="flex space-x-6">
+              <Link
+                href="/"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Accueil
+              </Link>
+              <Link
+                href="/annuaire"
+                className="text-blue-600 font-semibold"
+              >
+                Annuaire
+              </Link>
+              <Link
+                href="/categories"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Catégories
+              </Link>
+            </nav>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <nav className="flex text-sm text-gray-500">
+            <Link href="/" className="hover:text-blue-600">
+              Accueil
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-gray-900">Annuaire</span>
+          </nav>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
         <div className="mb-8">
-          <SearchBar />
-        </div>
-
-        {/* Filters */}
-        <div className="mb-6 flex flex-wrap gap-4">
-          {params.city && (
-            <Link
-              href="/annuaire"
-              className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors"
-            >
-              Ville: {params.city}
-              <svg
-                className="w-4 h-4 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </Link>
-          )}
-          {params.category && (
-            <Link
-              href="/annuaire"
-              className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors"
-            >
-              Catégorie: {params.category}
-              <svg
-                className="w-4 h-4 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </Link>
-          )}
-        </div>
-
-        {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            <span className="font-semibold">{companies.length}</span>{' '}
-            professionnel{companies.length !== 1 ? 's' : ''} trouvé
-            {companies.length !== 1 ? 's' : ''}
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Annuaire des Professionnels
+          </h1>
+          <p className="text-lg text-gray-600">
+            Découvrez tous les professionnels de {displayName}
           </p>
         </div>
 
+        {/* Filter Bar */}
+        <FilterBar
+          categories={categories}
+          cities={cities}
+          totalResults={totalCount}
+        />
+
         {/* Companies Grid */}
-        {companies.length === 0 ? (
-          <div className="text-center py-12">
-            <svg
-              className="w-16 h-16 text-gray-300 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <p className="text-gray-600 text-lg mb-2">Aucun résultat trouvé</p>
-            <p className="text-gray-500 mb-6">
-              Aucune entreprise n&apos;est encore référencée sur ce site.
+        {companies.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {companies.map((company) => {
+                const customDescription = company.content[0]?.customDescription;
+
+                return (
+                  <Link
+                    key={company.id}
+                    href={`/companies/${company.slug}`}
+                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+                  >
+                    {/* Cover Image */}
+                    {company.coverImageUrl && (
+                      <div className="h-48 bg-gray-200 relative">
+                        <img
+                          src={company.coverImageUrl}
+                          alt={company.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
+                    <div className="p-6">
+                      {/* Logo and Name */}
+                      <div className="flex items-start mb-4">
+                        {company.logoUrl ? (
+                          <img
+                            src={company.logoUrl}
+                            alt={company.name}
+                            className="w-16 h-16 object-contain mr-4"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xl mr-4">
+                            {company.name.charAt(0)}
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-gray-900 mb-1">
+                            {company.name}
+                          </h3>
+                          {company.city && (
+                            <p className="text-sm text-gray-600">
+                              📍 {company.city}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Categories */}
+                      {company.categories && company.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {company.categories.slice(0, 3).map((cat) => (
+                            <span
+                              key={cat}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+                            >
+                              {cat}
+                            </span>
+                          ))}
+                          {company.categories.length > 3 && (
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                              +{company.categories.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Description */}
+                      {customDescription && (
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                          {customDescription}
+                        </p>
+                      )}
+
+                      {/* Contact Info */}
+                      <div className="space-y-2 text-sm">
+                        {company.phone && (
+                          <div className="flex items-center text-gray-600">
+                            <svg
+                              className="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                              />
+                            </svg>
+                            {company.phone}
+                          </div>
+                        )}
+                        {company.website && (
+                          <div className="flex items-center text-blue-600">
+                            <svg
+                              className="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                              />
+                            </svg>
+                            Visiter le site
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Reviews Count */}
+                      {company._count && company._count.reviews > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="text-yellow-500 mr-1">⭐</span>
+                            {company._count.reviews} avis
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalResults={totalCount}
+              resultsPerPage={RESULTS_PER_PAGE}
+            />
+          </>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <div className="text-6xl mb-4">🔍</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Aucun résultat trouvé
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Essayez de modifier vos critères de recherche ou de filtrage.
             </p>
             <Link
-              href="/admin/login"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              href="/annuaire"
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Ajouter une Entreprise
+              Réinitialiser les filtres
             </Link>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {companies.map((company: any) => (
-              <Link
-                key={company.id}
-                href={`/companies/${company.slug}`}
-                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900 flex-1">
-                    {company.name}
-                  </h3>
-                  {company.avgRating && (
-                    <div className="flex items-center ml-2">
-                      <span className="text-yellow-500 mr-1">★</span>
-                      <span className="font-semibold">
-                        {company.avgRating.toFixed(1)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {company.categories.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {company.categories.slice(0, 2).map((category: string) => (
-                      <span
-                        key={category}
-                        className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
-                      >
-                        {category}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {company.address && (
-                  <p className="text-sm text-gray-600 mb-2 flex items-start">
-                    <svg
-                      className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    {company.address}
-                  </p>
-                )}
-
-                {company.phone && (
-                  <p className="text-sm text-gray-600 mb-2 flex items-center">
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                      />
-                    </svg>
-                    {company.phone}
-                  </p>
-                )}
-
-                {company._count.reviews > 0 && (
-                  <p className="text-xs text-gray-500 mt-3">
-                    {company._count.reviews} avis
-                  </p>
-                )}
-              </Link>
-            ))}
-          </div>
         )}
-      </div>
+      </main>
+
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(itemListSchema),
+        }}
+      />
     </div>
   );
 }
