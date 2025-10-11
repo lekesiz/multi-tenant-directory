@@ -1,10 +1,20 @@
-export default function AdminDashboard() {
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+
+export default async function AdminDashboard() {
+  const session = await getServerSession();
+
+  if (!session) {
+    redirect('/admin/login');
+  }
+
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600 mt-2">
-          Hoş geldiniz! Platform istatistiklerinizi buradan görüntüleyebilirsiniz.
+          Hoş geldiniz, {session.user?.name || session.user?.email}! Platform
+          istatistiklerinizi buradan görüntüleyebilirsiniz.
         </p>
       </div>
 
@@ -112,7 +122,7 @@ export default function AdminDashboard() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Hızlı İşlemler</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
-            href="/admin/companies"
+            href="/admin/companies/new"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
           >
             <div className="bg-blue-100 p-3 rounded-lg mr-4">
@@ -133,7 +143,7 @@ export default function AdminDashboard() {
             <div>
               <p className="font-semibold text-gray-900">Yeni Şirket Ekle</p>
               <p className="text-sm text-gray-600">
-                Google Maps'ten veya manuel
+                Google Maps&apos;ten veya manuel
               </p>
             </div>
           </a>
@@ -186,8 +196,10 @@ export default function AdminDashboard() {
               </svg>
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Verileri Senkronize Et</p>
-              <p className="text-sm text-gray-600">Google Maps'ten güncelle</p>
+              <p className="font-semibold text-gray-900">
+                Verileri Senkronize Et
+              </p>
+              <p className="text-sm text-gray-600">Google Maps&apos;ten güncelle</p>
             </div>
           </button>
         </div>
