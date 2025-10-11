@@ -46,7 +46,7 @@ export default async function CompanyDetailPage({
       },
       reviews: {
         orderBy: {
-          reviewTime: 'desc',
+          reviewDate: 'desc',
         },
       },
     },
@@ -192,7 +192,7 @@ export default async function CompanyDetailPage({
                             {review.authorName}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {new Date(review.reviewTime).toLocaleDateString(
+                            {new Date(review.reviewDate).toLocaleDateString(
                               'fr-FR',
                               {
                                 year: 'numeric',
@@ -217,8 +217,8 @@ export default async function CompanyDetailPage({
                           ))}
                         </div>
                       </div>
-                      {review.text && (
-                        <p className="text-gray-700">{review.text}</p>
+                      {review.comment && (
+                        <p className="text-gray-700">{review.comment}</p>
                       )}
                     </div>
                   ))}

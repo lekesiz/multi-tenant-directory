@@ -86,7 +86,7 @@ export async function POST(
           authorName: review.author_name,
           authorPhoto: review.profile_photo_url || null,
           rating: review.rating,
-          comment: review.text || '',
+          comment: review.comment || '',
           source: 'google',
           reviewDate: new Date(review.time * 1000),
         },

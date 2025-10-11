@@ -359,7 +359,7 @@ export default async function AnnuairePage({
                       {/* Categories */}
                       {company.categories && company.categories.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4">
-                          {company.categories.slice(0, 3).map((cat) => (
+                          {company.categories.slice(0, 3).map((cat: string) => (
                             <span
                               key={cat}
                               className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"

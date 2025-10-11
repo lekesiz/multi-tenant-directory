@@ -33,11 +33,14 @@ interface Company {
     };
   }>;
   reviews: Array<{
-    id: string;
+    id: number;
     authorName: string;
+    authorPhoto: string | null;
     rating: number;
-    text: string | null;
-    reviewTime: Date;
+    comment: string | null;
+    source: string;
+    reviewDate: Date;
+    isApproved: boolean;
   }>;
 }
 
@@ -501,11 +504,11 @@ export default function CompanyEditForm({
                       <span className="font-semibold">{review.rating}</span>
                     </div>
                   </div>
-                  {review.text && (
-                    <p className="text-gray-700 text-sm mb-2">{review.text}</p>
+                  {review.comment && (
+                    <p className="text-gray-700 text-sm mb-2">{review.comment}</p>
                   )}
                   <div className="text-xs text-gray-500">
-                    {new Date(review.reviewTime).toLocaleDateString('tr-TR')}
+                    {new Date(review.reviewDate).toLocaleDateString('tr-TR')}
                   </div>
                 </div>
               ))}

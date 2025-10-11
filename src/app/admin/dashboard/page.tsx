@@ -68,26 +68,31 @@ async function getDashboardStats() {
     });
 
     // Get domain stats
-    const domainStats = await prisma.domain.findMany({
-      select: {
-        id: true,
-        name: true,
-        displayName: true,
+    const domains = await prisma.domain.findMany({
+      where: {
         isActive: true,
-        _count: {
+      },
+      include: {
+        content: {
+          where: {
+            isVisible: true,
+          },
           select: {
-            companyContent: {
-              where: { isVisible: true },
-            },
+            id: true,
           },
         },
       },
       orderBy: {
-        companyContent: {
-          _count: 'desc',
-        },
+        name: 'asc',
       },
     });
+    
+    const domainStats = domains.map(domain => ({
+      id: domain.id,
+      name: domain.name,
+      isActive: domain.isActive,
+      companyCount: domain.content.length,
+    }));
 
     return {
       totalCompanies,
@@ -325,14 +330,14 @@ export default async function AdminDashboard() {
                       ></div>
                       <div>
                         <div className="font-medium text-gray-900">
-                          {domain.displayName || domain.name}
+                          {domain.name.split('.')[0].charAt(0).toUpperCase() + domain.name.split('.')[0].slice(1)}
                         </div>
                         <div className="text-xs text-gray-500">{domain.name}</div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-gray-900">
-                        {domain._count.companyContent}
+                        {domain.companyCount}
                       </div>
                       <div className="text-xs text-gray-500">şirket</div>
                     </div>

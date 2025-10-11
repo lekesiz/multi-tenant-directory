@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         },
         reviews: {
           orderBy: {
-            reviewTime: 'desc',
+            reviewDate: 'desc',
           },
           take: 5,
         },

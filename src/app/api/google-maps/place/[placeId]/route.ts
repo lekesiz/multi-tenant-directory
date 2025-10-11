@@ -46,8 +46,8 @@ export async function GET(
       authorName: review.author_name,
       authorPhoto: review.profile_photo_url,
       rating: review.rating,
-      text: review.text,
-      reviewTime: new Date(review.time * 1000).toISOString(),
+      text: review.comment,
+      reviewDate: new Date(review.time * 1000).toISOString(),
     }));
 
     // Fotoğrafları formatla

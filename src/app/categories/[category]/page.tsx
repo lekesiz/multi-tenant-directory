@@ -1,14 +1,14 @@
-import { headers } from 'next/headers';
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     category: string;
-  };
+  }>;
 }
 
 async function getDomainInfo() {
@@ -72,7 +72,8 @@ async function getCompaniesInCategory(category: string, domain: string) {
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { domain } = await getDomainInfo();
-  const decodedCategory = decodeURIComponent(params.category);
+  const { category } = await params;
+  const decodedCategory = decodeURIComponent(category);
   const metaTags = generateMetaTags(domain, 'category', { category: decodedCategory });
 
   return {
@@ -105,8 +106,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { domain, displayName } = await getDomainInfo();
-  const decodedCategory = decodeURIComponent(params.category);
-  const companies = await getCompaniesInCategory(params.category, domain);
+  const { category } = await params;
+  const decodedCategory = decodeURIComponent(category);
+  const companies = await getCompaniesInCategory(category, domain);
 
   if (companies.length === 0) {
     notFound();
@@ -116,7 +118,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: 'Accueil', url: `https://${domain}` },
     { name: 'Annuaire', url: `https://${domain}/annuaire` },
-    { name: decodedCategory, url: `https://${domain}/categories/${params.category}` },
+    { name: decodedCategory, url: `https://${domain}/categories/${category}` },
   ]);
 
   const itemListSchema = generateItemListSchema(companies, domain);

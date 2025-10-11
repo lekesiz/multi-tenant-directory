@@ -27,7 +27,7 @@ export default async function EditCompanyPage({
       },
       reviews: {
         orderBy: {
-          reviewTime: 'desc',
+          reviewDate: 'desc',
         },
         take: 10,
       },

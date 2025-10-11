@@ -34,7 +34,7 @@ export async function GET(
         },
         reviews: {
           orderBy: {
-            reviewTime: 'desc',
+            reviewDate: 'desc',
           },
         },
       },
