@@ -15,7 +15,7 @@ async function getDomainFromHost(host: string) {
 export default async function AnnuairePage({
   searchParams,
 }: {
-  searchParams: { q?: string; category?: string; city?: string };
+  searchParams: Promise<{ q?: string; category?: string; city?: string }>;
 }) {
   const headersList = headers();
   const host = headersList.get('host') || 'haguenau.pro';
@@ -37,6 +37,8 @@ export default async function AnnuairePage({
     );
   }
 
+  const params = await searchParams;
+
   // Build query filters
   const where: any = {
     content: {
@@ -47,20 +49,20 @@ export default async function AnnuairePage({
     },
   };
 
-  if (searchParams.q) {
+  if (params.q) {
     where.OR = [
-      { name: { contains: searchParams.q, mode: 'insensitive' } },
-      { address: { contains: searchParams.q, mode: 'insensitive' } },
-      { categories: { hasSome: [searchParams.q] } },
+      { name: { contains: params.q, mode: 'insensitive' } },
+      { address: { contains: params.q, mode: 'insensitive' } },
+      { categories: { hasSome: [params.q] } },
     ];
   }
 
-  if (searchParams.city) {
-    where.city = { equals: searchParams.city, mode: 'insensitive' };
+  if (params.city) {
+    where.city = { equals: params.city, mode: 'insensitive' };
   }
 
-  if (searchParams.category) {
-    where.categories = { has: searchParams.category };
+  if (params.category) {
+    where.categories = { has: params.category };
   }
 
   const companies = await prisma.company.findMany({
@@ -161,12 +163,12 @@ export default async function AnnuairePage({
 
         {/* Filters */}
         <div className="mb-6 flex flex-wrap gap-4">
-          {searchParams.city && (
+          {params.city && (
             <Link
               href="/annuaire"
               className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors"
             >
-              Ville: {searchParams.city}
+              Ville: {params.city}
               <svg
                 className="w-4 h-4 ml-2"
                 fill="none"
@@ -182,12 +184,12 @@ export default async function AnnuairePage({
               </svg>
             </Link>
           )}
-          {searchParams.category && (
+          {params.category && (
             <Link
               href="/annuaire"
               className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors"
             >
-              Catégorie: {searchParams.category}
+              Catégorie: {params.category}
               <svg
                 className="w-4 h-4 ml-2"
                 fill="none"
