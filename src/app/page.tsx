@@ -1,5 +1,7 @@
 import { headers } from 'next/headers';
 import Link from 'next/link';
+import { Metadata } from 'next';
+import { generateMetaTags, generateOrganizationSchema } from '@/lib/seo';
 
 async function getDomainInfo() {
   const headersList = await headers();
@@ -14,8 +16,45 @@ async function getDomainInfo() {
   return { domain, cityName, displayName };
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const { domain } = await getDomainInfo();
+  const metaTags = generateMetaTags(domain, 'home');
+  
+  return {
+    title: metaTags.title,
+    description: metaTags.description,
+    keywords: metaTags.keywords,
+    openGraph: {
+      title: metaTags.ogTitle,
+      description: metaTags.ogDescription,
+      url: metaTags.ogUrl,
+      images: metaTags.ogImage ? [metaTags.ogImage] : [],
+      type: 'website',
+      locale: 'fr_FR',
+    },
+    twitter: {
+      card: metaTags.twitterCard,
+      title: metaTags.twitterTitle,
+      description: metaTags.twitterDescription,
+      images: metaTags.twitterImage ? [metaTags.twitterImage] : [],
+    },
+    alternates: {
+      canonical: metaTags.canonical,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
+    },
+  };
+}
+
 export default async function Home() {
-  const { displayName } = await getDomainInfo();
+  const { domain, displayName } = await getDomainInfo();
+  const organizationSchema = generateOrganizationSchema(domain);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -244,6 +283,14 @@ export default async function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Structured Data (JSON-LD) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(organizationSchema),
+        }}
+      />
     </div>
   );
 }
