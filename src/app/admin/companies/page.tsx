@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next/auth';
+import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
