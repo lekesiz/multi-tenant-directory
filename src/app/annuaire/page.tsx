@@ -1,7 +1,9 @@
 import { headers } from 'next/headers';
+import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import SearchBar from '@/components/SearchBar';
+import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 
 async function getDomainFromHost(host: string) {
   try {
@@ -15,6 +17,48 @@ async function getDomainFromHost(host: string) {
     console.error('Database error in getDomainFromHost:', error);
     return null;
   }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  let headersList;
+  let host;
+  
+  try {
+    headersList = await headers();
+    host = headersList.get('host') || 'multi-tenant-directory.vercel.app';
+  } catch (error) {
+    host = 'multi-tenant-directory.vercel.app';
+  }
+
+  const domain = host.split(':')[0].replace('www.', '');
+  const metaTags = generateMetaTags(domain, 'annuaire');
+
+  return {
+    title: metaTags.title,
+    description: metaTags.description,
+    keywords: metaTags.keywords,
+    openGraph: {
+      title: metaTags.ogTitle,
+      description: metaTags.ogDescription,
+      url: metaTags.ogUrl,
+      images: metaTags.ogImage ? [metaTags.ogImage] : [],
+      type: 'website',
+      locale: 'fr_FR',
+    },
+    twitter: {
+      card: metaTags.twitterCard,
+      title: metaTags.twitterTitle,
+      description: metaTags.twitterDescription,
+      images: metaTags.twitterImage ? [metaTags.twitterImage] : [],
+    },
+    alternates: {
+      canonical: metaTags.canonical,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
 }
 
 export default async function AnnuairePage({
