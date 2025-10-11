@@ -13,7 +13,7 @@ async function getDomainFromHost(host: string) {
 export default async function CompanyDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
   const headersList = headers();
   const host = headersList.get('host') || 'haguenau.pro';
@@ -24,9 +24,11 @@ export default async function CompanyDetailPage({
     return notFound();
   }
 
+  const { slug } = await params;
+
   const company = await prisma.company.findFirst({
     where: {
-      slug: params.slug,
+      slug: slug,
       content: {
         some: {
           domainId: currentDomain.id,

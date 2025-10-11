@@ -6,7 +6,7 @@ import CompanyEditForm from '@/components/CompanyEditForm';
 export default async function EditCompanyPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const session = await getServerSession();
 
@@ -14,7 +14,8 @@ export default async function EditCompanyPage({
     redirect('/admin/login');
   }
 
-  const companyId = parseInt(params.id);
+  const { id } = await params;
+  const companyId = parseInt(id);
 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
