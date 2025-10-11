@@ -52,8 +52,11 @@ model Company {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  rating         Float?    // Google'dan gelen ortalama puan
+  reviewCount    Int       @default(0) // Toplam yorum sayısı
+
   content        CompanyContent[]
-  reviews        GoogleReview[]
+  reviews        Review[]
 
   @@map("companies")
 }
@@ -64,11 +67,26 @@ model CompanyContent {
   companyId          Int
   domainId           Int
   isVisible          Boolean  @default(false)
-  customDescription  String?  @db.Text
+  
+  // Özelleştirilebilir İçerik
+  customDescription  String?  @db.Text // Domain'e özel açıklama
   customImages       Json?    // Özel görseller array
-  promotions         String?  @db.Text
+  promotions         String?  @db.Text // Özel promosyonlar
+  specialOffers      String?  @db.Text // Özel teklifler
+  highlightedServices String[] // Öne çıkan hizmetler
+  customTags         String[] // Özel etiketler
+  
+  // SEO
   metaTitle          String?
   metaDescription    String?
+  
+  // Özel Alanlar
+  customFields       Json?    // Ek özel alanlar (JSON)
+  
+  // Zamanlama
+  featuredUntil      DateTime? // Öne çıkarma bitiş tarihi
+  priority           Int       @default(0) // Sıralama önceliği (0-100)
+  
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -79,20 +97,23 @@ model CompanyContent {
   @@map("company_content")
 }
 
-// Google Yorumları
-model GoogleReview {
-  id           String   @id // Google'ın verdiği review ID
+// Yorumlar (Google + Manuel)
+model Review {
+  id           Int      @id @default(autoincrement())
   companyId    Int
   authorName   String
   authorPhoto  String?
   rating       Int      // 1-5 arası
-  text         String?  @db.Text
-  reviewTime   DateTime
+  comment      String?  @db.Text
+  source       String   @default("manual") // "google" veya "manual"
+  reviewDate   DateTime @default(now())
+  isApproved   Boolean  @default(true)
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  @@map("google_reviews")
+  @@map("reviews")
 }
 
 // Yönetim Paneli Kullanıcıları

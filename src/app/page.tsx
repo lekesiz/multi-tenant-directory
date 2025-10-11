@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateMetaTags, generateOrganizationSchema } from '@/lib/seo';
+import { prisma } from '@/lib/prisma';
 
 async function getDomainInfo() {
   const headersList = await headers();
@@ -13,7 +14,127 @@ async function getDomainInfo() {
   const cityName = domain.split('.')[0];
   const displayName = cityName.charAt(0).toUpperCase() + cityName.slice(1);
   
-  return { domain, cityName, displayName };
+  // Domain bilgisini database'den al
+  const domainData = await prisma.domain.findUnique({
+    where: { name: domain },
+  });
+  
+  return { domain, cityName, displayName, domainData };
+}
+
+async function getStats(domainId: number) {
+  // Şirket sayısı
+  const companiesCount = await prisma.companyContent.count({
+    where: {
+      domainId,
+      isVisible: true,
+    },
+  });
+
+  // Toplam yorum sayısı
+  const reviewsCount = await prisma.review.count({
+    where: {
+      company: {
+        content: {
+          some: {
+            domainId,
+            isVisible: true,
+          },
+        },
+      },
+      isApproved: true,
+    },
+  });
+
+  // Ortalama puan
+  const avgRating = await prisma.review.aggregate({
+    where: {
+      company: {
+        content: {
+          some: {
+            domainId,
+            isVisible: true,
+          },
+        },
+      },
+      isApproved: true,
+    },
+    _avg: {
+      rating: true,
+    },
+  });
+
+  return {
+    companiesCount,
+    reviewsCount,
+    avgRating: avgRating._avg.rating ? avgRating._avg.rating.toFixed(1) : null,
+  };
+}
+
+async function getPopularCategories(domainId: number) {
+  // Tüm şirketleri al
+  const companies = await prisma.company.findMany({
+    where: {
+      content: {
+        some: {
+          domainId,
+          isVisible: true,
+        },
+      },
+    },
+    select: {
+      categories: true,
+    },
+  });
+
+  // Kategorileri say
+  const categoryCount: Record<string, number> = {};
+  companies.forEach((company) => {
+    company.categories.forEach((category) => {
+      categoryCount[category] = (categoryCount[category] || 0) + 1;
+    });
+  });
+
+  // En popüler 8 kategoriyi al
+  const sortedCategories = Object.entries(categoryCount)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 8)
+    .map(([name, count]) => ({ name, count }));
+
+  return sortedCategories;
+}
+
+async function getFeaturedCompanies(domainId: number) {
+  // Öne çıkan şirketler (priority > 0 veya featuredUntil > now)
+  const featured = await prisma.company.findMany({
+    where: {
+      content: {
+        some: {
+          domainId,
+          isVisible: true,
+          OR: [
+            { priority: { gt: 0 } },
+            { featuredUntil: { gte: new Date() } },
+          ],
+        },
+      },
+    },
+    include: {
+      content: {
+        where: {
+          domainId,
+        },
+      },
+    },
+    orderBy: {
+      content: {
+        _count: 'desc',
+      },
+    },
+    take: 6,
+  });
+
+  return featured;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -52,9 +173,66 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+const categoryIcons: Record<string, string> = {
+  Restaurant: '🍽️',
+  Boulangerie: '🥖',
+  Pâtisserie: '🍰',
+  Pharmacie: '💊',
+  Garage: '🚗',
+  Coiffure: '💇',
+  Beauté: '💄',
+  Santé: '⚕️',
+  Médecin: '🩺',
+  Dentiste: '🦷',
+  Kinésithérapie: '🏥',
+  Fleuriste: '🌸',
+  Pizzeria: '🍕',
+  Tabac: '🚬',
+  Presse: '📰',
+  Immobilier: '🏠',
+  Banque: '🏦',
+  Supermarché: '🛒',
+  Café: '☕',
+  Bar: '🍺',
+  Plomberie: '🔧',
+  Chauffage: '🔥',
+  Optique: '👓',
+  'Auto-École': '🚦',
+  Vétérinaire: '🐾',
+  Librairie: '📚',
+  Papeterie: '✏️',
+  Menuiserie: '🪚',
+  Électricité: '⚡',
+  Boucherie: '🥩',
+  Charcuterie: '🥓',
+  Traiteur: '🍱',
+  Épicerie: '🏪',
+  Commerce: '🛍️',
+  Services: '🔧',
+  Loisirs: '🎨',
+  Éducation: '📚',
+  Formation: '🎓',
+  Artisan: '🔨',
+  Poterie: '🏺',
+  Brasserie: '🍺',
+  Musée: '🏛️',
+};
+
+function getCategoryIcon(categoryName: string): string {
+  return categoryIcons[categoryName] || '📍';
+}
+
 export default async function Home() {
-  const { domain, displayName } = await getDomainInfo();
+  const { domain, displayName, domainData } = await getDomainInfo();
   const organizationSchema = generateOrganizationSchema(domain);
+
+  if (!domainData) {
+    return <div>Domain not found</div>;
+  }
+
+  const stats = await getStats(domainData.id);
+  const popularCategories = await getPopularCategories(domainData.id);
+  const featuredCompanies = await getFeaturedCompanies(domainData.id);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -63,34 +241,37 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+              <div 
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl"
+                style={{ background: domainData.primaryColor || '#2563EB' }}
+              >
                 {displayName.charAt(0)}
               </div>
               <div className="ml-3">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {displayName}.PRO
+                  {domainData.siteTitle || `${displayName}.PRO`}
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Les Professionnels de {displayName}
+                  {domainData.siteDescription || `Les Professionnels de ${displayName}`}
                 </p>
               </div>
             </div>
             <nav className="hidden md:flex space-x-8">
               <Link
                 href="/"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
               >
                 Accueil
               </Link>
               <Link
                 href="/annuaire"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
               >
                 Annuaire
               </Link>
               <Link
                 href="/categories"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
               >
                 Catégories
               </Link>
@@ -105,7 +286,12 @@ export default async function Home() {
           <h2 className="text-5xl font-bold text-gray-900 mb-6">
             Trouvez les Meilleurs Professionnels
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+            <span 
+              className="text-transparent bg-clip-text"
+              style={{ 
+                backgroundImage: `linear-gradient(to right, ${domainData.primaryColor || '#2563EB'}, #4F46E5)` 
+              }}
+            >
               à {displayName}
             </span>
           </h2>
@@ -117,7 +303,7 @@ export default async function Home() {
 
           {/* Search Bar */}
           <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-xl p-4 flex items-center">
+            <form action="/annuaire" method="GET" className="bg-white rounded-2xl shadow-xl p-4 flex items-center">
               <svg
                 className="w-6 h-6 text-gray-400 ml-2"
                 fill="none"
@@ -133,13 +319,18 @@ export default async function Home() {
               </svg>
               <input
                 type="text"
+                name="search"
                 placeholder="Rechercher un professionnel, un service..."
                 className="flex-1 px-4 py-3 outline-none text-gray-900 text-lg"
               />
-              <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold">
+              <button 
+                type="submit"
+                className="text-white px-8 py-3 rounded-xl hover:opacity-90 transition-all font-semibold"
+                style={{ background: domainData.primaryColor || '#2563EB' }}
+              >
                 Rechercher
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </section>
@@ -148,21 +339,71 @@ export default async function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="text-5xl font-bold text-blue-600 mb-2">0</div>
+            <div className="text-5xl font-bold mb-2" style={{ color: domainData.primaryColor || '#2563EB' }}>
+              {stats.companiesCount}
+            </div>
             <div className="text-gray-600 font-medium">
               Professionnels Référencés
             </div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="text-5xl font-bold text-indigo-600 mb-2">0</div>
+            <div className="text-5xl font-bold text-indigo-600 mb-2">
+              {stats.reviewsCount}
+            </div>
             <div className="text-gray-600 font-medium">Avis Clients</div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="text-5xl font-bold text-purple-600 mb-2">-</div>
+            <div className="text-5xl font-bold text-purple-600 mb-2">
+              {stats.avgRating || '-'}
+            </div>
             <div className="text-gray-600 font-medium">Note Moyenne</div>
           </div>
         </div>
       </section>
+
+      {/* Featured Companies */}
+      {featuredCompanies.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            Entreprises Mises en Avant
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featuredCompanies.map((company) => (
+              <Link
+                key={company.id}
+                href={`/companies/${company.slug}`}
+                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1"
+              >
+                <h4 className="font-bold text-lg text-gray-900 mb-2">
+                  {company.name}
+                </h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  {company.address}, {company.city}
+                </p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {company.categories.slice(0, 3).map((cat) => (
+                    <span
+                      key={cat}
+                      className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
+                    >
+                      {cat}
+                    </span>
+                  ))}
+                </div>
+                {company.rating && (
+                  <div className="flex items-center">
+                    <span className="text-yellow-500">⭐</span>
+                    <span className="ml-1 font-semibold">{company.rating.toFixed(1)}</span>
+                    <span className="ml-1 text-sm text-gray-500">
+                      ({company.reviewCount} avis)
+                    </span>
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Categories Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -170,45 +411,52 @@ export default async function Home() {
           Catégories Populaires
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            { name: 'Restaurants', icon: '🍽️', count: 0 },
-            { name: 'Services', icon: '🔧', count: 0 },
-            { name: 'Commerces', icon: '🏪', count: 0 },
-            { name: 'Santé', icon: '⚕️', count: 0 },
-            { name: 'Beauté', icon: '💄', count: 0 },
-            { name: 'Éducation', icon: '📚', count: 0 },
-            { name: 'Loisirs', icon: '🎨', count: 0 },
-            { name: 'Immobilier', icon: '🏠', count: 0 },
-          ].map((category) => (
+          {popularCategories.map((category) => (
             <Link
               key={category.name}
-              href={`/categories/${category.name.toLowerCase()}`}
+              href={`/categories/${encodeURIComponent(category.name)}`}
               className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1 cursor-pointer"
             >
-              <div className="text-4xl mb-3">{category.icon}</div>
+              <div className="text-4xl mb-3">{getCategoryIcon(category.name)}</div>
               <div className="font-semibold text-gray-900 mb-1">
                 {category.name}
               </div>
               <div className="text-sm text-gray-500">
-                {category.count} entreprises
+                {category.count} entreprise{category.count > 1 ? 's' : ''}
               </div>
             </Link>
           ))}
+        </div>
+        <div className="text-center mt-8">
+          <Link
+            href="/categories"
+            className="inline-block text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition-all"
+            style={{ background: domainData.primaryColor || '#2563EB' }}
+          >
+            Voir Toutes les Catégories
+          </Link>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl shadow-2xl p-12 text-center text-white">
+        <div 
+          className="rounded-3xl shadow-2xl p-12 text-center text-white"
+          style={{ background: `linear-gradient(to right, ${domainData.primaryColor || '#2563EB'}, #4F46E5)` }}
+        >
           <h3 className="text-4xl font-bold mb-4">
             Vous êtes un Professionnel ?
           </h3>
           <p className="text-xl mb-8 opacity-90">
             Rejoignez notre plateforme et augmentez votre visibilité locale
           </p>
-          <button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-colors">
+          <Link
+            href="/admin/login"
+            className="inline-block bg-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-colors"
+            style={{ color: domainData.primaryColor || '#2563EB' }}
+          >
             Créer Mon Profil Gratuitement
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -254,18 +502,10 @@ export default async function Home() {
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <Link
-                    href="/rejoindre"
+                    href="/admin/login"
                     className="hover:text-white transition-colors"
                   >
-                    Créer un Profil
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/tarifs"
-                    className="hover:text-white transition-colors"
-                  >
-                    Tarifs
+                    Espace Pro
                   </Link>
                 </li>
               </ul>
