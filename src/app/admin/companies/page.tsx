@@ -1,31 +1,32 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next/auth';
+import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
-interface Company {
-  id: number;
-  name: string;
-  slug: string;
-  city: string;
-  phone: string;
-  categories: string[];
-  createdAt: string;
-}
+export default async function AdminCompaniesPage() {
+  const session = await getServerSession();
 
-export default function AdminCompaniesPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  if (!session) {
+    redirect('/admin/login');
+  }
 
-  useEffect(() => {
-    // TODO: API'den şirketleri çek
-    setLoading(false);
-  }, []);
-
-  const filteredCompanies = companies.filter((company) =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const companies = await prisma.company.findMany({
+    include: {
+      content: {
+        include: {
+          domain: true,
+        },
+      },
+      _count: {
+        select: {
+          reviews: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
   return (
     <div>
@@ -57,37 +58,9 @@ export default function AdminCompaniesPage() {
         </Link>
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex items-center">
-          <svg
-            className="w-5 h-5 text-gray-400 mr-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            type="text"
-            placeholder="Şirket ara..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 outline-none text-gray-900"
-          />
-        </div>
-      </div>
-
       {/* Companies Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Yükleniyor...</div>
-        ) : filteredCompanies.length === 0 ? (
+        {companies.length === 0 ? (
           <div className="p-8 text-center">
             <svg
               className="w-16 h-16 text-gray-300 mx-auto mb-4"
@@ -140,7 +113,10 @@ export default function AdminCompaniesPage() {
                   Telefon
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Kategoriler
+                  Domain'ler
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Yorumlar
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   İşlemler
@@ -148,50 +124,65 @@ export default function AdminCompaniesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCompanies.map((company) => (
-                <tr key={company.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {company.name}
-                    </div>
-                    <div className="text-sm text-gray-500">{company.slug}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {company.city}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {company.phone}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-wrap gap-1">
-                      {company.categories.slice(0, 2).map((cat) => (
-                        <span
-                          key={cat}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                        >
-                          {cat}
-                        </span>
-                      ))}
-                      {company.categories.length > 2 && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          +{company.categories.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link
-                      href={`/admin/companies/${company.id}`}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      Düzenle
-                    </Link>
-                    <button className="text-red-600 hover:text-red-900">
-                      Sil
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {companies.map((company) => {
+                const visibleDomains = company.content.filter(
+                  (c) => c.isVisible
+                );
+                return (
+                  <tr key={company.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {company.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {company.slug}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {company.city || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {company.phone || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-wrap gap-1">
+                        {visibleDomains.length > 0 ? (
+                          <>
+                            {visibleDomains.slice(0, 2).map((content) => (
+                              <span
+                                key={content.id}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                              >
+                                {content.domain.name.split('.')[0]}
+                              </span>
+                            ))}
+                            {visibleDomains.length > 2 && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                +{visibleDomains.length - 2}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-400 text-xs">
+                            Hiçbir sitede yok
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {company._count.reviews}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Link
+                        href={`/admin/companies/${company.id}`}
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                      >
+                        Düzenle
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
