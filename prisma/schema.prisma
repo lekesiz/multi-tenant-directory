@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Domain (Alan Adı) Yönetimi
+model Domain {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique // örn: 'haguenau.pro'
+  isActive  Boolean  @default(true)
+  settings  Json?    // Site ayarları (logo, tema vb.)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyContent CompanyContent[]
+
+  @@map("domains")
+}
+
+// Şirket Ana Bilgileri
+model Company {
+  id             Int       @id @default(autoincrement())
+  name           String
+  slug           String    @unique
+  googlePlaceId  String?   @unique
+  address        String?
+  city           String?
+  postalCode     String?
+  phone          String?
+  email          String?
+  website        String?
+  latitude       Float?
+  longitude      Float?
+  businessHours  Json?     // Çalışma saatleri
+  categories     String[]  // İş kategorileri
+  logoUrl        String?
+  coverImageUrl  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  content        CompanyContent[]
+  reviews        GoogleReview[]
+
+  @@map("companies")
+}
+
+// Şirketlerin Domain'lerdeki Özel İçerikleri
+model CompanyContent {
+  id                 Int      @id @default(autoincrement())
+  companyId          Int
+  domainId           Int
+  isVisible          Boolean  @default(false)
+  customDescription  String?  @db.Text
+  customImages       Json?    // Özel görseller array
+  promotions         String?  @db.Text
+  metaTitle          String?
+  metaDescription    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  domain             Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, domainId])
+  @@map("company_content")
+}
+
+// Google Yorumları
+model GoogleReview {
+  id           String   @id // Google'ın verdiği review ID
+  companyId    Int
+  authorName   String
+  authorPhoto  String?
+  rating       Int      // 1-5 arası
+  text         String?  @db.Text
+  reviewTime   DateTime
+  createdAt    DateTime @default(now())
+
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("google_reviews")
+}
+
+// Yönetim Paneli Kullanıcıları
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  passwordHash  String
+  name          String?
+  role          String   @default("admin") // admin, editor vb.
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("users")
+}
