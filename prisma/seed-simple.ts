@@ -4,96 +4,40 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting production seed...');
+  console.log('🌱 Starting simple production seed...');
 
   // 1. Create Domains
   console.log('📍 Creating domains...');
   
-  const domains = [
-    {
-      name: 'bischwiller.pro',
-      siteTitle: 'Bischwiller.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Bischwiller',
-      isActive: true,
-    },
-    {
-      name: 'bouxwiller.pro',
-      siteTitle: 'Bouxwiller.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Bouxwiller',
-      isActive: true,
-    },
-    {
-      name: 'brumath.pro',
-      siteTitle: 'Brumath.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Brumath',
-      isActive: true,
-    },
-    {
-      name: 'haguenau.pro',
-      siteTitle: 'Haguenau.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Haguenau',
-      isActive: true,
-    },
-    {
-      name: 'hoerdt.pro',
-      siteTitle: 'Hoerdt.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Hoerdt',
-      isActive: true,
-    },
-    {
-      name: 'ingwiller.pro',
-      siteTitle: 'Ingwiller.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Ingwiller',
-      isActive: true,
-    },
-    {
-      name: 'saverne.pro',
-      siteTitle: 'Saverne.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Saverne',
-      isActive: true,
-    },
-    {
-      name: 'schiltigheim.pro',
-      siteTitle: 'Schiltigheim.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Schiltigheim',
-      isActive: true,
-    },
-    {
-      name: 'schweighouse.pro',
-      siteTitle: 'Schweighouse.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Schweighouse',
-      isActive: true,
-    },
-    {
-      name: 'souffelweyersheim.pro',
-      siteTitle: 'Souffelweyersheim.PRO - Annuaire des Professionnels',
-      siteDescription:
-        'Trouvez les meilleurs professionnels à Souffelweyersheim',
-      isActive: true,
-    },
-    {
-      name: 'soufflenheim.pro',
-      siteTitle: 'Soufflenheim.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Soufflenheim',
-      isActive: true,
-    },
-    {
-      name: 'wissembourg.pro',
-      siteTitle: 'Wissembourg.PRO - Annuaire des Professionnels',
-      siteDescription: 'Trouvez les meilleurs professionnels à Wissembourg',
-      isActive: true,
-    },
+  const domainNames = [
+    'bischwiller.pro',
+    'bouxwiller.pro',
+    'brumath.pro',
+    'haguenau.pro',
+    'hoerdt.pro',
+    'ingwiller.pro',
+    'saverne.pro',
+    'schiltigheim.pro',
+    'schweighouse.pro',
+    'souffelweyersheim.pro',
+    'soufflenheim.pro',
+    'wissembourg.pro',
   ];
 
   const createdDomains = [];
-  for (const domain of domains) {
-    const created = await prisma.domain.upsert({
-      where: { name: domain.name },
-      update: domain,
-      create: domain,
+  for (const name of domainNames) {
+    const domain = await prisma.domain.upsert({
+      where: { name },
+      update: {},
+      create: {
+        name,
+        siteTitle: `${name.split('.')[0].charAt(0).toUpperCase() + name.split('.')[0].slice(1)}.PRO`,
+        siteDescription: `Trouvez les meilleurs professionnels à ${name.split('.')[0]}`,
+        isActive: true,
+      },
     });
-    createdDomains.push(created);
-    console.log(`  ✓ ${domain.name}`);
+    createdDomains.push(domain);
+    console.log(`  ✓ ${name}`);
   }
 
   // 2. Create Admin User
@@ -256,7 +200,7 @@ async function main() {
   ];
 
   for (const companyData of companies) {
-    const { domains: domainNames, ...companyInfo } = companyData;
+    const { domains: domainList, ...companyInfo } = companyData;
 
     const company = await prisma.company.upsert({
       where: { slug: companyInfo.slug },
@@ -265,7 +209,7 @@ async function main() {
     });
 
     // Create content for each domain
-    for (const domainName of domainNames) {
+    for (const domainName of domainList) {
       const domain = createdDomains.find((d) => d.name === domainName);
       if (domain) {
         await prisma.companyContent.upsert({
