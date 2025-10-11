@@ -23,15 +23,20 @@ async function main() {
   ];
 
   for (const domainName of domains) {
+    const cityName = domainName.split('.')[0];
+    const capitalizedCity = cityName.charAt(0).toUpperCase() + cityName.slice(1);
+    
     await prisma.domain.upsert({
       where: { name: domainName },
       update: {},
       create: {
         name: domainName,
         isActive: true,
+        siteTitle: `${capitalizedCity} - Professionnels Locaux`,
+        siteDescription: `Trouvez les meilleurs professionnels à ${capitalizedCity}. Annuaire complet des entreprises locales.`,
+        primaryColor: '#3B82F6',
         settings: {
-          title: `${domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1)} - Professionnels Locaux`,
-          description: `Trouvez les meilleurs professionnels à ${domainName.split('.')[0]}`,
+          headerText: `Bienvenue à ${capitalizedCity}`,
         },
       },
     });

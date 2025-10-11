@@ -17,7 +17,7 @@ export default async function AnnuairePage({
 }: {
   searchParams: Promise<{ q?: string; category?: string; city?: string }>;
 }) {
-  const headersList = headers();
+  const headersList = await headers();
   const host = headersList.get('host') || 'haguenau.pro';
 
   const currentDomain = await getDomainFromHost(host);
@@ -88,7 +88,7 @@ export default async function AnnuairePage({
   // Calculate average rating for each company
   const companiesWithRatings = await Promise.all(
     companies.map(async (company) => {
-      const reviews = await prisma.review.findMany({
+      const reviews = await prisma.googleReview.findMany({
         where: { companyId: company.id },
         select: { rating: true },
       });

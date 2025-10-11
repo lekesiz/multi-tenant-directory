@@ -15,14 +15,18 @@ datasource db {
 
 // Domain (Alan Adı) Yönetimi
 model Domain {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique // örn: 'haguenau.pro'
-  isActive  Boolean  @default(true)
-  settings  Json?    // Site ayarları (logo, tema vb.)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  name            String   @unique // örn: 'haguenau.pro'
+  isActive        Boolean  @default(true)
+  siteTitle       String?
+  siteDescription String?  @db.Text
+  logoUrl         String?
+  primaryColor    String?  @default("#3B82F6")
+  settings        Json?    // Ek site ayarları
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  companyContent CompanyContent[]
+  content CompanyContent[] @relation("DomainContent")
 
   @@map("domains")
 }
@@ -69,7 +73,7 @@ model CompanyContent {
   updatedAt          DateTime @updatedAt
 
   company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  domain             Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domain             Domain   @relation("DomainContent", fields: [domainId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, domainId])
   @@map("company_content")
