@@ -4,10 +4,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const domainId = parseInt(params.id);
+    const { id } = await context.params;
+    const domainId = parseInt(id);
 
     const domain = await prisma.domain.findUnique({
       where: { id: domainId },
@@ -36,7 +37,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession();
 
@@ -45,7 +46,8 @@ export async function PUT(
   }
 
   try {
-    const domainId = parseInt(params.id);
+    const { id } = await context.params;
+    const domainId = parseInt(id);
     const body = await request.json();
 
     const domain = await prisma.domain.update({
