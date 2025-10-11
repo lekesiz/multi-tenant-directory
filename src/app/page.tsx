@@ -3,7 +3,11 @@ import Link from 'next/link';
 
 async function getDomainInfo() {
   const headersList = await headers();
-  const domain = headersList.get('x-tenant-domain') || 'haguenau.pro';
+  let domain = headersList.get('x-tenant-domain') || 'haguenau.pro';
+  
+  // www prefix'ini kaldır
+  domain = domain.replace('www.', '');
+  
   const cityName = domain.split('.')[0];
   const displayName = cityName.charAt(0).toUpperCase() + cityName.slice(1);
   

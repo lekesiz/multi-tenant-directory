@@ -5,7 +5,9 @@ import SearchBar from '@/components/SearchBar';
 
 async function getDomainFromHost(host: string) {
   try {
-    const domain = host.split(':')[0];
+    let domain = host.split(':')[0];
+    // www prefix'ini kaldır
+    domain = domain.replace('www.', '');
     return await prisma.domain.findUnique({
       where: { name: domain },
     });
