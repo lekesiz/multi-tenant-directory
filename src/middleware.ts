@@ -16,6 +16,8 @@ const SUPPORTED_DOMAINS = [
   'soufflenheim.pro',
   'wissembourg.pro',
   'localhost:3000', // Development için
+  'multi-tenant-directory.vercel.app', // Production default
+  'multi-tenant-directory-git-main-lekesizs-projects.vercel.app', // Git branch
 ];
 
 export function middleware(request: NextRequest) {
