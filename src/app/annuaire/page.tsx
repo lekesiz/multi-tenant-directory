@@ -14,6 +14,12 @@ async function getDomainFromHost(host: string) {
   try {
     let domain = host.split(':')[0];
     domain = domain.replace('www.', '');
+    
+    // Vercel deployment URL'lerini haguenau.pro'ya map et
+    if (domain.includes('.vercel.app')) {
+      domain = 'haguenau.pro';
+    }
+    
     return await prisma.domain.findUnique({
       where: { name: domain },
     });
