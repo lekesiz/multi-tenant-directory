@@ -13,6 +13,11 @@ async function getDomainInfo() {
   // www prefix'ini kaldır
   domain = domain.replace('www.', '');
   
+  // Vercel deployment URL'lerini haguenau.pro'ya map et
+  if (domain.includes('.vercel.app')) {
+    domain = 'haguenau.pro';
+  }
+  
   const cityName = domain.split('.')[0];
   const displayName = cityName.charAt(0).toUpperCase() + cityName.slice(1);
   
