@@ -11,6 +11,7 @@ interface CategoryPageProps {
   params: Promise<{
     category: string;
   }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function getDomainInfo() {
