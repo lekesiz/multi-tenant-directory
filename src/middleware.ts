@@ -16,13 +16,20 @@ const SUPPORTED_DOMAINS = [
   'soufflenheim.pro',
   'wissembourg.pro',
   'localhost:3000', // Development için
-  'multi-tenant-directory.vercel.app', // Production default
-  'multi-tenant-directory-git-main-lekesizs-projects.vercel.app', // Git branch
 ];
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const url = request.nextUrl;
+
+  // Vercel deployment URL'lerini kabul et
+  const isVercelDomain = hostname.includes('.vercel.app');
+  const isSupportedDomain = SUPPORTED_DOMAINS.includes(hostname);
+
+  // Eğer desteklenmeyen bir domain ise ve Vercel domain'i de değilse hata göster
+  if (!isSupportedDomain && !isVercelDomain) {
+    return new NextResponse('Domain not found', { status: 404 });
+  }
 
   // Admin panel kontrolü - haguenau.pro/admin veya localhost:3000/admin
   if (url.pathname.startsWith('/admin')) {
