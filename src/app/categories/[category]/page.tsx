@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 
+export const dynamic = 'force-dynamic';
+
 interface CategoryPageProps {
   params: Promise<{
     category: string;

@@ -3,6 +3,8 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 async function getDomainInfo() {
   const headersList = await headers();
   let domain = headersList.get('x-tenant-domain') || 'haguenau.pro';

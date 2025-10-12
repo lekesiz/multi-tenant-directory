@@ -4,6 +4,8 @@ import { headers } from 'next/headers';
 import { generateMetaTags, generateOrganizationSchema } from '@/lib/seo';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 async function getDomainInfo() {
   const headersList = await headers();
   let domain = headersList.get('x-tenant-domain') || 'haguenau.pro';

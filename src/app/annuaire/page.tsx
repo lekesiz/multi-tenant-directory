@@ -6,6 +6,8 @@ import FilterBar from '@/components/FilterBar';
 import Pagination from '@/components/Pagination';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 
+export const dynamic = 'force-dynamic';
+
 const RESULTS_PER_PAGE = 12;
 
 async function getDomainFromHost(host: string) {
