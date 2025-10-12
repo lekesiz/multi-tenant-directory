@@ -1,6 +1,6 @@
-import { headers } from 'next/headers';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { generateMetaTags, generateOrganizationSchema } from '@/lib/seo';
 import { prisma } from '@/lib/prisma';
 
@@ -502,6 +502,22 @@ export default async function Home() {
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <Link
+                    href="/rejoindre"
+                    className="hover:text-white transition-colors"
+                  >
+                    Créer un Profil
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/tarifs"
+                    className="hover:text-white transition-colors"
+                  >
+                    Tarifs
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/admin/login"
                     className="hover:text-white transition-colors"
                   >
@@ -511,15 +527,135 @@ export default async function Home() {
               </ul>
             </div>
             <div>
+              <h5 className="font-semibold mb-4">Autres Villes</h5>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>
+                  <a href="https://bischwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Bischwiller
+                  </a>
+                </li>
+                <li>
+                  <a href="https://bouxwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Bouxwiller
+                  </a>
+                </li>
+                <li>
+                  <a href="https://brumath.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Brumath
+                  </a>
+                </li>
+                <li>
+                  <a href="https://haguenau.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Haguenau
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hoerdt.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Hœrdt
+                  </a>
+                </li>
+                <li>
+                  <a href="https://ingwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Ingwiller
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Second row of cities */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-8">
+            <div>
+              <h5 className="font-semibold mb-4">Plus de Villes</h5>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>
+                  <a href="https://saverne.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Saverne
+                  </a>
+                </li>
+                <li>
+                  <a href="https://schiltigheim.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Schiltigheim
+                  </a>
+                </li>
+                <li>
+                  <a href="https://schweighouse.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Schweighouse
+                  </a>
+                </li>
+                <li>
+                  <a href="https://souffelweyersheim.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Souffelweyersheim
+                  </a>
+                </li>
+                <li>
+                  <a href="https://soufflenheim.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Soufflenheim
+                  </a>
+                </li>
+                <li>
+                  <a href="https://wissembourg.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Wissembourg
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
               <h5 className="font-semibold mb-4">Contact</h5>
               <ul className="space-y-2 text-gray-400 text-sm">
+                <li>
+                  <Link href="/contact" className="hover:text-white transition-colors">
+                    Nous Contacter
+                  </Link>
+                </li>
                 <li>03 67 31 07 70</li>
                 <li>pro@{displayName.toLowerCase()}.pro</li>
               </ul>
             </div>
+            <div>
+              <h5 className="font-semibold mb-4">Légal</h5>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>
+                  <Link href="/mentions-legales" className="hover:text-white transition-colors">
+                    Mentions Légales
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/politique-confidentialite" className="hover:text-white transition-colors">
+                    Politique de Confidentialité
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cgu" className="hover:text-white transition-colors">
+                    CGU
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-semibold mb-4">Suivez-nous</h5>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Facebook
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    LinkedIn
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition-colors">
+                    Instagram
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
+          
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-            © 2025 {displayName}.PRO - Tous droits réservés
+            © 2025 {displayName}.PRO - Tous droits réservés | Annuaire des Professionnels en Alsace
           </div>
         </div>
       </footer>
