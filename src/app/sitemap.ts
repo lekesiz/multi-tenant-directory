@@ -2,37 +2,67 @@ import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://multi-tenant-directory.vercel.app';
-
-  // Get all companies
-  const companies = await prisma.company.findMany({
+  // Get all domains
+  const domains = await prisma.domain.findMany({
     select: {
-      slug: true,
-      updatedAt: true,
+      name: true,
     },
   });
 
-  const companyUrls = companies.map((company) => ({
-    url: `${baseUrl}/companies/${company.slug}`,
-    lastModified: company.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }));
+  const sitemap: MetadataRoute.Sitemap = [];
 
-  return [
-    {
-      url: baseUrl,
+  // Add pages for each domain
+  for (const domain of domains) {
+    sitemap.push({
+      url: `https://${domain.name}`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
-    },
-    {
-      url: `${baseUrl}/annuaire`,
+    });
+
+    sitemap.push({
+      url: `https://${domain.name}/annuaire`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,
-    },
-    ...companyUrls,
-  ];
-}
+    });
 
+    sitemap.push({
+      url: `https://${domain.name}/categories`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    });
+
+    // Legal pages
+    sitemap.push({
+      url: `https://${domain.name}/mentions-legales`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    });
+
+    sitemap.push({
+      url: `https://${domain.name}/politique-confidentialite`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    });
+
+    sitemap.push({
+      url: `https://${domain.name}/cgu`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    });
+
+    sitemap.push({
+      url: `https://${domain.name}/tarifs`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    });
+  }
+
+  return sitemap;
+}
