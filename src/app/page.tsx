@@ -8,14 +8,14 @@ export const dynamic = 'force-dynamic';
 
 async function getDomainInfo() {
   const headersList = await headers();
-  let domain = headersList.get('x-tenant-domain') || 'haguenau.pro';
+  let domain = headersList.get('x-tenant-domain') || 'bas-rhin.pro';
   
   // www prefix'ini kaldır
   domain = domain.replace('www.', '');
   
-  // Vercel deployment URL'lerini haguenau.pro'ya map et
+  // Vercel deployment URL'lerini bas-rhin.pro'ya map et
   if (domain.includes('.vercel.app')) {
-    domain = 'haguenau.pro';
+    domain = 'bas-rhin.pro';
   }
   
   const cityName = domain.split('.')[0];

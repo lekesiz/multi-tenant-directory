@@ -16,7 +16,7 @@ interface CategoryPageProps {
 
 async function getDomainInfo() {
   const headersList = await headers();
-  let domain = headersList.get('x-tenant-domain') || 'haguenau.pro';
+  let domain = headersList.get('x-tenant-domain') || 'bas-rhin.pro';
   domain = domain.replace('www.', '');
   
   const cityName = domain.split('.')[0];

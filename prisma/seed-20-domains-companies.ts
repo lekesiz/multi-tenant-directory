@@ -1,0 +1,150 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+// Her domain için 10 şirket
+const domainCompanies: Record<string, any[]> = {
+  'bas-rhin.pro': [
+    { name: 'Boulangerie Artisanale Alsace', slug: 'boulangerie-artisanale-alsace', address: '1 Place Kléber', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 01', categories: ['Boulangerie'], description: 'Boulangerie artisanale alsacienne.' },
+    { name: 'Restaurant Le Bas-Rhin', slug: 'restaurant-le-bas-rhin', address: '2 Rue du Dôme', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 02', categories: ['Restaurant'], description: 'Restaurant gastronomique alsacien.' },
+    { name: 'Pharmacie Centrale Alsace', slug: 'pharmacie-centrale-alsace', address: '3 Avenue des Vosges', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 03', categories: ['Pharmacie'], description: 'Pharmacie de proximité.' },
+    { name: 'Garage Auto Alsace', slug: 'garage-auto-alsace', address: '4 Route de Colmar', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 04', categories: ['Garage'], description: 'Garage automobile multimarques.' },
+    { name: 'Coiffure Tendance Alsace', slug: 'coiffure-tendance-alsace', address: '5 Rue de la Mésange', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 05', categories: ['Coiffure'], description: 'Salon de coiffure moderne.' },
+    { name: 'Pizzeria Bella Alsace', slug: 'pizzeria-bella-alsace', address: '6 Rue du Jeu des Enfants', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 06', categories: ['Pizzeria'], description: 'Pizzas au feu de bois.' },
+    { name: 'Tabac Presse Alsace', slug: 'tabac-presse-alsace', address: '7 Place Gutenberg', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 07', categories: ['Tabac'], description: 'Tabac presse loto.' },
+    { name: 'Fleuriste Alsace', slug: 'fleuriste-alsace', address: '8 Rue des Hallebardes', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 08', categories: ['Fleuriste'], description: 'Compositions florales.' },
+    { name: 'Boucherie Alsace', slug: 'boucherie-alsace', address: '9 Rue du Vieux Marché aux Poissons', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 09', categories: ['Boucherie'], description: 'Boucherie charcuterie.' },
+    { name: 'Opticien Alsace', slug: 'opticien-alsace', address: '10 Rue des Grandes Arcades', city: 'Strasbourg', postalCode: '67000', phone: '03 88 00 00 10', categories: ['Optique'], description: 'Opticien lunetier.' },
+  ],
+};
+
+// Diğer 19 domain için aynı yapıyı kopyala
+const cities = [
+  { domain: 'bischwiller.pro', city: 'Bischwiller', postalCode: '67240', phonePrefix: '03 88 53' },
+  { domain: 'bouxwiller.pro', city: 'Bouxwiller', postalCode: '67330', phonePrefix: '03 88 70' },
+  { domain: 'brumath.pro', city: 'Brumath', postalCode: '67170', phonePrefix: '03 88 51' },
+  { domain: 'erstein.pro', city: 'Erstein', postalCode: '67150', phonePrefix: '03 88 98' },
+  { domain: 'geispolsheim.pro', city: 'Geispolsheim', postalCode: '67118', phonePrefix: '03 88 66' },
+  { domain: 'haguenau.pro', city: 'Haguenau', postalCode: '67500', phonePrefix: '03 88 93' },
+  { domain: 'hoerdt.pro', city: 'Hoerdt', postalCode: '67720', phonePrefix: '03 88 51' },
+  { domain: 'illkirch.pro', city: 'Illkirch-Graffenstaden', postalCode: '67400', phonePrefix: '03 88 66' },
+  { domain: 'ingwiller.pro', city: 'Ingwiller', postalCode: '67340', phonePrefix: '03 88 89' },
+  { domain: 'ittenheim.pro', city: 'Ittenheim', postalCode: '67117', phonePrefix: '03 88 69' },
+  { domain: 'ostwald.pro', city: 'Ostwald', postalCode: '67540', phonePrefix: '03 88 66' },
+  { domain: 'saverne.pro', city: 'Saverne', postalCode: '67700', phonePrefix: '03 88 91' },
+  { domain: 'schiltigheim.pro', city: 'Schiltigheim', postalCode: '67300', phonePrefix: '03 88 83' },
+  { domain: 'schweighouse.pro', city: 'Schweighouse-sur-Moder', postalCode: '67590', phonePrefix: '03 88 72' },
+  { domain: 'souffelweyersheim.pro', city: 'Souffelweyersheim', postalCode: '67460', phonePrefix: '03 88 20' },
+  { domain: 'soufflenheim.pro', city: 'Soufflenheim', postalCode: '67620', phonePrefix: '03 88 86' },
+  { domain: 'vendenheim.pro', city: 'Vendenheim', postalCode: '67550', phonePrefix: '03 88 69' },
+  { domain: 'wissembourg.pro', city: 'Wissembourg', postalCode: '67160', phonePrefix: '03 88 94' },
+  { domain: 'mutzig.pro', city: 'Mutzig', postalCode: '67190', phonePrefix: '03 88 38' },
+];
+
+const companyTemplates = [
+  { name: 'Boulangerie Pâtisserie', categories: ['Boulangerie', 'Pâtisserie'], description: 'Boulangerie artisanale, pains et pâtisseries.' },
+  { name: 'Restaurant', categories: ['Restaurant'], description: 'Restaurant traditionnel alsacien.' },
+  { name: 'Pharmacie', categories: ['Pharmacie', 'Santé'], description: 'Pharmacie de proximité.' },
+  { name: 'Garage Automobile', categories: ['Garage', 'Automobile'], description: 'Garage multimarques, entretien et réparation.' },
+  { name: 'Salon de Coiffure', categories: ['Coiffure', 'Beauté'], description: 'Salon de coiffure mixte.' },
+  { name: 'Pizzeria', categories: ['Pizzeria', 'Restaurant'], description: 'Pizzas artisanales au feu de bois.' },
+  { name: 'Tabac Presse', categories: ['Tabac', 'Presse'], description: 'Tabac, presse, jeux, loto.' },
+  { name: 'Fleuriste', categories: ['Fleuriste', 'Commerce'], description: 'Compositions florales et plantes.' },
+  { name: 'Boucherie Charcuterie', categories: ['Boucherie', 'Charcuterie'], description: 'Viandes de qualité, charcuterie artisanale.' },
+  { name: 'Opticien', categories: ['Optique', 'Santé'], description: 'Lunettes de vue et soleil, lentilles.' },
+];
+
+// Her şehir için şirket verilerini oluştur
+cities.forEach(cityInfo => {
+  domainCompanies[cityInfo.domain] = companyTemplates.map((template, index) => ({
+    name: `${template.name} ${cityInfo.city}`,
+    slug: `${template.name.toLowerCase().replace(/\s+/g, '-')}-${cityInfo.city.toLowerCase().replace(/\s+/g, '-')}`,
+    address: `${index + 1} Rue Principale`,
+    city: cityInfo.city,
+    postalCode: cityInfo.postalCode,
+    phone: `${cityInfo.phonePrefix} ${(index + 1).toString().padStart(2, '0')} ${(index + 1).toString().padStart(2, '0')}`,
+    categories: template.categories,
+    description: template.description,
+  }));
+});
+
+async function main() {
+  console.log('🌱 Seeding 20 domains with companies...\n');
+
+  for (const [domainName, companies] of Object.entries(domainCompanies)) {
+    console.log(`📍 Processing ${domainName}...`);
+    
+    const domain = await prisma.domain.findUnique({
+      where: { name: domainName },
+    });
+
+    if (!domain) {
+      console.error(`  ❌ Domain ${domainName} not found`);
+      continue;
+    }
+
+    let created = 0;
+
+    for (const companyData of companies) {
+      const company = await prisma.company.upsert({
+        where: { slug: companyData.slug },
+        update: {},
+        create: {
+          name: companyData.name,
+          slug: companyData.slug,
+          address: companyData.address,
+          city: companyData.city,
+          postalCode: companyData.postalCode,
+          phone: companyData.phone,
+          categories: companyData.categories,
+        },
+      });
+
+      await prisma.companyContent.upsert({
+        where: {
+          companyId_domainId: {
+            companyId: company.id,
+            domainId: domain.id,
+          },
+        },
+        update: {},
+        create: {
+          companyId: company.id,
+          domainId: domain.id,
+          customDescription: companyData.description,
+          isVisible: true,
+        },
+      });
+
+      created++;
+    }
+
+    console.log(`  ✅ ${created} companies created for ${domainName}`);
+  }
+
+  console.log('\n✅ All 20 domains seeded successfully!');
+  
+  // İstatistikleri göster
+  const stats = await prisma.domain.findMany({
+    include: {
+      _count: {
+        select: { companyContent: true }
+      }
+    },
+    orderBy: { name: 'asc' }
+  });
+  
+  console.log('\n📊 Final Statistics:');
+  stats.forEach(d => {
+    console.log(`  - ${d.name}: ${d._count.companyContent} companies`);
+  });
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

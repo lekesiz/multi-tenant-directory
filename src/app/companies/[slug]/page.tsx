@@ -18,7 +18,7 @@ export default async function CompanyDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const headersList = await headers();
-  const host = headersList.get('host') || 'haguenau.pro';
+  const host = headersList.get('host') || 'bas-rhin.pro';
 
   const currentDomain = await getDomainFromHost(host);
 

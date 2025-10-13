@@ -17,7 +17,7 @@ async function getDomainFromHost(host: string) {
     
     // Vercel deployment URL'lerini haguenau.pro'ya map et
     if (domain.includes('.vercel.app')) {
-      domain = 'haguenau.pro';
+      domain = 'bas-rhin.pro';
     }
     
     return await prisma.domain.findUnique({

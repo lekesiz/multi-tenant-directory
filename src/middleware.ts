@@ -1,20 +1,28 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Desteklenen domain'ler
+// Desteklenen domain'ler - 20 domain
 const SUPPORTED_DOMAINS = [
+  'bas-rhin.pro',
   'bischwiller.pro',
   'bouxwiller.pro',
   'brumath.pro',
+  'erstein.pro',
+  'geispolsheim.pro',
   'haguenau.pro',
   'hoerdt.pro',
+  'illkirch.pro',
   'ingwiller.pro',
+  'ittenheim.pro',
+  'ostwald.pro',
   'saverne.pro',
   'schiltigheim.pro',
   'schweighouse.pro',
   'souffelweyersheim.pro',
   'soufflenheim.pro',
+  'vendenheim.pro',
   'wissembourg.pro',
+  'mutzig.pro',
   'localhost:3000', // Development için
 ];
 
@@ -31,7 +39,7 @@ export function middleware(request: NextRequest) {
     return new NextResponse('Domain not found', { status: 404 });
   }
 
-  // Admin panel kontrolü - haguenau.pro/admin veya localhost:3000/admin
+  // Admin panel kontrolü - bas-rhin.pro/admin veya localhost:3000/admin
   if (url.pathname.startsWith('/admin')) {
     // Admin sayfalarını /admin route'una yönlendir
     return NextResponse.rewrite(new URL(`/admin${url.pathname.replace('/admin', '')}${url.search}`, request.url));
