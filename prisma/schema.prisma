@@ -27,6 +27,7 @@ model Domain {
   updatedAt       DateTime @updatedAt
 
   content CompanyContent[] @relation("DomainContent")
+  legalPages LegalPage[]
 
   @@map("domains")
 }
@@ -127,4 +128,20 @@ model User {
   updatedAt     DateTime @updatedAt
 
   @@map("users")
+}
+
+// Yasal Sayfalar (Footer Pages)
+model LegalPage {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique // mentions-legales, politique-confidentialite, cgu, tarifs
+  title       String
+  content     String   @db.Text
+  domainId    Int?     // Null ise tüm domain'ler için geçerli
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  domain      Domain?  @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@map("legal_pages")
 }
