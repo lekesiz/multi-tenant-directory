@@ -537,11 +537,6 @@ export default async function Home() {
               <h5 className="font-semibold mb-4">Autres Villes</h5>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
-                  <a href="https://bas-rhin.pro" className="hover:text-white transition-colors font-bold text-yellow-400" rel="nofollow">
-                    ⭐ Bas-Rhin
-                  </a>
-                </li>
-                <li>
                   <a href="https://bischwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
                     Bischwiller
                   </a>
@@ -557,18 +552,18 @@ export default async function Home() {
                   </a>
                 </li>
                 <li>
-                  <a href="https://erstein.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Erstein
-                  </a>
-                </li>
-                <li>
-                  <a href="https://geispolsheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Geispolsheim
-                  </a>
-                </li>
-                <li>
                   <a href="https://haguenau.pro" className="hover:text-white transition-colors" rel="nofollow">
                     Haguenau
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hoerdt.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Hœrdt
+                  </a>
+                </li>
+                <li>
+                  <a href="https://ingwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
+                    Ingwiller
                   </a>
                 </li>
               </ul>
@@ -581,45 +576,10 @@ export default async function Home() {
               <h5 className="font-semibold mb-4">Plus de Villes</h5>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
-                  <a href="https://hoerdt.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Hœrdt
-                  </a>
-                </li>
-                <li>
-                  <a href="https://illkirch.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Illkirch
-                  </a>
-                </li>
-                <li>
-                  <a href="https://ingwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Ingwiller
-                  </a>
-                </li>
-                <li>
-                  <a href="https://ittenheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Ittenheim
-                  </a>
-                </li>
-                <li>
-                  <a href="https://mutzig.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Mutzig
-                  </a>
-                </li>
-                <li>
-                  <a href="https://ostwald.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Ostwald
-                  </a>
-                </li>
-                <li>
                   <a href="https://saverne.pro" className="hover:text-white transition-colors" rel="nofollow">
                     Saverne
                   </a>
                 </li>
-              </ul>
-            </div>
-            <div className="md:col-start-2">
-              <h5 className="font-semibold mb-4 invisible">Plus</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <a href="https://schiltigheim.pro" className="hover:text-white transition-colors" rel="nofollow">
                     Schiltigheim
@@ -638,11 +598,6 @@ export default async function Home() {
                 <li>
                   <a href="https://soufflenheim.pro" className="hover:text-white transition-colors" rel="nofollow">
                     Soufflenheim
-                  </a>
-                </li>
-                <li>
-                  <a href="https://vendenheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Vendenheim
                   </a>
                 </li>
                 <li>
