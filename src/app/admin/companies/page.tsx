@@ -75,9 +75,6 @@ export default async function AdminCompaniesPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Yorumlar
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Durum
-              </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 İşlemler
               </th>
@@ -108,11 +105,6 @@ export default async function AdminCompaniesPage() {
                     {company._count.reviews} yorum
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Aktif</span>
-                    {company.isActive ? 'Aktif' : 'Pasif'}
-                  </span>
-                </td>
                 <td className="px-6 py-4 text-right text-sm font-medium">
                   <Link
                     href={`/admin/companies/${company.id}`}
@@ -129,4 +121,3 @@ export default async function AdminCompaniesPage() {
     </div>
   );
 }
-
