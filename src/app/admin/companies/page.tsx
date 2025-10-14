@@ -109,13 +109,7 @@ export default async function AdminCompaniesPage() {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      company.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Aktif</span>
                     {company.isActive ? 'Aktif' : 'Pasif'}
                   </span>
                 </td>
