@@ -41,8 +41,9 @@ Tarayıcıda açın: http://localhost:3000
 ## 🔑 Admin Giriş
 
 - **URL:** http://localhost:3000/admin/login
-- **Email:** admin@haguenau.pro
-- **Şifre:** changeme123
+- Admin kimlik bilgileri `.env` dosyasında tanımlanır:
+  - `ADMIN_EMAIL`: Admin email adresi
+  - `ADMIN_PASSWORD`: Admin şifresi (minimum 8 karakter)
 
 ## 🛠️ Teknoloji Yığını
 

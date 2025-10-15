@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { addSecurityHeaders } from './middleware/security';
 
 // Desteklenen domain'ler - 20 domain
 const SUPPORTED_DOMAINS = [
@@ -49,14 +50,15 @@ export function middleware(request: NextRequest) {
   if (url.pathname.startsWith('/api')) {
     const response = NextResponse.next();
     response.headers.set('x-tenant-domain', hostname);
-    return response;
+    return addSecurityHeaders(request, response);
   }
 
   // Domain'i header'a ekle
   const response = NextResponse.next();
   response.headers.set('x-tenant-domain', hostname);
 
-  return response;
+  // Add security headers
+  return addSecurityHeaders(request, response);
 }
 
 export const config = {
