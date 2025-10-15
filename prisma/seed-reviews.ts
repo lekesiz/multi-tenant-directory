@@ -17,7 +17,7 @@ async function main() {
 
   // Seed reviews for companies
   for (const company of companies) {
-    const existingReviewsCount = company.reviews.filter(r => r.isApproved && r.isVisible).length;
+    const existingReviewsCount = company.reviews.filter(r => r.isApproved).length;
     
     if (existingReviewsCount < 3) {
       console.log(`Adding reviews for ${company.name}...`);
@@ -40,12 +40,10 @@ async function main() {
         const template = reviewTemplates[i];
         reviewsData.push({
           companyId: company.id,
-          domainId: company.domainId,
           authorName: template.author,
           rating: template.rating,
           comment: template.comment,
           isApproved: true,
-          isVisible: true,
           createdAt: new Date(Date.now() - (30 - i * 5) * 24 * 60 * 60 * 1000),
         });
       }
@@ -60,7 +58,6 @@ async function main() {
           where: {
             companyId: company.id,
             isApproved: true,
-            isVisible: true,
           },
         });
 
@@ -85,10 +82,7 @@ async function main() {
   // Update existing reviews to be approved and visible
   const unapprovedReviews = await prisma.review.findMany({
     where: {
-      OR: [
-        { isApproved: false },
-        { isVisible: false },
-      ],
+      isApproved: false,
     },
   });
 
@@ -102,7 +96,6 @@ async function main() {
       },
       data: {
         isApproved: true,
-        isVisible: true,
       },
     });
     console.log('✅ All existing reviews approved and visible');
