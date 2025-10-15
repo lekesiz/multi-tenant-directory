@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendContactEmail } from '@/lib/email';
 
 interface ContactFormData {
   name: string;
@@ -96,28 +97,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // TODO: Send email notification
-    // This will be implemented with Resend, SendGrid, or other email service
-    /*
-    const emailService = process.env.EMAIL_SERVICE; // 'resend' | 'sendgrid' | 'smtp'
-    
-    if (emailService === 'resend') {
-      await sendEmailWithResend({
-        to: companyEmail || 'contact@domain.pro',
-        from: 'noreply@domain.pro',
-        replyTo: email,
-        subject: `Nouveau contact: ${subject}`,
-        html: generateEmailTemplate({
+    // Send email notification
+    if (companyEmail && process.env.RESEND_API_KEY) {
+      try {
+        await sendContactEmail({
           name,
           email,
           phone,
           subject,
           message,
-          companyName,
-        }),
-      });
+          companyName: companyName || 'Unknown Company',
+          companyEmail,
+        });
+        console.log('✅ Contact email sent to:', companyEmail);
+      } catch (error) {
+        // Non-critical error, don't fail the request
+        console.error('⚠️ Error sending email:', error);
+      }
+    } else if (companyEmail && !process.env.RESEND_API_KEY) {
+      console.warn('⚠️ RESEND_API_KEY not configured. Contact email not sent.');
     }
-    */
 
     return NextResponse.json({
       success: true,

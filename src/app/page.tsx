@@ -581,7 +581,7 @@ export default async function Home() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/politique-confidentialite" className="hover:text-white transition-colors">
+                  <Link href="/politique-de-confidentialite" className="hover:text-white transition-colors">
                     Politique de Confidentialité
                   </Link>
                 </li>

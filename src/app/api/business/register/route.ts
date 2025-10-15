@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { sendVerificationEmail } from '@/lib/email';
 
 // Validation schema
 const registerSchema = z.object({
@@ -51,8 +52,23 @@ export async function POST(request: Request) {
       },
     });
     
-    // TODO: Send verification email
-    // await sendVerificationEmail(businessOwner.email, businessOwner.id);
+    // Send verification email
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const verificationToken = Buffer.from(`${businessOwner.id}:${Date.now()}`).toString('base64');
+        const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/business/verify-email?token=${verificationToken}`;
+        
+        await sendVerificationEmail({
+          to: businessOwner.email,
+          verificationUrl,
+          firstName: businessOwner.firstName,
+        });
+        console.log('✅ Verification email sent to:', businessOwner.email);
+      } catch (error) {
+        console.error('⚠️ Error sending verification email:', error);
+        // Don't fail the registration if email fails
+      }
+    }
     
     return NextResponse.json({
       success: true,

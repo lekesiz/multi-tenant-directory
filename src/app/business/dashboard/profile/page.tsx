@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
-  description: z.string().min(50, 'La description doit contenir au moins 50 caractères').optional().or(z.literal('')),
   email: z.string().email('Email invalide'),
   phone: z.string().min(10, 'Numéro de téléphone invalide'),
   website: z.string().url().optional().or(z.literal('')),
@@ -103,20 +102,6 @@ export default function ProfileEditPage() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                {...register('description')}
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Décrivez votre entreprise..."
-              />
-              {errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-              )}
-            </div>
           </div>
         </div>
 
