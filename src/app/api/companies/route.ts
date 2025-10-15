@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdminAuth } from '@/lib/auth-helpers';
 
 // GET /api/companies - Şirketleri listele (domain'e göre filtreleme)
 export async function GET(request: NextRequest) {
@@ -71,6 +72,8 @@ export async function GET(request: NextRequest) {
 // POST /api/companies - Yeni şirket ekle (Admin only)
 export async function POST(request: NextRequest) {
   try {
+    // Admin authentication kontrolü
+    await requireAdminAuth();
     const body = await request.json();
     const {
       name,
@@ -112,6 +115,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(company, { status: 201 });
   } catch (error) {
     console.error('Error creating company:', error);
+    
+    // Authentication hatası
+    if (error instanceof Error && error.message.includes('Unauthorized')) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Admin access required' },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

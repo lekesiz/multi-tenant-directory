@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdminAuth } from '@/lib/auth-helpers';
 
 // GET /api/companies/[id] - Şirket detayını getir
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const domain = request.headers.get('x-tenant-domain') || '';
-    const companyId = parseInt(params.id);
+    const { id } = await params;
+    const companyId = parseInt(id);
 
     // Domain'i bul
     const domainRecord = await prisma.domain.findUnique({
@@ -71,10 +73,14 @@ export async function GET(
 // PUT /api/companies/[id] - Şirketi güncelle (Admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const companyId = parseInt(params.id);
+    // Admin authentication kontrolü
+    await requireAdminAuth();
+    
+    const { id } = await params;
+    const companyId = parseInt(id);
     const body = await request.json();
 
     const company = await prisma.company.update({
@@ -95,10 +101,14 @@ export async function PUT(
 // DELETE /api/companies/[id] - Şirketi sil (Admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const companyId = parseInt(params.id);
+    // Admin authentication kontrolü
+    await requireAdminAuth();
+    
+    const { id } = await params;
+    const companyId = parseInt(id);
 
     await prisma.company.delete({
       where: { id: companyId },

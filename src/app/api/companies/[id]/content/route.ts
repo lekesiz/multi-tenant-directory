@@ -4,10 +4,11 @@ import { prisma } from '@/lib/prisma';
 // GET /api/companies/[id]/content - Şirketin tüm domain içeriklerini getir
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const companyId = parseInt(params.id);
+    const { id } = await params;
+    const companyId = parseInt(id);
 
     const contents = await prisma.companyContent.findMany({
       where: { companyId },
@@ -29,10 +30,11 @@ export async function GET(
 // POST /api/companies/[id]/content - Şirket için domain içeriği oluştur/güncelle
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const companyId = parseInt(params.id);
+    const { id } = await params;
+    const companyId = parseInt(id);
     const body = await request.json();
     const {
       domainId,

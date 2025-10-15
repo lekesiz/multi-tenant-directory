@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 // Google Places API Place Details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { placeId: string } }
+  { params }: { params: Promise<{ placeId: string }> }
 ) {
   try {
-    const { placeId } = params;
+    const { placeId } = await params;
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {

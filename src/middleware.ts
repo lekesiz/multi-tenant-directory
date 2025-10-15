@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 // Desteklenen domain'ler
 const SUPPORTED_DOMAINS = [
@@ -18,12 +19,21 @@ const SUPPORTED_DOMAINS = [
   'localhost:3000', // Development için
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const url = request.nextUrl;
 
   // Admin panel kontrolü - haguenau.pro/admin veya localhost:3000/admin
   if (url.pathname.startsWith('/admin')) {
+    // Admin login sayfası hariç, authentication kontrol et
+    if (url.pathname !== '/admin/login' && !url.pathname.startsWith('/api/auth')) {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+      
+      if (!token || token.role !== 'admin') {
+        return NextResponse.redirect(new URL('/admin/login', request.url));
+      }
+    }
+    
     // Admin sayfalarını /admin route'una yönlendir
     return NextResponse.rewrite(new URL(`/admin${url.pathname.replace('/admin', '')}${url.search}`, request.url));
   }
