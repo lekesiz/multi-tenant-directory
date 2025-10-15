@@ -10,6 +10,44 @@ export interface EmailOptions {
   html: string;
 }
 
+// Helper function to generate unsubscribe link
+export function generateUnsubscribeLink(token: string, type?: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const params = new URLSearchParams({ token });
+  if (type) {
+    params.append('type', type);
+  }
+  return `${baseUrl}/api/unsubscribe?${params.toString()}`;
+}
+
+// Helper function to add unsubscribe footer to emails
+export function addUnsubscribeFooter(html: string, token?: string, emailType?: string) {
+  if (!token) return html;
+  
+  const unsubscribeLink = generateUnsubscribeLink(token, emailType);
+  const unsubscribeAllLink = generateUnsubscribeLink(token, 'all');
+  
+  const footer = `
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #E5E7EB;">
+      <p style="color: #9CA3AF; font-size: 11px; text-align: center; margin: 0;">
+        Vous recevez cet email car vous êtes inscrit à nos notifications.
+      </p>
+      <p style="color: #9CA3AF; font-size: 11px; text-align: center; margin: 5px 0 0 0;">
+        <a href="${unsubscribeLink}" style="color: #9CA3AF; text-decoration: underline;">
+          Se désinscrire de ce type d'email
+        </a>
+        •
+        <a href="${unsubscribeAllLink}" style="color: #9CA3AF; text-decoration: underline;">
+          Se désinscrire de tous les emails
+        </a>
+      </p>
+    </div>
+  `;
+  
+  // Insert footer before closing body tag
+  return html.replace('</body>', `${footer}</body>`);
+}
+
 export async function sendEmail({
   to,
   from,
@@ -482,6 +520,7 @@ export async function sendNewReviewEmail({
   rating,
   comment,
   reviewUrl,
+  unsubscribeToken,
 }: {
   to: string;
   businessName: string;
@@ -489,6 +528,7 @@ export async function sendNewReviewEmail({
   rating: number;
   comment?: string;
   reviewUrl: string;
+  unsubscribeToken?: string;
 }) {
   const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
   
@@ -571,11 +611,15 @@ export async function sendNewReviewEmail({
     </html>
   `;
 
+  const finalHtml = unsubscribeToken 
+    ? addUnsubscribeFooter(html, unsubscribeToken, 'newReview')
+    : html;
+
   return sendEmail({
     to,
     from: process.env.RESEND_FROM_EMAIL || 'noreply@example.com',
     subject: `⭐ Nouvel avis ${rating} étoiles pour ${businessName}`,
-    html,
+    html: finalHtml,
   });
 }
 
