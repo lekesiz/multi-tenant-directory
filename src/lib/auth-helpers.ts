@@ -1,11 +1,11 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-config';
 import { setTenantContext } from './prisma-middleware';
 
 export async function setupTenantContext(domain: string) {
   try {
     const session = await getServerSession(authOptions);
-    const userRole = session?.user?.role === 'admin' ? 'admin' : 'user';
+    const userRole = (session?.user as any)?.role === 'admin' ? 'admin' : 'user';
     
     setTenantContext(domain, userRole);
     
@@ -18,7 +18,7 @@ export async function setupTenantContext(domain: string) {
 }
 
 export function isAdmin(session: any): boolean {
-  return session?.user?.role === 'admin';
+  return (session?.user as any)?.role === 'admin';
 }
 
 export function requireAdmin(session: any) {

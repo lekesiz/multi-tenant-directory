@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-config';
 
 export enum Role {
   SUPER_ADMIN = 'SUPER_ADMIN',
@@ -34,7 +34,7 @@ export async function getCurrentSession(): Promise<AuthContext | null> {
 
     return {
       user: {
-        id: session.user.id || '',
+        id: (session.user as any).id || '',
         email: session.user.email || '',
         name: session.user.name,
         role: (session.user as any).role || Role.USER,

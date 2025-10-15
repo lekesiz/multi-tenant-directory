@@ -2,21 +2,26 @@ import { PrismaClient } from '@prisma/client';
 
 // Tenant context middleware for Row-Level Security
 export function createTenantMiddleware(prisma: PrismaClient) {
-  prisma.$use(async (params, next) => {
-    // Set tenant context for RLS policies
-    const tenantDomain = global.tenantContext?.domain;
-    const userRole = global.tenantContext?.userRole;
+  // Prisma v6+ uses extensions instead of middleware
+  return prisma.$extends({
+    query: {
+      $allOperations: async ({ args, query }) => {
+        // Set tenant context for RLS policies before each query
+        const tenantDomain = global.tenantContext?.domain;
+        const userRole = global.tenantContext?.userRole;
 
-    if (tenantDomain) {
-      // Set PostgreSQL session variables for RLS policies
-      await prisma.$executeRaw`SELECT set_config('app.current_tenant', ${tenantDomain}, true)`;
-    }
+        if (tenantDomain) {
+          // Set PostgreSQL session variables for RLS policies
+          await prisma.$executeRaw`SELECT set_config('app.current_tenant', ${tenantDomain}, true)`;
+        }
 
-    if (userRole) {
-      await prisma.$executeRaw`SELECT set_config('app.user_role', ${userRole}, true)`;
-    }
+        if (userRole) {
+          await prisma.$executeRaw`SELECT set_config('app.user_role', ${userRole}, true)`;
+        }
 
-    return next(params);
+        return query(args);
+      },
+    },
   });
 }
 
