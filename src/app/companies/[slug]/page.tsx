@@ -4,6 +4,11 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import StructuredData from '@/components/StructuredData';
+import CompanyReviews from '@/components/CompanyReviews';
+import GoogleMap from '@/components/GoogleMap';
+import BusinessHours from '@/components/BusinessHours';
+import PhotoGallery from '@/components/PhotoGallery';
+import SocialLinks from '@/components/SocialLinks';
 import { Metadata } from 'next';
 
 async function getDomainFromHost(host: string) {
@@ -196,15 +201,15 @@ export default async function CompanyDetailPage({
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Company Info Card */}
-            <div className="bg-white rounded-lg shadow p-8">
-              <div className="flex items-start justify-between mb-6">
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6 lg:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4 sm:mb-6">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                     {company.name}
                   </h1>
                   {company.categories.length > 0 && (
@@ -221,14 +226,14 @@ export default async function CompanyDetailPage({
                   )}
                 </div>
                 {avgRating && (
-                  <div className="text-center ml-4">
+                  <div className="text-center">
                     <div className="flex items-center justify-center mb-1">
-                      <span className="text-yellow-500 text-2xl mr-1">★</span>
-                      <span className="text-3xl font-bold">
+                      <span className="text-yellow-500 text-xl sm:text-2xl mr-1">★</span>
+                      <span className="text-2xl sm:text-3xl font-bold">
                         {avgRating.toFixed(1)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs sm:text-sm text-gray-600">
                       {company.reviews.length} avis
                     </p>
                   </div>
@@ -271,65 +276,36 @@ export default async function CompanyDetailPage({
                   </p>
                 </div>
               )}
+
+              {/* Social Links */}
+              {(content?.customFields as any)?.socialLinks && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                    Suivez-nous
+                  </h3>
+                  <SocialLinks 
+                    socialLinks={(content.customFields as any).socialLinks} 
+                    website={company.website}
+                  />
+                </div>
+              )}
             </div>
 
+            {/* Photo Gallery */}
+            <PhotoGallery 
+              photos={content?.customImages as string[] | null}
+              companyName={company.name}
+              coverImage={company.coverImageUrl}
+            />
+
             {/* Reviews */}
-            {company.reviews.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Avis clients
-                </h2>
-                <div className="space-y-6">
-                  {company.reviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="border-b border-gray-200 pb-6 last:border-0 last:pb-0"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <div className="font-semibold text-gray-900">
-                            {review.authorName}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {new Date(review.reviewDate).toLocaleDateString(
-                              'fr-FR',
-                              {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              }
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <span
-                              key={i}
-                              className={`text-xl ${
-                                i < review.rating
-                                  ? 'text-yellow-500'
-                                  : 'text-gray-300'
-                              }`}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      {review.comment && (
-                        <p className="text-gray-700">{review.comment}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <CompanyReviews companyId={company.id} companyName={company.name} />
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Contact Card */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Coordonnées
               </h3>
@@ -442,15 +418,28 @@ export default async function CompanyDetailPage({
               </div>
             </div>
 
-            {/* Map Placeholder */}
+            {/* Business Hours */}
+            {company.businessHours && (
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
+                  Horaires d'ouverture
+                </h3>
+                <BusinessHours businessHours={company.businessHours as any} />
+              </div>
+            )}
+
+            {/* Google Maps */}
             {company.latitude && company.longitude && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
                   Localisation
                 </h3>
-                <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">Carte Google Maps</p>
-                </div>
+                <GoogleMap 
+                  latitude={company.latitude}
+                  longitude={company.longitude}
+                  companyName={company.name}
+                  address={company.address ? `${company.address}, ${company.postalCode} ${company.city}` : undefined}
+                />
               </div>
             )}
           </div>

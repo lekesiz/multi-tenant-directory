@@ -78,17 +78,17 @@ export default function CompanyReviews({ companyId, companyName }: CompanyReview
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
+    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
           Avis Clients ({reviews.length})
         </h2>
         <button
           onClick={syncGoogleReviews}
           disabled={syncing}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 text-sm"
+          className="bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 text-sm whitespace-nowrap"
         >
-          {syncing ? '⏳ Synchronisation...' : '🔄 Sync Google'}
+          {syncing ? '⏳ Sync...' : '🔄 Sync Google'}
         </button>
       </div>
 
@@ -106,9 +106,9 @@ export default function CompanyReviews({ companyId, companyName }: CompanyReview
         <div className="space-y-6">
           {reviews.map((review) => (
             <div key={review.id} className="border-b border-gray-200 pb-6 last:border-0">
-              <div className="flex items-start space-x-4">
+              <div className="flex items-start space-x-3 sm:space-x-4">
                 {review.authorPhoto ? (
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0">
                     <Image
                       src={review.authorPhoto}
                       alt={review.authorName}
@@ -118,34 +118,34 @@ export default function CompanyReviews({ companyId, companyName }: CompanyReview
                     />
                   </div>
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
                     {review.authorName.charAt(0)}
                   </div>
                 )}
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                     <div>
-                      <h4 className="font-semibold text-gray-900">
+                      <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
                         {review.authorName}
                       </h4>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                         <div className="flex">
                           {[...Array(5)].map((_, i) => (
                             <span
                               key={i}
-                              className={i < review.rating ? 'text-yellow-500' : 'text-gray-300'}
+                              className={`text-sm sm:text-base ${i < review.rating ? 'text-yellow-500' : 'text-gray-300'}`}
                             >
                               ⭐
                             </span>
                           ))}
                         </div>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500">
                           {new Date(review.reviewDate).toLocaleDateString('fr-FR')}
                         </span>
                       </div>
                     </div>
                     {review.source === 'google' && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full self-start">
                         Google
                       </span>
                     )}
