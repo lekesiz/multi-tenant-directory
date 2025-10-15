@@ -1,152 +1,49 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { headers } from 'next/headers';
-import { generateMetaTags, generateOrganizationSchema } from '@/lib/seo';
-import { prisma } from '@/lib/prisma';
+import { generateMetaTags } from '@/lib/seo';
 import StructuredData from '@/components/StructuredData';
+
+// Query utilities
+import { getCurrentDomainInfo } from '@/lib/queries/domain';
+import {
+  countCompaniesByDomain,
+  getCompaniesByCategoryCount,
+  getFeaturedCompanies
+} from '@/lib/queries/company';
+import {
+  getReviewsCountByDomain,
+  getAverageRatingByDomain
+} from '@/lib/queries/review';
 
 export const dynamic = 'force-dynamic';
 
-async function getDomainInfo() {
-  const headersList = await headers();
-  let domain = headersList.get('x-tenant-domain') || 'bas-rhin.pro';
-  
-  // www prefix'ini kaldır
-  domain = domain.replace('www.', '');
-  
-  // Vercel deployment URL'lerini bas-rhin.pro'ya map et
-  if (domain.includes('.vercel.app')) {
-    domain = 'bas-rhin.pro';
-  }
-  
-  const cityName = domain.split('.')[0];
-  const displayName = cityName.charAt(0).toUpperCase() + cityName.slice(1);
-  
-  // Domain bilgisini database'den al
-  const domainData = await prisma.domain.findUnique({
-    where: { name: domain },
-  });
-  
-  return { domain, cityName, displayName, domainData };
-}
-
+/**
+ * Get domain statistics (companies, reviews, average rating)
+ */
 async function getStats(domainId: number) {
-  // Şirket sayısı
-  const companiesCount = await prisma.companyContent.count({
-    where: {
-      domainId,
-      isVisible: true,
-    },
-  });
-
-  // Toplam yorum sayısı
-  const reviewsCount = await prisma.review.count({
-    where: {
-      company: {
-        content: {
-          some: {
-            domainId,
-            isVisible: true,
-          },
-        },
-      },
-      isApproved: true,
-    },
-  });
-
-  // Ortalama puan
-  const avgRating = await prisma.review.aggregate({
-    where: {
-      company: {
-        content: {
-          some: {
-            domainId,
-            isVisible: true,
-          },
-        },
-      },
-      isApproved: true,
-    },
-    _avg: {
-      rating: true,
-    },
-  });
+  const [companiesCount, reviewsCount, avgRating] = await Promise.all([
+    countCompaniesByDomain(domainId),
+    getReviewsCountByDomain(domainId),
+    getAverageRatingByDomain(domainId),
+  ]);
 
   return {
     companiesCount,
     reviewsCount,
-    avgRating: avgRating._avg.rating ? avgRating._avg.rating.toFixed(1) : null,
+    avgRating: avgRating ? avgRating.toFixed(1) : null,
   };
 }
 
+/**
+ * Get popular categories for a domain
+ */
 async function getPopularCategories(domainId: number) {
-  // Tüm şirketleri al
-  const companies = await prisma.company.findMany({
-    where: {
-      content: {
-        some: {
-          domainId,
-          isVisible: true,
-        },
-      },
-    },
-    select: {
-      categories: true,
-    },
-  });
-
-  // Kategorileri say
-  const categoryCount: Record<string, number> = {};
-  companies.forEach((company) => {
-    company.categories.forEach((category) => {
-      categoryCount[category] = (categoryCount[category] || 0) + 1;
-    });
-  });
-
-  // En popüler 8 kategoriyi al
-  const sortedCategories = Object.entries(categoryCount)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 8)
-    .map(([name, count]) => ({ name, count }));
-
-  return sortedCategories;
-}
-
-async function getFeaturedCompanies(domainId: number) {
-  // Öne çıkan şirketler (priority > 0 veya featuredUntil > now)
-  const featured = await prisma.company.findMany({
-    where: {
-      content: {
-        some: {
-          domainId,
-          isVisible: true,
-          OR: [
-            { priority: { gt: 0 } },
-            { featuredUntil: { gte: new Date() } },
-          ],
-        },
-      },
-    },
-    include: {
-      content: {
-        where: {
-          domainId,
-        },
-      },
-    },
-    orderBy: {
-      content: {
-        _count: 'desc',
-      },
-    },
-    take: 6,
-  });
-
-  return featured;
+  const categories = await getCompaniesByCategoryCount(domainId);
+  return categories.slice(0, 8);
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { domain } = await getDomainInfo();
+  const { domain } = await getCurrentDomainInfo();
   const metaTags = generateMetaTags(domain, 'home');
   
   return {
@@ -231,16 +128,18 @@ function getCategoryIcon(categoryName: string): string {
 }
 
 export default async function Home() {
-  const { domain, displayName, domainData } = await getDomainInfo();
-  const organizationSchema = generateOrganizationSchema(domain);
+  const { domain, displayName, domainData } = await getCurrentDomainInfo();
 
   if (!domainData) {
     return <div>Domain not found</div>;
   }
 
-  const stats = await getStats(domainData.id);
-  const popularCategories = await getPopularCategories(domainData.id);
-  const featuredCompanies = await getFeaturedCompanies(domainData.id);
+  // Fetch all data in parallel for better performance
+  const [stats, popularCategories, featuredCompanies] = await Promise.all([
+    getStats(domainData.id),
+    getPopularCategories(domainData.id),
+    getFeaturedCompanies(domainData.id),
+  ]);
 
   return (
     <>
