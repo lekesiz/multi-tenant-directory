@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { PhotoLightbox } from './PhotoLightbox';
 
 interface PhotoGalleryProps {
   photos: string[] | null;
@@ -10,7 +11,8 @@ interface PhotoGalleryProps {
 }
 
 export default function PhotoGallery({ photos, companyName, coverImage }: PhotoGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [imageError, setImageError] = useState<{ [key: string]: boolean }>({});
 
   // Combine cover image with other photos if available
@@ -40,7 +42,7 @@ export default function PhotoGallery({ photos, companyName, coverImage }: PhotoG
               className={`relative cursor-pointer overflow-hidden rounded-lg bg-gray-100 ${
                 index === 0 && allPhotos.length > 1 ? 'col-span-2 row-span-2 h-40 sm:h-64' : 'h-20 sm:h-32'
               }`}
-              onClick={() => !imageError[photo] && setSelectedImage(photo)}
+              onClick={() => !imageError[photo] && (setLightboxIndex(index), setLightboxOpen(true))}
             >
               {!imageError[photo] ? (
                 <Image
@@ -68,7 +70,7 @@ export default function PhotoGallery({ photos, companyName, coverImage }: PhotoG
 
         {allPhotos.length > 4 && (
           <button
-            onClick={() => setSelectedImage(allPhotos[0])}
+            onClick={() => (setLightboxIndex(0), setLightboxOpen(true))}
             className="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
             Voir toutes les photos ({allPhotos.length})
@@ -76,68 +78,13 @@ export default function PhotoGallery({ photos, companyName, coverImage }: PhotoG
         )}
       </div>
 
-      {/* Lightbox Modal */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div className="relative max-w-5xl max-h-[90vh] w-full h-full">
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
-            >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <div className="relative w-full h-full flex items-center justify-center">
-              <Image
-                src={selectedImage}
-                alt={`${companyName} - Full size`}
-                width={1200}
-                height={800}
-                className="object-contain"
-                sizes="(max-width: 1200px) 100vw, 1200px"
-              />
-            </div>
-
-            {/* Navigation buttons */}
-            {allPhotos.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const currentIndex = allPhotos.indexOf(selectedImage);
-                    const prevIndex = currentIndex === 0 ? allPhotos.length - 1 : currentIndex - 1;
-                    setSelectedImage(allPhotos[prevIndex]);
-                  }}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
-                >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const currentIndex = allPhotos.indexOf(selectedImage);
-                    const nextIndex = currentIndex === allPhotos.length - 1 ? 0 : currentIndex + 1;
-                    setSelectedImage(allPhotos[nextIndex]);
-                  }}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
-                >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Lightbox */}
+      <PhotoLightbox
+        photos={allPhotos.filter(photo => !imageError[photo])}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </>
   );
 }

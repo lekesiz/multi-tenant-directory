@@ -6,6 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { FormSkeleton } from '@/components/LoadingSkeleton';
+import { NoDataEmptyState } from '@/components/EmptyState';
+import { HelpTooltip } from '@/components/Tooltip';
 
 const DAYS = [
   { id: 'monday', label: 'Lundi' },
@@ -201,19 +204,26 @@ export default function HoursPage() {
 
   if (isFetching) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="max-w-4xl">
+        <div className="h-8 w-64 bg-gray-200 animate-pulse rounded mb-6"></div>
+        <FormSkeleton />
+        <div className="mt-8">
+          <FormSkeleton />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Horaires d'ouverture</h1>
+      <div className="flex items-center gap-2 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Horaires d'ouverture</h1>
+        <HelpTooltip content="Configurez vos horaires d'ouverture réguliers et définissez des horaires spéciaux pour les jours fériés." />
+      </div>
 
       {/* Weekly Schedule */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Horaires hebdomadaires</h2>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-8">
+        <h2 className="text-lg sm:text-xl font-semibold mb-4">Horaires hebdomadaires</h2>
 
         <div className="space-y-4">
           {DAYS.map((day) => {
@@ -300,9 +310,12 @@ export default function HoursPage() {
       </div>
 
       {/* Special Hours */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Horaires spéciaux</h2>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold">Horaires spéciaux</h2>
+            <HelpTooltip content="Définissez des horaires exceptionnels pour les jours fériés, vacances, événements spéciaux, etc." />
+          </div>
           <button
             onClick={() => setShowSpecialHourForm(!showSpecialHourForm)}
             className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -419,11 +432,12 @@ export default function HoursPage() {
         )}
 
         {/* Special Hours List */}
-        {specialHours.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-8">
-            Aucun horaire spécial défini
-          </p>
-        ) : (
+        {specialHours.length === 0 && !showSpecialHourForm ? (
+          <NoDataEmptyState
+            title="Aucun horaire spécial"
+            description="Définissez des horaires exceptionnels pour les jours fériés, vacances ou événements spéciaux."
+          />
+        ) : specialHours.length > 0 ? (
           <div className="space-y-3">
             {specialHours
               .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -463,7 +477,7 @@ export default function HoursPage() {
                 </div>
               ))}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

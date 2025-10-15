@@ -1,14 +1,30 @@
 import Link from 'next/link';
 import { LegalPageLayout } from '@/components/LegalPageLayout';
+import { getCurrentDomainInfo } from '@/lib/queries/domain';
 
-export const metadata = {
-  title: 'Conditions Générales d\'Utilisation - Multi-Tenant Directory',
-  description: 'Conditions générales d\'utilisation du site Multi-Tenant Directory',
-};
+export async function generateMetadata() {
+  const { displayName, domain } = await getCurrentDomainInfo();
+  return {
+    title: `Conditions Générales d'Utilisation - ${displayName}.PRO`,
+    description: `Conditions générales d'utilisation du site ${domain}`,
+    alternates: {
+      canonical: `https://${domain}/cgu`,
+    },
+  };
+}
 
-export default function CGUPage() {
+export default async function CGUPage() {
+  const { domain, displayName, domainData } = await getCurrentDomainInfo();
+  
+  const companyInfo = {
+    name: domainData?.settings?.companyName || 'NETZ FRANCE',
+    address: domainData?.settings?.address || '1 rue de la Paix, 67500 Haguenau',
+    email: `contact@${domain}`,
+    supportEmail: `support@${domain}`,
+    legalForm: domainData?.settings?.legalForm || 'SARL',
+  };
   return (
-    <LegalPageLayout title="Conditions Générales d'Utilisation">
+    <LegalPageLayout title="Conditions Générales d'Utilisation" lastUpdated="15 octobre 2025">
       <div className="space-y-8">
         {/* 1. Objet */}
         <section>
@@ -19,7 +35,7 @@ export default function CGUPage() {
             <p>
               Les présentes Conditions Générales d'Utilisation (ci-après « CGU ») ont pour objet de définir 
               les modalités et conditions d'utilisation des services proposés sur le site internet 
-              accessible à l'adresse [domain].pro (ci-après « le Site »), ainsi que de définir les droits 
+              accessible à l'adresse ${domain} (ci-après « le Site »), ainsi que de définir les droits 
               et obligations des parties dans ce cadre.
             </p>
             <p>
@@ -44,7 +60,7 @@ export default function CGUPage() {
           </h2>
           <div className="text-gray-700 space-y-4">
             <p>
-              Le Site est édité par [À COMPLÉTER - Nom de la société], dont les informations complètes 
+              Le Site est édité par ${companyInfo.name}, dont les informations complètes 
               sont disponibles dans les{' '}
               <Link href="/mentions-legales" className="text-blue-600 hover:underline">
                 Mentions Légales
@@ -176,6 +192,8 @@ export default function CGUPage() {
             <p>
               Les avis doivent être authentiques et basés sur une expérience réelle. 
               Il est interdit de publier de faux avis ou de manipuler les évaluations.
+              Conformément au décret n° 2017-1436 du 29 septembre 2017, nous nous engageons à garantir
+              la transparence et l'authenticité des avis consommateurs.
             </p>
           </div>
         </section>
@@ -366,9 +384,10 @@ export default function CGUPage() {
               vous pouvez nous contacter :
             </p>
             <ul className="list-disc list-inside ml-4 space-y-2">
-              <li>Par email : <a href="mailto:contact@[domain].pro" className="text-blue-600 hover:underline">contact@[domain].pro</a></li>
+              <li>Par email : <a href={`mailto:${companyInfo.email}`} className="text-blue-600 hover:underline">{companyInfo.email}</a></li>
+              <li>Email support : <a href={`mailto:${companyInfo.supportEmail}`} className="text-blue-600 hover:underline">{companyInfo.supportEmail}</a></li>
               <li>Via le formulaire de contact du Site</li>
-              <li>Par courrier : [À COMPLÉTER - Adresse postale]</li>
+              <li>Par courrier : {companyInfo.name}, {companyInfo.address}</li>
             </ul>
           </div>
         </section>

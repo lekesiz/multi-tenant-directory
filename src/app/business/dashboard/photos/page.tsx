@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { PhotoIcon, TrashIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
+import { PhotoGridSkeleton } from '@/components/LoadingSkeleton';
+import { NoPhotosEmptyState } from '@/components/EmptyState';
+import { HelpTooltip } from '@/components/Tooltip';
 
 const MAX_PHOTOS = 50;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -197,19 +200,31 @@ export default function PhotosPage() {
 
   if (isFetching) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="max-w-6xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="h-8 w-48 bg-gray-200 animate-pulse rounded mb-2"></div>
+            <div className="h-4 w-32 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+        </div>
+        <PhotoGridSkeleton count={8} />
       </div>
     );
   }
 
   return (
     <div className="max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Galerie photos</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Galerie photos</h1>
+            <HelpTooltip content="Téléchargez jusqu'à 50 photos de votre entreprise. La première photo sera automatiquement définie comme photo principale." />
+          </div>
           <p className="text-sm text-gray-500 mt-1">
             {photos.length} / {MAX_PHOTOS} photos
+            {photos.length >= MAX_PHOTOS && (
+              <span className="ml-2 text-red-600">(Limite atteinte)</span>
+            )}
           </p>
         </div>
 
@@ -265,13 +280,7 @@ export default function PhotosPage() {
 
       {/* Photos Grid */}
       {photos.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune photo</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Commencez par télécharger vos premières photos
-          </p>
-        </div>
+        <NoPhotosEmptyState onUpload={() => document.getElementById('file-upload')?.click()} />
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {photos.map((photo) => (
