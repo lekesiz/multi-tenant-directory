@@ -14,6 +14,9 @@ import { SocialShareButtons } from '@/components/SocialShareButtons';
 import RelatedCompanies from '@/components/RelatedCompanies';
 import { Metadata } from 'next';
 
+// ISR: Revalidate every 300 seconds (5 minutes)
+export const revalidate = 300;
+
 async function getDomainFromHost(host: string) {
   let domain = host.split(':')[0];
   // www prefix'ini kaldır

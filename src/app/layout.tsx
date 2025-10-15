@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import ToastProvider from "@/components/ToastProvider";
 import CookieBanner from "@/components/CookieBanner";
+import { WebVitals } from "@/components/WebVitals";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
+          <WebVitals />
           <ToastProvider />
           {children}
           <CookieBanner />
