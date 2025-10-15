@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
@@ -200,10 +201,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               {/* Cover Image */}
               {company.coverImageUrl && (
                 <div className="h-48 bg-gray-200 relative">
-                  <img
+                  <Image
                     src={company.coverImageUrl}
                     alt={company.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
                   />
                 </div>
               )}
@@ -212,11 +215,15 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 {/* Logo and Name */}
                 <div className="flex items-start mb-4">
                   {company.logoUrl ? (
-                    <img
-                      src={company.logoUrl}
-                      alt={company.name}
-                      className="w-16 h-16 object-contain mr-4"
-                    />
+                    <div className="relative w-16 h-16 mr-4">
+                      <Image
+                        src={company.logoUrl}
+                        alt={company.name}
+                        fill
+                        sizes="64px"
+                        className="object-contain"
+                      />
+                    </div>
                   ) : (
                     <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xl mr-4">
                       {company.name.charAt(0)}

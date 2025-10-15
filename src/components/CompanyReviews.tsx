@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface Review {
   id: number;
@@ -107,11 +108,15 @@ export default function CompanyReviews({ companyId, companyName }: CompanyReview
             <div key={review.id} className="border-b border-gray-200 pb-6 last:border-0">
               <div className="flex items-start space-x-4">
                 {review.authorPhoto ? (
-                  <img
-                    src={review.authorPhoto}
-                    alt={review.authorName}
-                    className="w-12 h-12 rounded-full"
-                  />
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                    <Image
+                      src={review.authorPhoto}
+                      alt={review.authorName}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                     {review.authorName.charAt(0)}
