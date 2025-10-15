@@ -34,7 +34,7 @@ export async function getCurrentSession(): Promise<AuthContext | null> {
 
     return {
       user: {
-        id: session.user.id || '',
+        id: (session.user as any).id || session.user.email || '',
         email: session.user.email || '',
         name: session.user.name,
         role: (session.user as any).role || Role.USER,
