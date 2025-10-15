@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth-guard';
 
 export async function GET() {
+  // Require admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const pages = await prisma.legalPage.findMany({
       orderBy: { slug: 'asc' },
@@ -18,6 +25,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  // Require admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { slug, title, content, domainId, isActive } = body;

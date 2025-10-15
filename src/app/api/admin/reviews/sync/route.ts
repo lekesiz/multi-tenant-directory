@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { syncCompanyReviews, syncAllCompaniesReviews } from '@/lib/google-places';
+import { requireAdmin } from '@/lib/auth-guard';
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { companyId, syncAll } = body;
