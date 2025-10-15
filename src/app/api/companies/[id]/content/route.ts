@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { setTenantContext, clearTenantContext } from '@/lib/prisma-middleware';
 
-// GET /api/companies/[id]/content - Şirketin tüm domain içeriklerini getir
+// GET /api/companies/[id]/content - Şirketin tüm domain içeriklerini getir (Admin only)
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -10,6 +11,9 @@ export async function GET(
     const { id } = await context.params;
     const companyId = parseInt(id);
 
+    // Set admin context for cross-tenant access
+    setTenantContext('', 'admin');
+
     const contents = await prisma.companyContent.findMany({
       where: { companyId },
       include: {
@@ -17,8 +21,10 @@ export async function GET(
       },
     });
 
+    clearTenantContext();
     return NextResponse.json(contents);
   } catch (error) {
+    clearTenantContext();
     console.error('Error fetching company content:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -27,7 +33,7 @@ export async function GET(
   }
 }
 
-// POST /api/companies/[id]/content - Şirket için domain içeriği oluştur/güncelle
+// POST /api/companies/[id]/content - Şirket için domain içeriği oluştur/güncelle (Admin only)
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -45,6 +51,9 @@ export async function POST(
       metaTitle,
       metaDescription,
     } = body;
+
+    // Set admin context for RLS bypass
+    setTenantContext('', 'admin');
 
     // Upsert: Varsa güncelle, yoksa oluştur
     const content = await prisma.companyContent.upsert({
@@ -74,8 +83,10 @@ export async function POST(
       },
     });
 
+    clearTenantContext();
     return NextResponse.json(content);
   } catch (error) {
+    clearTenantContext();
     console.error('Error creating/updating company content:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

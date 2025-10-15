@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { setTenantContext, clearTenantContext } from '@/lib/prisma-middleware';
 
 // GET /api/companies/[id] - Şirket detayını getir
 export async function GET(
@@ -11,27 +12,27 @@ export async function GET(
     const { id } = await context.params;
     const companyId = parseInt(id);
 
+    // Set tenant context for RLS
+    setTenantContext(domain, 'user');
+
     // Domain'i bul
     const domainRecord = await prisma.domain.findUnique({
       where: { name: domain },
     });
 
     if (!domainRecord) {
+      clearTenantContext();
       return NextResponse.json(
         { error: 'Domain not found' },
         { status: 404 }
       );
     }
 
-    // Şirketi getir
+    // RLS ile şirketi getir - artık otomatik tenant filtrelemesi yapılacak
     const company = await prisma.company.findUnique({
       where: { id: companyId },
       include: {
-        content: {
-          where: {
-            domainId: domainRecord.id,
-          },
-        },
+        content: true, // RLS policies will filter this automatically
         reviews: {
           orderBy: {
             reviewDate: 'desc',
@@ -40,27 +41,18 @@ export async function GET(
       },
     });
 
+    clearTenantContext();
+
     if (!company) {
       return NextResponse.json(
-        { error: 'Company not found' },
+        { error: 'Company not found or not available on this domain' },
         { status: 404 }
-      );
-    }
-
-    // Bu domain'de görünür mü kontrol et
-    const isVisible = company.content.some(
-      (c) => c.domainId === domainRecord.id && c.isVisible
-    );
-
-    if (!isVisible) {
-      return NextResponse.json(
-        { error: 'Company not available on this domain' },
-        { status: 403 }
       );
     }
 
     return NextResponse.json(company);
   } catch (error) {
+    clearTenantContext();
     console.error('Error fetching company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -79,13 +71,18 @@ export async function PUT(
     const companyId = parseInt(id);
     const body = await request.json();
 
+    // Set admin context for RLS bypass
+    setTenantContext('', 'admin');
+
     const company = await prisma.company.update({
       where: { id: companyId },
       data: body,
     });
 
+    clearTenantContext();
     return NextResponse.json(company);
   } catch (error) {
+    clearTenantContext();
     console.error('Error updating company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -103,12 +100,17 @@ export async function DELETE(
     const { id } = await context.params;
     const companyId = parseInt(id);
 
+    // Set admin context for RLS bypass
+    setTenantContext('', 'admin');
+
     await prisma.company.delete({
       where: { id: companyId },
     });
 
+    clearTenantContext();
     return NextResponse.json({ message: 'Company deleted successfully' });
   } catch (error) {
+    clearTenantContext();
     console.error('Error deleting company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
