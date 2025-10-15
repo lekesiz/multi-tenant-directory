@@ -1,17 +1,52 @@
 import { MetadataRoute } from 'next';
+import { headers } from 'next/headers';
 
-export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://multi-tenant-directory.vercel.app';
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const headersList = await headers();
+  const host = headersList.get('host') || 'bas-rhin.pro';
+  
+  // Remove port and www prefix
+  let domain = host.split(':')[0];
+  domain = domain.replace('www.', '');
 
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/api/'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/business/dashboard/',
+          '/auth/',
+          '/_next/',
+          '/private/',
+        ],
+      },
+      // Block AI crawlers
+      {
+        userAgent: 'GPTBot',
+        disallow: '/',
+      },
+      {
+        userAgent: 'CCBot',
+        disallow: '/',
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        disallow: '/',
+      },
+      {
+        userAgent: 'anthropic-ai',
+        disallow: '/',
+      },
+      {
+        userAgent: 'Claude-Web',
+        disallow: '/',
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `https://${domain}/sitemap.xml`,
+    host: `https://${domain}`,
   };
 }
 
