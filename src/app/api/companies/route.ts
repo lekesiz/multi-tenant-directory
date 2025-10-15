@@ -1,32 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { resolveTenant, getDomainId } from '@/lib/api-guard';
+import { requireAdmin } from '@/lib/auth-guard';
 
 // GET /api/companies - Şirketleri listele (domain'e göre filtreleme)
 export async function GET(request: NextRequest) {
   try {
-    const domain = request.headers.get('x-tenant-domain') || '';
+    // Resolve tenant from request
+    const tenant = await resolveTenant(request);
+    if (!tenant) {
+      return NextResponse.json(
+        { error: 'Invalid tenant domain' },
+        { status: 400 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search');
     const category = searchParams.get('category');
-
-    // Domain'i veritabanından bul
-    const domainRecord = await prisma.domain.findUnique({
-      where: { name: domain },
-    });
-
-    if (!domainRecord) {
-      return NextResponse.json(
-        { error: 'Domain not found' },
-        { status: 404 }
-      );
-    }
 
     // Şirketleri getir
     const companies = await prisma.company.findMany({
       where: {
         content: {
           some: {
-            domainId: domainRecord.id,
+            domainId: getDomainId(tenant),
             isVisible: true,
           },
         },
@@ -46,7 +44,7 @@ export async function GET(request: NextRequest) {
       include: {
         content: {
           where: {
-            domainId: domainRecord.id,
+            domainId: getDomainId(tenant),
           },
         },
         reviews: {
@@ -70,6 +68,12 @@ export async function GET(request: NextRequest) {
 
 // POST /api/companies - Yeni şirket ekle (Admin only)
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const {

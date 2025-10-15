@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { resolveTenant, getDomainId } from '@/lib/api-guard';
+import { requireAdmin } from '@/lib/auth-guard';
 
 // GET /api/companies/[id] - Şirket detayını getir
 export async function GET(
@@ -7,21 +9,17 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const domain = request.headers.get('x-tenant-domain') || '';
-    const { id } = await context.params;
-    const companyId = parseInt(id);
-
-    // Domain'i bul
-    const domainRecord = await prisma.domain.findUnique({
-      where: { name: domain },
-    });
-
-    if (!domainRecord) {
+    // Resolve tenant
+    const tenant = await resolveTenant(request);
+    if (!tenant) {
       return NextResponse.json(
-        { error: 'Domain not found' },
-        { status: 404 }
+        { error: 'Invalid tenant domain' },
+        { status: 400 }
       );
     }
+
+    const { id } = await context.params;
+    const companyId = parseInt(id);
 
     // Şirketi getir
     const company = await prisma.company.findUnique({
@@ -29,7 +27,7 @@ export async function GET(
       include: {
         content: {
           where: {
-            domainId: domainRecord.id,
+            domainId: getDomainId(tenant),
           },
         },
         reviews: {
@@ -48,11 +46,11 @@ export async function GET(
     }
 
     // Bu domain'de görünür mü kontrol et
-    const isVisible = company.content.some(
-      (c) => c.domainId === domainRecord.id && c.isVisible
+    const visibleContent = company.content.find(
+      (c) => c.domainId === getDomainId(tenant) && c.isVisible
     );
 
-    if (!isVisible) {
+    if (!visibleContent) {
       return NextResponse.json(
         { error: 'Company not available on this domain' },
         { status: 403 }
@@ -74,6 +72,12 @@ export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  // Require admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { id } = await context.params;
     const companyId = parseInt(id);
@@ -99,6 +103,12 @@ export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  // Require admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { id } = await context.params;
     const companyId = parseInt(id);
