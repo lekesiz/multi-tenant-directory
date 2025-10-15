@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { GooglePlaceResult, GooglePlacesSearchResponse } from '@/types/google-maps';
 
-// Google Places API Text Search
-// NOT: Bu endpoint Google Places API kullanır. API key gereklidir.
+/**
+ * Google Places API Text Search endpoint
+ * Searches for places using Google Places API
+ * @requires GOOGLE_MAPS_API_KEY environment variable
+ */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -28,7 +32,7 @@ export async function GET(request: NextRequest) {
     )}&key=${apiKey}`;
 
     const response = await fetch(url);
-    const data = await response.json();
+    const data = await response.json() as GooglePlacesSearchResponse;
 
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       return NextResponse.json(
@@ -37,8 +41,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Sonuçları basitleştir
-    const results = data.results.map((place: any) => ({
+    // Transform results to simplified format
+    const results = data.results.map((place: GooglePlaceResult) => ({
       placeId: place.place_id,
       name: place.name,
       address: place.formatted_address,

@@ -17,6 +17,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Multi-Tenant Directory Platform",
   description: "Yerel işletmeler için çok kiracılı dizin platformu",
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.svg', type: 'image/svg+xml', sizes: '180x180' },
+    ],
+  },
 };
 
 export default function RootLayout({

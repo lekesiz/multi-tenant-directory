@@ -1,4 +1,5 @@
 import { Company, Review } from '@prisma/client';
+import type { StructuredDataSchema } from '@/types/seo';
 
 /**
  * Schema.org structured data generator for SEO optimization
@@ -66,7 +67,7 @@ export function generateLocalBusinessSchema(
     ? company.reviews.reduce((sum, review) => sum + review.rating, 0) / company.reviews.length
     : undefined;
 
-  const schema: any = {
+  const schema: StructuredDataSchema = {
     '@context': 'https://schema.org',
     '@type': ['LocalBusiness', 'Organization'],
     name: company.name,
@@ -275,7 +276,7 @@ export function generateFAQPageSchema(company: Company & { content?: Array<{ cus
  * Generate complete structured data for a page
  */
 export function generatePageStructuredData(props: StructuredDataProps) {
-  const schemas: any[] = [];
+  const schemas: StructuredDataSchema[] = [];
 
   // Always include WebSite schema
   schemas.push(generateWebSiteSchema(props.domain));
@@ -315,7 +316,7 @@ export function generatePageStructuredData(props: StructuredDataProps) {
 /**
  * Convert structured data to JSON-LD script tag content
  */
-export function structuredDataToJsonLd(schemas: any[]): string {
+export function structuredDataToJsonLd(schemas: StructuredDataSchema[]): string {
   if (schemas.length === 1) {
     return JSON.stringify(schemas[0], null, 2);
   }

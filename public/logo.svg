@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
+  <!-- Background shape -->
+  <rect x="5" y="5" width="50" height="50" rx="8" fill="#2563EB"/>
+
+  <!-- Directory icon -->
+  <rect x="12" y="15" width="16" height="3" rx="1" fill="#60A5FA"/>
+  <rect x="12" y="22" width="16" height="3" rx="1" fill="#60A5FA"/>
+  <rect x="12" y="29" width="16" height="3" rx="1" fill="#60A5FA"/>
+  <rect x="12" y="36" width="16" height="3" rx="1" fill="#60A5FA"/>
+
+  <rect x="32" y="15" width="16" height="3" rx="1" fill="#93C5FD"/>
+  <rect x="32" y="22" width="16" height="3" rx="1" fill="#93C5FD"/>
+  <rect x="32" y="29" width="16" height="3" rx="1" fill="#93C5FD"/>
+  <rect x="32" y="36" width="16" height="3" rx="1" fill="#93C5FD"/>
+
+  <!-- Dots -->
+  <circle cx="10" cy="16.5" r="1.5" fill="#DBEAFE"/>
+  <circle cx="10" cy="23.5" r="1.5" fill="#DBEAFE"/>
+  <circle cx="10" cy="30.5" r="1.5" fill="#DBEAFE"/>
+  <circle cx="10" cy="37.5" r="1.5" fill="#DBEAFE"/>
+
+  <!-- Text -->
+  <text x="65" y="35" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1F2937">
+    Directory
+  </text>
+  <text x="65" y="50" font-family="Arial, sans-serif" font-size="12" fill="#6B7280">
+    Multi-Tenant Platform
+  </text>
+</svg>
