@@ -10,6 +10,8 @@ import BusinessHours from '@/components/BusinessHours';
 import PhotoGallery from '@/components/PhotoGallery';
 import SocialLinks from '@/components/SocialLinks';
 import ContactForm from '@/components/ContactForm';
+import { SocialShareButtons } from '@/components/SocialShareButtons';
+import RelatedCompanies from '@/components/RelatedCompanies';
 import { Metadata } from 'next';
 
 async function getDomainFromHost(host: string) {
@@ -151,6 +153,44 @@ export default async function CompanyDetailPage({
 
   const content = company.content[0];
 
+  // Get related companies (same category and city, excluding current company)
+  const relatedCompanies = await prisma.company.findMany({
+    where: {
+      AND: [
+        { id: { not: company.id } },
+        {
+          OR: [
+            { categories: { hasSome: company.categories } },
+            { city: company.city },
+          ],
+        },
+        {
+          content: {
+            some: {
+              domainId: currentDomain.id,
+              isVisible: true,
+            },
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      city: true,
+      logoUrl: true,
+      categories: true,
+      rating: true,
+      reviewCount: true,
+    },
+    take: 6,
+    orderBy: [
+      { rating: 'desc' },
+      { reviewCount: 'desc' },
+    ],
+  });
+
   // Calculate average rating
   const avgRating =
     company.reviews.length > 0
@@ -241,6 +281,18 @@ export default async function CompanyDetailPage({
                     </p>
                   </div>
                 )}
+              </div>
+
+              {/* Share Buttons */}
+              <div className="flex items-center justify-between py-4 border-y border-gray-200 mb-6">
+                <div className="text-sm text-gray-600">
+                  Partager cette entreprise
+                </div>
+                <SocialShareButtons
+                  url={`https://${currentDomain.name}/companies/${company.slug}`}
+                  title={company.name}
+                  description={content?.customDescription || `Découvrez ${company.name} à ${company.city}`}
+                />
               </div>
 
               {/* Custom Description */}
@@ -449,6 +501,15 @@ export default async function CompanyDetailPage({
                   address={company.address ? `${company.address}, ${company.postalCode} ${company.city}` : undefined}
                 />
               </div>
+            )}
+
+            {/* Related Companies */}
+            {relatedCompanies.length > 0 && (
+              <RelatedCompanies
+                companies={relatedCompanies}
+                currentCompanyId={company.id}
+                category={company.categories[0]}
+              />
             )}
           </div>
         </div>

@@ -126,10 +126,17 @@ model Review {
   source       String   @default("manual") // "google" veya "manual"
   reviewDate   DateTime @default(now())
   isApproved   Boolean  @default(true)
+  isVerified   Boolean  @default(false) // Verified purchase badge
+  verifiedAt   DateTime?
+  verifiedBy   String?  // BusinessOwner ID who verified
+  helpfulCount Int      @default(0) // Count of helpful votes
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  reply        ReviewReply?
+  votes        ReviewVote[]
+  reports      ReviewReport[]
 
   @@index([companyId, isApproved, reviewDate(sort: Desc)])
   @@index([isApproved, createdAt(sort: Desc)])
@@ -181,12 +188,22 @@ model BusinessOwner {
   phone         String?
   emailVerified DateTime?
   phoneVerified DateTime?
+  
+  // Email preferences
+  emailNewReview       Boolean  @default(true)  // Receive email on new review
+  emailReviewReply     Boolean  @default(true)  // Receive email when someone replies to their review
+  emailWeeklyDigest    Boolean  @default(false) // Weekly summary email
+  emailMarketing       Boolean  @default(false) // Marketing and promotional emails
+  unsubscribeToken     String   @unique @default(cuid())
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   companies     CompanyOwnership[]
+  reviewReplies ReviewReply[]
 
   @@index([email])
+  @@index([unsubscribeToken])
   @@map("business_owners")
 }
 
@@ -280,4 +297,58 @@ model CompanyAnalytics {
   @@unique([companyId, date])
   @@index([companyId, date(sort: Desc)])
   @@map("company_analytics")
+}
+
+// Review Reply model - Business owners can reply to reviews
+model ReviewReply {
+  id          Int      @id @default(autoincrement())
+  reviewId    Int      @unique
+  ownerId     String   // BusinessOwner ID
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  owner       BusinessOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@index([ownerId])
+  @@map("review_replies")
+}
+
+// Review Vote model - Users can vote reviews as helpful
+model ReviewVote {
+  id          Int      @id @default(autoincrement())
+  reviewId    Int
+  voterIp     String   // IP address to prevent duplicates
+  voterSession String? // Session ID for additional tracking
+  isHelpful   Boolean  // true = helpful, false = not helpful
+  createdAt   DateTime @default(now())
+
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, voterIp])
+  @@index([reviewId])
+  @@index([voterIp])
+  @@map("review_votes")
+}
+
+// Review Report model - Users can report inappropriate reviews
+model ReviewReport {
+  id          Int      @id @default(autoincrement())
+  reviewId    Int
+  reporterIp  String   // IP address
+  reason      String   // spam, offensive, fake, other
+  description String?  @db.Text
+  status      String   @default("pending") // pending, reviewed, resolved, dismissed
+  reviewedAt  DateTime?
+  reviewedBy  String?  // Admin user ID
+  createdAt   DateTime @default(now())
+
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("review_reports")
 }
