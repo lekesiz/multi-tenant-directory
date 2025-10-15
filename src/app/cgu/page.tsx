@@ -46,6 +46,7 @@ export default async function CGUPage() {
               <li>La publication et consultation d'avis clients</li>
               <li>La gestion d'un espace professionnel pour les entreprises</li>
               <li>La mise en relation entre clients et professionnels</li>
+              <li>Un service multi-domaines couvrant plusieurs villes et régions</li>
             </ul>
             <p>
               L'accès et l'utilisation du Site impliquent l'acceptation sans réserve des présentes CGU.
