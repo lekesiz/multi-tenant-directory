@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { getCategoryIcon } from '@/lib/category-icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -144,13 +145,16 @@ export default async function CategoriesPage() {
                 href={`/categories/${encodeURIComponent(item.category)}`}
                 className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 flex items-center justify-between group"
               >
-                <div className="flex-1">
+                <div className="flex items-center flex-1">
+                  <div className="text-4xl mr-4">{getCategoryIcon(item.category)}</div>
+                  <div>
                   <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                     {item.category}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {item.count} professionnel{item.count > 1 ? 's' : ''}
-                  </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {item.count} professionnel{item.count > 1 ? 's' : ''}
+                    </p>
+                  </div>
                 </div>
                 <svg
                   className="w-6 h-6 text-gray-400 group-hover:text-blue-600 transition-colors"
