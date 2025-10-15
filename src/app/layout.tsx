@@ -16,8 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Multi-Tenant Directory Platform",
-  description: "Yerel işletmeler için çok kiracılı dizin platformu",
+  title: {
+    template: '%s',
+    default: 'Annuaire des Professionnels',
+  },
+  description: "Plateforme d'annuaire multi-domaines pour les entreprises locales",
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -34,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="fr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
