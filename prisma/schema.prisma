@@ -49,7 +49,7 @@ model Company {
   website        String?
   latitude       Float?
   longitude      Float?
-  businessHours  Json?     // Çalışma saatleri
+  businessHours  Json?     // Çalışma saatleri (deprecated - use BusinessHours model)
   categories     String[]  // İş kategorileri
   logoUrl        String?
   coverImageUrl  String?
@@ -61,6 +61,10 @@ model Company {
 
   content        CompanyContent[]
   reviews        Review[]
+  ownerships     CompanyOwnership[]
+  photos         Photo[]
+  hours          BusinessHours?
+  analytics      CompanyAnalytics[]
 
   @@index([slug])
   @@index([city])
@@ -165,4 +169,115 @@ model LegalPage {
   @@index([slug, isActive])
   @@index([domainId, isActive])
   @@map("legal_pages")
+}
+
+// İşletme Sahipleri (Business Owners Dashboard)
+model BusinessOwner {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String   // Hashed with bcrypt
+  firstName     String?
+  lastName      String?
+  phone         String?
+  emailVerified DateTime?
+  phoneVerified DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  companies     CompanyOwnership[]
+
+  @@index([email])
+  @@map("business_owners")
+}
+
+// Şirket Sahipliği (Çoktan Çoğa İlişki)
+model CompanyOwnership {
+  id          String   @id @default(cuid())
+  companyId   Int
+  ownerId     String
+  role        String   @default("owner") // owner, manager, editor
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  owner       BusinessOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, ownerId])
+  @@index([ownerId])
+  @@index([companyId])
+  @@map("company_ownerships")
+}
+
+// Fotoğraf Galerisi
+model Photo {
+  id          String   @id @default(cuid())
+  companyId   Int
+  url         String   // Vercel Blob URL
+  thumbnail   String?  // Thumbnail URL
+  caption     String?
+  order       Int      @default(0)
+  type        String   @default("gallery") // logo, cover, gallery, interior, product
+  isPrimary   Boolean  @default(false)
+  uploadedBy  String?  // BusinessOwner ID
+  createdAt   DateTime @default(now())
+
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, order])
+  @@index([companyId, type])
+  @@map("photos")
+}
+
+// Çalışma Saatleri
+model BusinessHours {
+  id          String   @id @default(cuid())
+  companyId   Int      @unique
+
+  // Weekly hours (JSON format)
+  monday      Json?    // { open: "09:00", close: "18:00", closed: false }
+  tuesday     Json?
+  wednesday   Json?
+  thursday    Json?
+  friday      Json?
+  saturday    Json?
+  sunday      Json?
+
+  // Special hours (holidays, etc.)
+  specialHours Json?   // [{ date: "2025-12-25", closed: true, note: "Noël" }]
+
+  timezone    String   @default("Europe/Paris")
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("business_hours")
+}
+
+// Şirket İstatistikleri (Analytics)
+model CompanyAnalytics {
+  id              String   @id @default(cuid())
+  companyId       Int
+  date            DateTime @default(now()) @db.Date
+
+  // View metrics
+  profileViews    Int      @default(0)
+  uniqueVisitors  Int      @default(0)
+
+  // Click metrics
+  phoneClicks     Int      @default(0)
+  websiteClicks   Int      @default(0)
+  emailClicks     Int      @default(0)
+  directionsClicks Int     @default(0)
+
+  // Source metrics
+  sourceOrganic   Int      @default(0)
+  sourceSearch    Int      @default(0)
+  sourceDirect    Int      @default(0)
+  sourceReferral  Int      @default(0)
+
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date])
+  @@index([companyId, date(sort: Desc)])
+  @@map("company_analytics")
 }
