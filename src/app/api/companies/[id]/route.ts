@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { setTenantContext, clearTenantContext } from '@/lib/prisma-middleware';
+import { upstashApiRateLimit, upstashCompanyRateLimit, checkUpstashConfig } from '@/lib/upstash-rate-limit';
+import { apiRateLimit } from '@/lib/rate-limit';
 
 // GET /api/companies/[id] - Şirket detayını getir
 export async function GET(
@@ -8,6 +10,15 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Apply rate limiting
+    const rateLimitResponse = checkUpstashConfig() 
+      ? await upstashApiRateLimit(request)
+      : await apiRateLimit(request);
+    
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     const domain = request.headers.get('x-tenant-domain') || '';
     const { id } = await context.params;
     const companyId = parseInt(id);
@@ -67,6 +78,15 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Apply stricter rate limiting for modifications
+    const rateLimitResponse = checkUpstashConfig() 
+      ? await upstashCompanyRateLimit(request)
+      : await apiRateLimit(request);
+    
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     const { id } = await context.params;
     const companyId = parseInt(id);
     const body = await request.json();
@@ -97,6 +117,15 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Apply stricter rate limiting for deletions
+    const rateLimitResponse = checkUpstashConfig() 
+      ? await upstashCompanyRateLimit(request)
+      : await apiRateLimit(request);
+    
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     const { id } = await context.params;
     const companyId = parseInt(id);
 

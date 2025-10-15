@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { upstashMapsRateLimit, checkUpstashConfig } from '@/lib/upstash-rate-limit';
+import { apiRateLimit } from '@/lib/rate-limit';
 
 // Google Places API Place Details
 export async function GET(
@@ -6,6 +8,15 @@ export async function GET(
   context: { params: Promise<{ placeId: string }> }
 ) {
   try {
+    // Apply rate limiting - use Upstash if configured, fallback to in-memory
+    const rateLimitResponse = checkUpstashConfig() 
+      ? await upstashMapsRateLimit(request)
+      : await apiRateLimit(request);
+    
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     const { placeId } = await context.params;
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 

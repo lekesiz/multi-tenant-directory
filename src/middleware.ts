@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { upstashAuthRateLimit, upstashApiRateLimit, checkUpstashConfig } from '@/lib/upstash-rate-limit';
+import { strictRateLimit, apiRateLimit } from '@/lib/rate-limit';
 
 // Desteklenen domain'ler - 20 domain
 const SUPPORTED_DOMAINS = [
@@ -26,9 +28,33 @@ const SUPPORTED_DOMAINS = [
   'localhost:3000', // Development için
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const url = request.nextUrl;
+
+  // Rate limiting kontrolü
+  if (url.pathname.startsWith('/api')) {
+    // Auth endpoints için stricter rate limiting
+    if (url.pathname.startsWith('/api/auth')) {
+      const rateLimitResponse = checkUpstashConfig() 
+        ? await upstashAuthRateLimit(request)
+        : await strictRateLimit(request);
+      
+      if (rateLimitResponse) {
+        return rateLimitResponse;
+      }
+    } 
+    // Diğer API endpoints için genel rate limiting
+    else {
+      const rateLimitResponse = checkUpstashConfig() 
+        ? await upstashApiRateLimit(request)
+        : await apiRateLimit(request);
+      
+      if (rateLimitResponse) {
+        return rateLimitResponse;
+      }
+    }
+  }
 
   // Vercel deployment URL'lerini kabul et
   const isVercelDomain = hostname.includes('.vercel.app');
