@@ -14,7 +14,7 @@ export default function PhotoGallery({ photos, companyName, coverImage }: PhotoG
   const [imageError, setImageError] = useState<{ [key: string]: boolean }>({});
 
   // Combine cover image with other photos if available
-  const allPhotos = [];
+  const allPhotos: string[] = [];
   if (coverImage) allPhotos.push(coverImage);
   if (photos && photos.length > 0) allPhotos.push(...photos);
 

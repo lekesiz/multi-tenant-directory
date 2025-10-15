@@ -161,7 +161,7 @@ export async function POST(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid photo data', details: error.errors },
+        { error: 'Invalid photo data', details: error.issues },
         { status: 400 }
       );
     }

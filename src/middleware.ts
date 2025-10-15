@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { addSecurityHeaders } from './middleware/security';
+import { getToken } from 'next-auth/jwt';
 
 // Desteklenen domain'ler - 20 domain
 const SUPPORTED_DOMAINS = [
@@ -27,7 +28,7 @@ const SUPPORTED_DOMAINS = [
   'localhost:3000', // Development için
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const url = request.nextUrl;
 
@@ -38,6 +39,21 @@ export function middleware(request: NextRequest) {
   // Eğer desteklenmeyen bir domain ise ve Vercel domain'i de değilse hata göster
   if (!isSupportedDomain && !isVercelDomain) {
     return new NextResponse('Domain not found', { status: 404 });
+  }
+
+  // Protected routes - Dashboard authentication check
+  if (url.pathname.startsWith('/dashboard')) {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    if (!token) {
+      // Redirect to login with callback URL
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', url.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   // Admin panel kontrolü - bas-rhin.pro/admin veya localhost:3000/admin

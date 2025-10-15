@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { authOptions } from '@/lib/auth-config';
+import { authOptions } from '@/lib/auth';
 
 export enum Role {
   SUPER_ADMIN = 'SUPER_ADMIN',

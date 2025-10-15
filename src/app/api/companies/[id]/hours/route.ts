@@ -121,26 +121,26 @@ export async function PUT(
     const businessHours = await prisma.businessHours.upsert({
       where: { companyId },
       update: {
-        monday: validatedData.monday,
-        tuesday: validatedData.tuesday,
-        wednesday: validatedData.wednesday,
-        thursday: validatedData.thursday,
-        friday: validatedData.friday,
-        saturday: validatedData.saturday,
-        sunday: validatedData.sunday,
-        specialHours: validatedData.specialHours,
+        monday: validatedData.monday || undefined,
+        tuesday: validatedData.tuesday || undefined,
+        wednesday: validatedData.wednesday || undefined,
+        thursday: validatedData.thursday || undefined,
+        friday: validatedData.friday || undefined,
+        saturday: validatedData.saturday || undefined,
+        sunday: validatedData.sunday || undefined,
+        specialHours: validatedData.specialHours || undefined,
         timezone: validatedData.timezone,
       },
       create: {
         companyId,
-        monday: validatedData.monday,
-        tuesday: validatedData.tuesday,
-        wednesday: validatedData.wednesday,
-        thursday: validatedData.thursday,
-        friday: validatedData.friday,
-        saturday: validatedData.saturday,
-        sunday: validatedData.sunday,
-        specialHours: validatedData.specialHours,
+        monday: validatedData.monday || undefined,
+        tuesday: validatedData.tuesday || undefined,
+        wednesday: validatedData.wednesday || undefined,
+        thursday: validatedData.thursday || undefined,
+        friday: validatedData.friday || undefined,
+        saturday: validatedData.saturday || undefined,
+        sunday: validatedData.sunday || undefined,
+        specialHours: validatedData.specialHours || undefined,
         timezone: validatedData.timezone,
       },
     });
@@ -154,7 +154,7 @@ export async function PUT(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid business hours data', details: error.errors },
+        { error: 'Invalid business hours data', details: error.issues },
         { status: 400 }
       );
     }

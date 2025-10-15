@@ -100,7 +100,7 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
     throw new Error('Invalid environment variables');
   }
 
-  env = new Proxy(parsed.data, {
+  env = new Proxy(parsed.data as any, {
     get(target, prop) {
       if (typeof prop !== "string") return undefined;
       // Throw a descriptive error if a server-side env var is accessed on the client

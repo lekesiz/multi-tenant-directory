@@ -71,7 +71,7 @@ export async function generateMetadata({
     // Build SEO-optimized title with category
     const categoryText = company.categories.length > 0 ? ` - ${company.categories[0]}` : '';
     const title = `${company.name}${categoryText} à ${company.city} | ${currentDomain.name}`;
-    const description = content?.customDescription || company.description || `Découvrez ${company.name} à ${company.city}. ${company.reviews.length} avis clients.`;
+    const description = content?.customDescription || company.address || `Découvrez ${company.name} à ${company.city}. ${company.reviews.length} avis clients.`;
 
     return {
       title,

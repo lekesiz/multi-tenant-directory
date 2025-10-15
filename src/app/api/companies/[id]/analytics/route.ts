@@ -127,7 +127,7 @@ export async function GET(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid date range', details: error.errors },
+        { error: 'Invalid date range', details: error.issues },
         { status: 400 }
       );
     }

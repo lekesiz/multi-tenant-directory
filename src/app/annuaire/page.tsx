@@ -134,7 +134,6 @@ export default async function AnnuairePage({
       content: {
         some: {
           domainId: currentDomain.id,
-          isVisible: true,
         },
       },
     };
@@ -181,13 +180,11 @@ export default async function AnnuairePage({
         content: {
           where: {
             domainId: currentDomain.id,
-            isVisible: true,
           },
         },
         reviews: {
           where: {
             isApproved: true,
-            isVisible: true,
           },
           select: {
             rating: true,
@@ -198,7 +195,6 @@ export default async function AnnuairePage({
             reviews: {
               where: {
                 isApproved: true,
-                isVisible: true,
               },
             },
           },
@@ -215,7 +211,6 @@ export default async function AnnuairePage({
         content: {
           some: {
             domainId: currentDomain.id,
-            isVisible: true,
           },
         },
       },

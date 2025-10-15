@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid query parameters', details: error.errors },
+        { error: 'Invalid query parameters', details: error.issues },
         { status: 400 }
       );
     }
