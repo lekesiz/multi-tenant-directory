@@ -1,0 +1,17 @@
+# Resend API Key
+
+**API Key:** re_j299ogpf_EEAKZAoLJArch69r5tXmjVPs
+
+**Status:** ✅ Received from user
+
+**Action Required:**
+Add to Vercel environment variables:
+1. Go to: https://vercel.com/lekesizs-projects/multi-tenant-directory/settings/environment-variables
+2. Add new variable:
+   - Name: RESEND_API_KEY
+   - Value: re_j299ogpf_EEAKZAoLJArch69r5tXmjVPs
+   - Environment: Production, Preview, Development
+3. Redeploy or wait for auto-deploy
+
+**Date:** 16 Octobre 2025, 03:00 GMT+2
+
