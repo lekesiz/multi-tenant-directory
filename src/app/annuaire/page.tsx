@@ -8,7 +8,8 @@ import Pagination from '@/components/Pagination';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 import StructuredData from '@/components/StructuredData';
 
-export const dynamic = 'force-dynamic';
+// ISR: Revalidate every 120 seconds (2 minutes)
+export const revalidate = 120;
 
 const RESULTS_PER_PAGE = 12;
 
