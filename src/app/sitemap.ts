@@ -1,13 +1,29 @@
 import { MetadataRoute } from 'next';
-import { prisma } from '@/lib/prisma';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Get all domains
-  const domains = await prisma.domain.findMany({
-    select: {
-      name: true,
-    },
-  });
+  // Static domains list to avoid database access during build
+  const domains = [
+    { name: 'bas-rhin.pro' },
+    { name: 'bischwiller.pro' },
+    { name: 'bouxwiller.pro' },
+    { name: 'brumath.pro' },
+    { name: 'erstein.pro' },
+    { name: 'geispolsheim.pro' },
+    { name: 'haguenau.pro' },
+    { name: 'hoerdt.pro' },
+    { name: 'illkirch.pro' },
+    { name: 'ingwiller.pro' },
+    { name: 'ittenheim.pro' },
+    { name: 'ostwald.pro' },
+    { name: 'saverne.pro' },
+    { name: 'schiltigheim.pro' },
+    { name: 'schweighouse.pro' },
+    { name: 'souffelweyersheim.pro' },
+    { name: 'soufflenheim.pro' },
+    { name: 'vendenheim.pro' },
+    { name: 'wissembourg.pro' },
+    { name: 'mutzig.pro' }
+  ];
 
   const sitemap: MetadataRoute.Sitemap = [];
 
