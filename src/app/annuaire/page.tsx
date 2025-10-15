@@ -6,6 +6,7 @@ import Image from 'next/image';
 import FilterBar from '@/components/FilterBar';
 import Pagination from '@/components/Pagination';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
+import StructuredData from '@/components/StructuredData';
 
 export const dynamic = 'force-dynamic';
 
@@ -244,7 +245,17 @@ export default async function AnnuairePage({
   const itemListSchema = generateItemListSchema(companies, currentDomain.name);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <StructuredData
+        domain={currentDomain.name}
+        type="directory"
+        companies={companies}
+        breadcrumbs={[
+          { name: 'Accueil', url: `https://${currentDomain.name}` },
+          { name: 'Annuaire', url: `https://${currentDomain.name}/annuaire` }
+        ]}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -486,13 +497,8 @@ export default async function AnnuairePage({
           __html: JSON.stringify(breadcrumbSchema),
         }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(itemListSchema),
-        }}
-      />
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -3,6 +3,7 @@ import ReviewCard from "@/components/ReviewCard";
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import StructuredData from '@/components/StructuredData';
 
 async function getDomainFromHost(host: string) {
   let domain = host.split(':')[0];
@@ -67,7 +68,21 @@ export default async function CompanyDetailPage({
       : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <StructuredData
+        domain={currentDomain.name}
+        type="company"
+        company={{
+          ...company,
+          _count: { reviews: company.reviews.length }
+        }}
+        breadcrumbs={[
+          { name: 'Accueil', url: `https://${currentDomain.name}` },
+          { name: 'Annuaire', url: `https://${currentDomain.name}/annuaire` },
+          { name: company.name, url: `https://${currentDomain.name}/companies/${company.slug}` }
+        ]}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -359,6 +374,7 @@ export default async function CompanyDetailPage({
         </div>
       </div>
     </div>
+    </>
   );
 }
 

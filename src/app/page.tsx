@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { generateMetaTags, generateOrganizationSchema } from '@/lib/seo';
 import { prisma } from '@/lib/prisma';
+import StructuredData from '@/components/StructuredData';
 
 export const dynamic = 'force-dynamic';
 
@@ -242,7 +243,15 @@ export default async function Home() {
   const featuredCompanies = await getFeaturedCompanies(domainData.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <>
+      <StructuredData
+        domain={domain}
+        type="homepage"
+        breadcrumbs={[
+          { name: 'Accueil', url: `https://${domain}` }
+        ]}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -713,13 +722,8 @@ export default async function Home() {
       </footer>
 
       {/* Structured Data (JSON-LD) */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema),
-        }}
-      />
-    </div>
+      </div>
+    </>
   );
 }
 

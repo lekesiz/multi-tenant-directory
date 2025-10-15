@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
+import StructuredData from '@/components/StructuredData';
 
 export const dynamic = 'force-dynamic';
 
@@ -128,7 +129,19 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const itemListSchema = generateItemListSchema(companies, domain);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <StructuredData
+        domain={domain}
+        type="category"
+        categoryName={decodedCategory}
+        companies={companies}
+        breadcrumbs={[
+          { name: 'Accueil', url: `https://${domain}` },
+          { name: 'Annuaire', url: `https://${domain}/annuaire` },
+          { name: decodedCategory, url: `https://${domain}/categories/${category}` }
+        ]}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -347,13 +360,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           __html: JSON.stringify(breadcrumbSchema),
         }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(itemListSchema),
-        }}
-      />
-    </div>
+      </div>
+    </>
   );
 }
 
