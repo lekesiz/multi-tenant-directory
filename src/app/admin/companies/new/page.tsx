@@ -49,10 +49,10 @@ export default function NewCompanyPage() {
       if (data.results) {
         setSearchResults(data.results);
       } else {
-        setError('Sonuç bulunamadı');
+        setError('Aucun résultat trouvé');
       }
     } catch (err) {
-      setError('Arama sırasında bir hata oluştu');
+      setError('Une erreur s\'est produite lors de la recherche');
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function NewCompanyPage() {
       });
       setStep('details');
     } catch (err) {
-      setError('İşletme bilgileri alınamadı');
+      setError('Impossible de récupérer les informations de l\'entreprise');
     } finally {
       setLoading(false);
     }
@@ -110,10 +110,10 @@ export default function NewCompanyPage() {
       if (response.ok) {
         router.push('/admin/companies');
       } else {
-        setError('Şirket eklenirken bir hata oluştu');
+        setError('Une erreur s\'est produite lors de l\'ajout de l\'entreprise');
       }
     } catch (err) {
-      setError('Bir hata oluştu. Lütfen tekrar deneyin.');
+      setError('Une erreur s\'est produite. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -125,17 +125,17 @@ export default function NewCompanyPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Yeni Şirket Ekle
+              Ajouter une Entreprise
             </h1>
             <p className="text-gray-600 mt-2">
-              Google Maps'ten arayarak veya manuel olarak şirket ekleyin
+              Recherchez via Google Maps ou ajoutez manuellement
             </p>
           </div>
           <Link
             href="/admin/companies"
             className="text-gray-600 hover:text-gray-900"
           >
-            ← Geri Dön
+            ← Retour
           </Link>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function NewCompanyPage() {
         <div className="max-w-3xl">
           <div className="bg-white rounded-lg shadow p-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6">
-              Nasıl eklemek istersiniz?
+              Comment souhaitez-vous ajouter?
             </h2>
 
             <div className="space-y-4">
@@ -168,10 +168,10 @@ export default function NewCompanyPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 mb-2">
-                      Google Maps'ten Ara (Önerilen)
+                      Rechercher sur Google Maps (Recommandé)
                     </h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      İşletme bilgilerini otomatik olarak çek
+                      Récupérer automatiquement les informations
                     </p>
                     <div className="flex gap-2">
                       <input
@@ -181,7 +181,7 @@ export default function NewCompanyPage() {
                         onKeyPress={(e) =>
                           e.key === 'Enter' && handleGoogleSearch()
                         }
-                        placeholder="İşletme adı veya adres..."
+                        placeholder="Nom de l'entreprise ou adresse..."
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       />
                       <button
@@ -189,7 +189,7 @@ export default function NewCompanyPage() {
                         disabled={loading}
                         className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                       >
-                        {loading ? 'Aranıyor...' : 'Ara'}
+                        {loading ? 'Recherche...' : 'Rechercher'}
                       </button>
                     </div>
 
@@ -214,7 +214,7 @@ export default function NewCompanyPage() {
                             {place.rating && (
                               <div className="text-sm text-yellow-600 mt-1">
                                 ⭐ {place.rating} ({place.userRatingsTotal}{' '}
-                                yorum)
+                                avis)
                               </div>
                             )}
                           </button>
@@ -248,10 +248,10 @@ export default function NewCompanyPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">
-                      Manuel Giriş
+                      Saisie Manuelle
                     </h3>
                     <p className="text-sm text-gray-600">
-                      Tüm bilgileri kendiniz girin
+                      Entrez toutes les informations vous-même
                     </p>
                   </div>
                 </div>
@@ -265,14 +265,14 @@ export default function NewCompanyPage() {
         <div className="max-w-4xl">
           <div className="bg-white rounded-lg shadow p-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6">
-              Şirket Bilgileri
+              Informations de l'Entreprise
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Şirket Adı *
+                    Nom de l'Entreprise *
                   </label>
                   <input
                     type="text"
@@ -302,7 +302,7 @@ export default function NewCompanyPage() {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Adres
+                    Adresse
                   </label>
                   <input
                     type="text"
@@ -316,7 +316,7 @@ export default function NewCompanyPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Şehir
+                    Ville
                   </label>
                   <input
                     type="text"
@@ -330,7 +330,7 @@ export default function NewCompanyPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Posta Kodu
+                    Code Postal
                   </label>
                   <input
                     type="text"
@@ -344,7 +344,7 @@ export default function NewCompanyPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Telefon
+                    Téléphone
                   </label>
                   <input
                     type="tel"
@@ -397,14 +397,14 @@ export default function NewCompanyPage() {
                   onClick={() => setStep('search')}
                   className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Geri
+                  Retour
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
                   className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'Kaydediliyor...' : 'Şirketi Kaydet'}
+                  {loading ? 'Enregistrement...' : 'Enregistrer l\'Entreprise'}
                 </button>
               </div>
             </form>
