@@ -33,9 +33,9 @@ export default async function AdminCompaniesPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Şirketler</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Entreprises</h1>
           <p className="text-gray-600 mt-2">
-            Tüm şirketleri görüntüleyin ve yönetin
+            Visualisez et gérez toutes les entreprises
           </p>
         </div>
         <div className="flex gap-3">
@@ -57,7 +57,7 @@ export default async function AdminCompaniesPage() {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Yeni Şirket
+            Nouvelle entreprise
           </Link>
         </div>
       </div>
@@ -67,16 +67,16 @@ export default async function AdminCompaniesPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Şirket
+                Entreprise
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Domain'ler
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Yorumlar
+                Avis
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                İşlemler
+                Actions
               </th>
             </tr>
           </thead>
@@ -102,7 +102,7 @@ export default async function AdminCompaniesPage() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm text-gray-900">
-                    {company._count.reviews} yorum
+                    {company._count.reviews} avis
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right text-sm font-medium">
@@ -110,7 +110,7 @@ export default async function AdminCompaniesPage() {
                     href={`/admin/companies/${company.id}`}
                     className="text-blue-600 hover:text-blue-900 mr-4"
                   >
-                    Düzenle
+                    Modifier
                   </Link>
                 </td>
               </tr>

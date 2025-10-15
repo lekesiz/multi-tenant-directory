@@ -147,7 +147,7 @@ export default async function AdminDashboard() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Toplam Şirket</p>
+              <p className="text-sm text-gray-600">Total Entreprises</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {stats.totalCompanies}
               </p>
@@ -205,15 +205,14 @@ export default async function AdminDashboard() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Toplam Yorum</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
+               <p className="text-sm text-gray-600">Total Avis</p>>              <p className="text-3xl font-bold text-gray-900 mt-2">
                 {stats.totalReviews}
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 {stats.totalCompanies > 0
                   ? (stats.totalReviews / stats.totalCompanies).toFixed(1)
                   : 0}{' '}
-                ortalama/şirket
+                moyenne/entreprise
               </p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-lg">
@@ -237,12 +236,12 @@ export default async function AdminDashboard() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Ortalama Puan</p>
+              <p className="text-sm text-gray-600">Note Moyenne</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {stats.avgRating > 0 ? stats.avgRating.toFixed(1) : '-'}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                {stats.totalReviews > 0 ? '⭐ 5 üzerinden' : 'Henüz yorum yok'}
+                {stats.totalReviews > 0 ? '⭐ sur 5' : 'Aucun avis'}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -269,7 +268,7 @@ export default async function AdminDashboard() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">
-              Popüler Kategoriler
+              Catégories Populaires
             </h2>
           </div>
           <div className="p-6">
@@ -286,7 +285,7 @@ export default async function AdminDashboard() {
                           {item.category}
                         </span>
                         <span className="text-gray-600 text-sm">
-                          {item.count} şirket
+                          {item.count} entreprises
                         </span>
                       </div>
                       <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
@@ -303,7 +302,7 @@ export default async function AdminDashboard() {
               </div>
             ) : (
               <p className="text-gray-500 text-center py-8">
-                Henüz kategori bulunmuyor
+                Aucune catégorie trouvée
               </p>
             )}
           </div>
@@ -312,7 +311,7 @@ export default async function AdminDashboard() {
         {/* Domain Stats */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Domain İstatistikleri</h2>
+            <h2 className="text-xl font-bold text-gray-900">Statistiques des Domaines</h2>
           </div>
           <div className="p-6">
             {stats.domainStats.length > 0 ? (
@@ -339,14 +338,14 @@ export default async function AdminDashboard() {
                       <div className="text-lg font-bold text-gray-900">
                         {domain.companyCount}
                       </div>
-                      <div className="text-xs text-gray-500">şirket</div>
+                      <div className="text-xs text-gray-500">entreprises</div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <p className="text-gray-500 text-center py-8">
-                Henüz domain bulunmuyor
+                Aucun domaine trouvé
               </p>
             )}
           </div>
@@ -356,12 +355,12 @@ export default async function AdminDashboard() {
       {/* Recent Companies */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">Son Eklenen Şirketler</h2>
+          <h2 className="text-xl font-bold text-gray-900">Dernières Entreprises Ajoutées</h2>
           <Link
             href="/admin/companies"
             className="text-blue-600 hover:text-blue-700 text-sm font-medium"
           >
-            Tümünü Gör →
+            Voir tout →
           </Link>
         </div>
         <div className="overflow-x-auto">
@@ -370,19 +369,19 @@ export default async function AdminDashboard() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Şirket
+                    Entreprise
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Şehir
+                    Ville
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kategoriler
+                    Catégories
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Eklenme Tarihi
+                    Date d'ajout
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    İşlem
+                    Action
                   </th>
                 </tr>
               </thead>
@@ -423,7 +422,7 @@ export default async function AdminDashboard() {
                         href={`/admin/companies/${company.id}`}
                         className="text-blue-600 hover:text-blue-900"
                       >
-                        Düzenle
+                        Modifier
                       </Link>
                     </td>
                   </tr>
@@ -432,7 +431,7 @@ export default async function AdminDashboard() {
             </table>
           ) : (
             <div className="p-8 text-center text-gray-500">
-              Henüz şirket eklenmemiş
+              Aucune entreprise ajoutée
             </div>
           )}
         </div>
@@ -445,9 +444,9 @@ export default async function AdminDashboard() {
           className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-6 flex items-center justify-between transition-colors"
         >
           <div>
-            <h3 className="text-lg font-semibold">Yeni Şirket Ekle</h3>
+            <h3 className="text-lg font-semibold">Ajouter une Entreprise</h3>
             <p className="text-blue-100 text-sm mt-1">
-              Hızlıca yeni bir şirket profili oluştur
+              Créer rapidement un nouveau profil d'entreprise
             </p>
           </div>
           <svg

@@ -68,7 +68,9 @@ export async function generateMetadata({
       ? (company.reviews.reduce((sum, r) => sum + r.rating, 0) / company.reviews.length).toFixed(1)
       : null;
 
-    const title = `${company.name} - ${company.city} | ${currentDomain.name}`;
+    // Build SEO-optimized title with category
+    const categoryText = company.categories.length > 0 ? ` - ${company.categories[0]}` : '';
+    const title = `${company.name}${categoryText} à ${company.city} | ${currentDomain.name}`;
     const description = content?.customDescription || company.description || `Découvrez ${company.name} à ${company.city}. ${company.reviews.length} avis clients.`;
 
     return {
