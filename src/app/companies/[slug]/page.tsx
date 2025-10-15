@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import StructuredData from '@/components/StructuredData';
+import { Metadata } from 'next';
 
 async function getDomainFromHost(host: string) {
   let domain = host.split(':')[0];
@@ -12,6 +13,88 @@ async function getDomainFromHost(host: string) {
   return await prisma.domain.findUnique({
     where: { name: domain },
   });
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  try {
+    const headersList = await headers();
+    const host = headersList.get('host') || 'bas-rhin.pro';
+    const currentDomain = await getDomainFromHost(host);
+    
+    if (!currentDomain) {
+      return {
+        title: 'Entreprise non trouvée',
+      };
+    }
+
+    const { slug } = await params;
+    const company = await prisma.company.findFirst({
+      where: {
+        slug: slug,
+        content: {
+          some: {
+            domainId: currentDomain.id,
+            isVisible: true,
+          },
+        },
+      },
+      include: {
+        content: {
+          where: {
+            domainId: currentDomain.id,
+          },
+        },
+        reviews: true,
+      },
+    });
+
+    if (!company) {
+      return {
+        title: 'Entreprise non trouvée',
+      };
+    }
+
+    const content = company.content[0];
+    const avgRating = company.reviews.length > 0
+      ? (company.reviews.reduce((sum, r) => sum + r.rating, 0) / company.reviews.length).toFixed(1)
+      : null;
+
+    const title = `${company.name} - ${company.city} | ${currentDomain.name}`;
+    const description = content?.customDescription || company.description || `Découvrez ${company.name} à ${company.city}. ${company.reviews.length} avis clients.`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        locale: 'fr_FR',
+        siteName: currentDomain.name,
+        images: company.logoUrl ? [{
+          url: company.logoUrl,
+          width: 200,
+          height: 200,
+          alt: company.name,
+        }] : [],
+      },
+      twitter: {
+        card: 'summary',
+        title,
+        description,
+        images: company.logoUrl ? [company.logoUrl] : [],
+      },
+    };
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+    return {
+      title: 'Entreprise',
+    };
+  }
 }
 
 export default async function CompanyDetailPage({
