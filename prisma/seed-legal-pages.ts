@@ -1,3 +1,8 @@
+/**
+ * Seed script for legal pages (mentions légales, politique de confidentialité, CGU)
+ * Creates default legal pages for all domains
+ */
+
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -8,387 +13,508 @@ const legalPages = [
     title: 'Mentions Légales',
     content: `# Mentions Légales
 
-## Éditeur du site
+## 1. Éditeur du site
 
-**Nom du site** : Annuaire des Professionnels du Bas-Rhin  
-**Propriétaire** : [Nom de votre entreprise]  
-**Adresse** : [Votre adresse]  
-**Email** : contact@bas-rhin.pro  
-**Téléphone** : [Votre téléphone]  
-**SIRET** : [Votre SIRET]  
-**Directeur de publication** : [Nom du directeur]
+**Nom de l'entreprise :** NETZ Informatique
+**Forme juridique :** Micro-entreprise
+**Siège social :** 22 Rue du Général de Gaulle, 67500 Haguenau, France
+**SIRET :** [À compléter]
+**Email :** contact@netzinformatique.fr
+**Téléphone :** 03 67 31 07 70
 
-## Hébergement
+**Directeur de la publication :** Mikail Lekesiz
+**Responsable de la rédaction :** Mikail Lekesiz
 
-**Hébergeur** : Vercel Inc.  
-**Adresse** : 340 S Lemon Ave #4133, Walnut, CA 91789, USA  
-**Site web** : https://vercel.com
+## 2. Hébergement
 
-## Propriété intellectuelle
+**Hébergeur :** Vercel Inc.
+**Adresse :** 340 S Lemon Ave #4133, Walnut, CA 91789, USA
+**Site web :** https://vercel.com
+**Téléphone :** +1 (559) 288-7060
+
+## 3. Propriété intellectuelle
 
 L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur et la propriété intellectuelle. Tous les droits de reproduction sont réservés, y compris pour les documents téléchargeables et les représentations iconographiques et photographiques.
 
-## Protection des données personnelles
+La reproduction de tout ou partie de ce site sur un support électronique quel qu'il soit est formellement interdite sauf autorisation expresse du directeur de la publication.
 
-Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant. Pour exercer ce droit, contactez-nous à : contact@bas-rhin.pro
+## 4. Protection des données personnelles
 
-## Cookies
+Conformément à la loi Informatique et Libertés du 6 janvier 1978 modifiée et au Règlement Général sur la Protection des Données (RGPD), vous disposez d'un droit d'accès, de rectification, de suppression et d'opposition aux données personnelles vous concernant.
 
-Ce site utilise des cookies pour améliorer l'expérience utilisateur. En poursuivant votre navigation, vous acceptez l'utilisation de cookies.
+Pour exercer ces droits, veuillez nous contacter :
+- **Par email :** contact@netzinformatique.fr
+- **Par courrier :** NETZ Informatique, 22 Rue du Général de Gaulle, 67500 Haguenau, France
+
+## 5. Cookies
+
+Ce site utilise des cookies pour améliorer l'expérience utilisateur et analyser le trafic. Vous pouvez gérer vos préférences de cookies via le bandeau de consentement affiché lors de votre première visite.
+
+## 6. Responsabilité
+
+Les informations fournies sur ce site le sont à titre indicatif. NETZ Informatique s'efforce d'assurer l'exactitude et la mise à jour des informations, mais ne saurait être tenu responsable des erreurs, omissions ou résultats obtenus par une mauvaise utilisation.
+
+## 7. Liens externes
+
+Ce site peut contenir des liens vers des sites externes. NETZ Informatique n'est pas responsable du contenu de ces sites et décline toute responsabilité quant aux informations qui y sont diffusées.
+
+## 8. Droit applicable
+
+Le présent site et les présentes mentions légales sont régis par le droit français. En cas de litige, les tribunaux français seront seuls compétents.
 
 ---
 
-*Dernière mise à jour : ${new Date().toLocaleDateString('fr-FR')}*
-`
+*Dernière mise à jour : 15 octobre 2025*
+`,
   },
   {
     slug: 'politique-confidentialite',
     title: 'Politique de Confidentialité',
     content: `# Politique de Confidentialité
 
-## Introduction
+## 1. Introduction
 
-La protection de vos données personnelles est une priorité pour nous. Cette politique de confidentialité explique quelles informations nous collectons, comment nous les utilisons et vos droits concernant ces données.
+NETZ Informatique accorde une grande importance à la protection de vos données personnelles. Cette politique de confidentialité explique comment nous collectons, utilisons, partageons et protégeons vos informations personnelles conformément au Règlement Général sur la Protection des Données (RGPD).
 
-## Données collectées
+## 2. Responsable du traitement
 
-### Données fournies directement
-- Nom et prénom
-- Adresse email
-- Numéro de téléphone
-- Informations professionnelles (pour les professionnels inscrits)
+**Responsable :** NETZ Informatique
+**Adresse :** 22 Rue du Général de Gaulle, 67500 Haguenau, France
+**Email :** contact@netzinformatique.fr
+**Téléphone :** 03 67 31 07 70
 
-### Données collectées automatiquement
+## 3. Données collectées
+
+### 3.1 Données fournies directement par vous
+
+Lorsque vous utilisez notre site, nous collectons les informations suivantes :
+- **Informations d'identification :** nom, prénom
+- **Coordonnées :** adresse email, numéro de téléphone
+- **Informations professionnelles :** nom d'entreprise, adresse, secteur d'activité
+- **Avis et commentaires :** texte des avis, notes données
+
+### 3.2 Données collectées automatiquement
+
 - Adresse IP
-- Type de navigateur
-- Pages visitées
-- Durée de visite
-- Cookies
+- Type de navigateur et version
+- Système d'exploitation
+- Pages visitées et durée de visite
+- Date et heure de connexion
+- Données de géolocalisation (ville, région)
 
-## Utilisation des données
+### 3.3 Cookies
 
-Vos données sont utilisées pour :
-- Gérer votre compte et vos annonces
-- Vous contacter concernant nos services
-- Améliorer nos services
-- Respecter nos obligations légales
+Nous utilisons des cookies pour améliorer votre expérience. Consultez notre politique de cookies pour plus d'informations.
 
-## Partage des données
+## 4. Finalités du traitement
 
-Nous ne vendons jamais vos données personnelles. Vos données peuvent être partagées avec :
-- Nos prestataires de services (hébergement, analytics)
-- Les autorités légales si requis par la loi
+Vos données personnelles sont utilisées pour :
+- **Gestion de votre compte** : créer et gérer votre profil utilisateur
+- **Publication d'annuaires** : afficher les informations des entreprises
+- **Avis et commentaires** : publier et modérer les avis clients
+- **Communication** : répondre à vos demandes de contact
+- **Amélioration du service** : analyser l'utilisation du site
+- **Obligations légales** : respecter nos obligations réglementaires
 
-## Vos droits (RGPD)
+## 5. Base légale du traitement
+
+Le traitement de vos données repose sur :
+- **Votre consentement** : pour l'envoi de newsletters et la gestion des cookies
+- **Exécution d'un contrat** : pour la gestion de votre compte
+- **Intérêt légitime** : pour l'amélioration de nos services
+- **Obligation légale** : pour le respect de la législation
+
+## 6. Destinataires des données
+
+Vos données peuvent être communiquées à :
+- **Personnel autorisé** : équipe de NETZ Informatique
+- **Prestataires techniques** : hébergement (Vercel), analytics (Google Analytics)
+- **Autorités légales** : sur réquisition judiciaire
+
+Nous ne vendons ni ne louons vos données personnelles à des tiers.
+
+## 7. Durée de conservation
+
+Vos données sont conservées pendant :
+- **Données de compte** : durée de votre inscription + 3 ans après la dernière connexion
+- **Avis publiés** : durée indéterminée (sauf demande de suppression)
+- **Logs de connexion** : 12 mois
+- **Cookies** : selon la durée définie dans la politique de cookies
+
+## 8. Vos droits (RGPD)
 
 Conformément au RGPD, vous disposez des droits suivants :
-- **Droit d'accès** : obtenir une copie de vos données
-- **Droit de rectification** : corriger vos données
-- **Droit à l'effacement** : supprimer vos données
-- **Droit à la portabilité** : recevoir vos données dans un format structuré
-- **Droit d'opposition** : vous opposer au traitement de vos données
 
-Pour exercer ces droits, contactez-nous à : contact@bas-rhin.pro
+### 8.1 Droit d'accès
+Obtenir la confirmation que vos données sont traitées et y accéder.
 
-## Sécurité
+### 8.2 Droit de rectification
+Corriger ou compléter vos données inexactes ou incomplètes.
 
-Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées pour protéger vos données contre tout accès non autorisé, perte ou destruction.
+### 8.3 Droit à l'effacement
+Demander la suppression de vos données dans certaines conditions.
 
-## Conservation des données
+### 8.4 Droit d'opposition
+Vous opposer au traitement de vos données pour des raisons légitimes.
 
-Vos données sont conservées pendant la durée nécessaire aux finalités pour lesquelles elles sont traitées, conformément à la législation en vigueur.
+### 8.5 Droit à la limitation
+Limiter le traitement de vos données dans certains cas.
 
-## Cookies
+### 8.6 Droit à la portabilité
+Recevoir vos données dans un format structuré et les transmettre à un autre responsable.
 
-Nous utilisons des cookies pour :
-- Mémoriser vos préférences
-- Analyser le trafic du site
-- Améliorer l'expérience utilisateur
+### 8.7 Droit de retirer votre consentement
+Retirer votre consentement à tout moment pour les traitements qui le nécessitent.
 
-Vous pouvez désactiver les cookies dans les paramètres de votre navigateur.
+### 8.8 Exercice de vos droits
 
-## Contact
+Pour exercer ces droits, contactez-nous :
+- **Email :** contact@netzinformatique.fr
+- **Courrier :** NETZ Informatique, 22 Rue du Général de Gaulle, 67500 Haguenau, France
 
-Pour toute question concernant cette politique de confidentialité :  
-**Email** : contact@bas-rhin.pro  
-**Adresse** : [Votre adresse]
+Nous répondrons à votre demande dans un délai d'un mois.
+
+## 9. Sécurité des données
+
+Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données contre :
+- L'accès non autorisé
+- La modification
+- La divulgation
+- La destruction
+
+## 10. Transferts internationaux
+
+Vos données peuvent être transférées et stockées aux États-Unis (hébergement Vercel). Ces transferts sont encadrés par des garanties appropriées conformément au RGPD.
+
+## 11. Modifications
+
+Cette politique peut être modifiée à tout moment. Les modifications seront publiées sur cette page avec une nouvelle date de mise à jour.
+
+## 12. Réclamation
+
+Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de la CNIL (Commission Nationale de l'Informatique et des Libertés) :
+- **Site web :** www.cnil.fr
+- **Adresse :** 3 Place de Fontenoy, 75007 Paris, France
+- **Téléphone :** 01 53 73 22 22
+
+## 13. Contact
+
+Pour toute question concernant cette politique de confidentialité :
+- **Email :** contact@netzinformatique.fr
+- **Téléphone :** 03 67 31 07 70
 
 ---
 
-*Dernière mise à jour : ${new Date().toLocaleDateString('fr-FR')}*
-`
+*Dernière mise à jour : 15 octobre 2025*
+`,
   },
   {
     slug: 'cgu',
-    title: 'Conditions Générales d\'Utilisation',
+    title: "Conditions Générales d'Utilisation",
     content: `# Conditions Générales d'Utilisation (CGU)
 
 ## 1. Objet
 
-Les présentes Conditions Générales d'Utilisation (CGU) ont pour objet de définir les modalités et conditions d'utilisation du site annuaire des professionnels du Bas-Rhin.
+Les présentes Conditions Générales d'Utilisation (ci-après "CGU") ont pour objet de définir les modalités et conditions d'utilisation du site internet exploité par NETZ Informatique, ainsi que les droits et obligations des utilisateurs.
 
-## 2. Acceptation des CGU
+## 2. Définitions
 
-L'utilisation du site implique l'acceptation pleine et entière des présentes CGU. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser ce site.
+- **Site** : le site internet accessible à l'adresse [domaine].pro et ses sous-domaines
+- **Éditeur** : NETZ Informatique, responsable de la publication du site
+- **Utilisateur** : toute personne accédant et utilisant le site
+- **Professionnel** : entreprise ou professionnel inscrit dans l'annuaire
+- **Contenu** : ensemble des informations, textes, images, avis disponibles sur le site
 
-## 3. Accès au site
+## 3. Acceptation des CGU
 
-### 3.1 Accès libre
-L'accès au site est gratuit pour tous les utilisateurs disposant d'un accès à Internet.
+L'utilisation du site implique l'acceptation pleine et entière des présentes CGU. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser le site.
 
-### 3.2 Disponibilité
-Nous nous efforçons de maintenir le site accessible 24h/24 et 7j/7, mais nous ne pouvons garantir une disponibilité absolue.
+L'Éditeur se réserve le droit de modifier les CGU à tout moment. Les modifications seront effectives dès leur publication sur le site.
 
-### 3.3 Maintenance
-Le site peut être temporairement indisponible en raison d'opérations de maintenance.
+## 4. Accès au site
 
-## 4. Utilisation du site
+### 4.1 Disponibilité
 
-### 4.1 Usage autorisé
-Le site est destiné à :
-- Rechercher des professionnels locaux
-- Consulter des informations sur les entreprises
-- Contacter des professionnels
+Le site est accessible 24h/24, 7j/7, sauf en cas de :
+- Force majeure
+- Maintenance programmée ou d'urgence
+- Panne technique
+- Interruption du réseau internet
 
-### 4.2 Usage interdit
-Il est strictement interdit de :
-- Utiliser le site à des fins illégales
-- Collecter des données de manière automatisée (scraping)
-- Publier du contenu offensant ou diffamatoire
-- Usurper l'identité d'autrui
-- Tenter de compromettre la sécurité du site
+L'Éditeur s'efforce d'assurer la disponibilité du site mais ne peut garantir une accessibilité continue.
 
-## 5. Inscription des professionnels
+### 4.2 Modifications et interruptions
 
-### 5.1 Création de compte
-Les professionnels peuvent créer un compte pour gérer leur présence sur le site.
+L'Éditeur se réserve le droit de :
+- Modifier, suspendre ou interrompre tout ou partie du site
+- Modifier les fonctionnalités et services proposés
+- Mettre à jour le contenu
 
-### 5.2 Exactitude des informations
-Vous vous engagez à fournir des informations exactes et à les maintenir à jour.
+Ces modifications peuvent intervenir sans préavis.
 
-### 5.3 Sécurité du compte
-Vous êtes responsable de la confidentialité de vos identifiants de connexion.
+## 5. Services proposés
 
-## 6. Contenu publié
+Le site propose les services suivants :
 
-### 6.1 Responsabilité
-Les professionnels sont responsables du contenu qu'ils publient.
+### 5.1 Annuaire de professionnels
+- Recherche d'entreprises par nom, catégorie, ville
+- Consultation des fiches détaillées des professionnels
+- Accès aux coordonnées et informations pratiques
 
-### 6.2 Modération
-Nous nous réservons le droit de modérer, modifier ou supprimer tout contenu inapproprié.
+### 5.2 Système d'avis
+- Publication d'avis sur les professionnels (utilisateurs inscrits)
+- Consultation des avis publiés
+- Notation des établissements
 
-### 6.3 Propriété intellectuelle
-En publiant du contenu, vous accordez au site une licence d'utilisation non exclusive.
+### 5.3 Espace professionnel
+- Création et gestion de fiche entreprise
+- Réponse aux avis clients
+- Gestion des informations professionnelles
 
-## 7. Avis et commentaires
+## 6. Inscription et compte utilisateur
 
-### 7.1 Publication d'avis
-Les utilisateurs peuvent publier des avis sur les professionnels.
+### 6.1 Création de compte
 
-### 7.2 Authenticité
-Les avis doivent être authentiques et basés sur une expérience réelle.
+Pour accéder à certains services (publication d'avis, gestion de fiche professionnelle), vous devez créer un compte en fournissant :
+- Une adresse email valide
+- Un mot de passe sécurisé
+- Des informations exactes et à jour
 
-### 7.3 Modération
-Les avis peuvent être modérés pour respecter nos standards de qualité.
+### 6.2 Responsabilités de l'utilisateur
 
-## 8. Limitation de responsabilité
+Vous êtes responsable de :
+- La confidentialité de vos identifiants de connexion
+- Toutes les activités effectuées depuis votre compte
+- La mise à jour régulière de vos informations
+- La déconnexion après chaque session
 
-### 8.1 Contenu tiers
-Nous ne sommes pas responsables du contenu publié par les utilisateurs ou les professionnels.
+En cas de perte ou de vol de vos identifiants, vous devez immédiatement nous en informer.
 
-### 8.2 Exactitude des informations
-Nous ne garantissons pas l'exactitude absolue des informations publiées.
+### 6.3 Suspension et suppression de compte
 
-### 8.3 Dommages
-Nous ne saurions être tenus responsables des dommages directs ou indirects résultant de l'utilisation du site.
+L'Éditeur se réserve le droit de suspendre ou supprimer tout compte :
+- En cas de violation des présentes CGU
+- En cas d'utilisation frauduleuse
+- En cas d'inactivité prolongée (> 24 mois)
+- Sans préavis si nécessaire pour des raisons de sécurité
+
+## 7. Obligations des utilisateurs
+
+En utilisant le site, vous vous engagez à :
+
+### 7.1 Fournir des informations exactes
+- Ne pas usurper l'identité d'autrui
+- Ne pas créer de faux comptes
+- Maintenir vos informations à jour
+
+### 7.2 Utilisation conforme
+- Respecter les lois et réglementations en vigueur
+- Ne pas utiliser le site à des fins illégales
+- Ne pas porter atteinte aux droits de tiers
+
+### 7.3 Respect des autres utilisateurs
+- Ne pas publier de contenu offensant, diffamatoire ou injurieux
+- Ne pas harceler ou menacer d'autres utilisateurs
+- Respecter la vie privée des autres
+
+### 7.4 Sécurité
+- Ne pas tenter d'accéder de manière non autorisée au site
+- Ne pas perturber le fonctionnement du site
+- Ne pas introduire de virus ou code malveillant
+
+## 8. Avis et commentaires
+
+### 8.1 Publication d'avis
+
+Les utilisateurs peuvent publier des avis sur les professionnels. Ces avis doivent :
+- Être basés sur une expérience réelle et vérifiée
+- Être honnêtes, objectifs et constructifs
+- Respecter la vie privée des personnes
+- Ne pas contenir de propos :
+  - Diffamatoires ou injurieux
+  - Racistes, sexistes ou discriminatoires
+  - Publicitaires ou promotionnels
+  - Contraires à l'ordre public
+
+### 8.2 Modération
+
+L'Éditeur se réserve le droit de :
+- Modérer les avis avant publication
+- Modifier ou supprimer tout contenu inapproprié
+- Refuser la publication d'un avis
+- Supprimer un compte en cas d'abus répétés
+
+Les décisions de modération sont prises à la seule discrétion de l'Éditeur.
+
+### 8.3 Responsabilité des avis
+
+Les avis publiés reflètent l'opinion personnelle de leurs auteurs. L'Éditeur ne peut être tenu responsable du contenu des avis, sous réserve de sa responsabilité en tant qu'hébergeur.
 
 ## 9. Propriété intellectuelle
 
-Tous les éléments du site (textes, images, logos, etc.) sont protégés par le droit d'auteur et ne peuvent être reproduits sans autorisation.
+### 9.1 Protection
 
-## 10. Données personnelles
+Tous les éléments du site sont protégés par le droit d'auteur et sont la propriété exclusive de l'Éditeur ou de ses partenaires :
+- Structure et design du site
+- Textes et contenus éditoriaux
+- Logos et marques
+- Images et illustrations
+- Code source et logiciels
 
-Le traitement de vos données personnelles est régi par notre Politique de Confidentialité.
+### 9.2 Utilisation autorisée
 
-## 11. Modification des CGU
+Vous êtes autorisé à :
+- Consulter le site pour un usage personnel et non commercial
+- Imprimer des pages pour un usage personnel
 
-Nous nous réservons le droit de modifier les présentes CGU à tout moment. Les modifications entrent en vigueur dès leur publication sur le site.
+### 9.3 Utilisations interdites
 
-## 12. Droit applicable
+Il est strictement interdit de :
+- Reproduire, copier ou diffuser le contenu sans autorisation
+- Utiliser le contenu à des fins commerciales
+- Modifier, adapter ou créer des œuvres dérivées
+- Extraire ou réutiliser une partie substantielle du contenu
 
-Les présentes CGU sont régies par le droit français. Tout litige sera soumis aux tribunaux compétents.
+Toute violation peut entraîner des poursuites judiciaires.
 
-## 13. Contact
+## 10. Limitation de responsabilité
 
-Pour toute question concernant ces CGU :  
-**Email** : contact@bas-rhin.pro  
-**Adresse** : [Votre adresse]
+### 10.1 Informations publiées
+
+L'Éditeur s'efforce d'assurer l'exactitude des informations mais ne peut être tenu responsable :
+- Des erreurs ou omissions dans les informations
+- De l'exactitude des informations fournies par les professionnels
+- Des changements survenus depuis la publication
+
+### 10.2 Utilisation du site
+
+L'Éditeur ne peut être tenu responsable :
+- Des dommages directs ou indirects résultant de l'utilisation du site
+- Des interruptions de service
+- De la perte de données
+- Des virus ou programmes malveillants
+
+### 10.3 Actes de tiers
+
+L'Éditeur ne peut être tenu responsable :
+- Des actes des utilisateurs
+- Des contenus publiés par des tiers
+- Des sites externes liés au site
+
+## 11. Protection des données personnelles
+
+Le traitement de vos données personnelles est régi par notre [Politique de Confidentialité](/politique-confidentialite), que nous vous invitons à consulter.
+
+Conformément au RGPD, vous disposez de droits sur vos données (accès, rectification, effacement, opposition, portabilité).
+
+## 12. Liens externes
+
+Le site peut contenir des liens vers des sites externes. L'Éditeur :
+- N'est pas responsable du contenu de ces sites
+- Ne contrôle pas ces sites externes
+- Décline toute responsabilité quant aux informations diffusées sur ces sites
+
+L'inclusion de liens ne signifie pas l'approbation de ces sites par l'Éditeur.
+
+## 13. Cookies
+
+Le site utilise des cookies pour améliorer votre expérience et analyser le trafic. Vous pouvez gérer vos préférences via le bandeau de consentement.
+
+Pour plus d'informations, consultez notre [Politique de Confidentialité](/politique-confidentialite).
+
+## 14. Droit applicable et juridiction compétente
+
+### 14.1 Droit applicable
+
+Les présentes CGU sont régies par le droit français, quelle que soit votre localisation.
+
+### 14.2 Règlement des litiges
+
+En cas de litige relatif à l'interprétation ou l'exécution des présentes CGU :
+1. Tentative de résolution amiable par contact avec notre service client
+2. À défaut d'accord, recours possible à la médiation
+3. En dernier recours, compétence exclusive des tribunaux français
+
+### 14.3 Médiation
+
+Conformément à la réglementation, vous pouvez recourir gratuitement à un médiateur de la consommation :
+**Nom :** [À compléter]
+**Site web :** [À compléter]
+
+## 15. Modifications des CGU
+
+L'Éditeur se réserve le droit de modifier les présentes CGU à tout moment pour :
+- S'adapter aux évolutions techniques et juridiques
+- Améliorer les services proposés
+- Corriger des erreurs ou omissions
+
+Les modifications seront publiées sur cette page avec une nouvelle date de mise à jour. Votre utilisation continue du site après les modifications vaut acceptation des nouvelles CGU.
+
+## 16. Nullité partielle
+
+Si une clause des présentes CGU est déclarée nulle ou inapplicable, elle sera réputée non écrite, sans affecter la validité des autres clauses.
+
+## 17. Non-renonciation
+
+Le fait pour l'Éditeur de ne pas se prévaloir d'un manquement de votre part aux présentes CGU ne saurait être interprété comme une renonciation à invoquer ce manquement ultérieurement.
+
+## 18. Contact
+
+Pour toute question concernant ces CGU, contactez-nous :
+
+**NETZ Informatique**
+- **Email :** contact@netzinformatique.fr
+- **Téléphone :** 03 67 31 07 70
+- **Adresse :** 22 Rue du Général de Gaulle, 67500 Haguenau, France
+
+**Horaires :**
+Lundi - Vendredi : 9h00 - 12h00 et 14h00 - 18h00
 
 ---
 
-*Dernière mise à jour : ${new Date().toLocaleDateString('fr-FR')}*
-`
+*Dernière mise à jour : 15 octobre 2025*
+`,
   },
-  {
-    slug: 'tarifs',
-    title: 'Tarifs',
-    content: `# Tarifs
-
-## Annuaire des Professionnels du Bas-Rhin
-
-Découvrez nos différentes offres pour augmenter votre visibilité locale et développer votre activité.
-
----
-
-## 🆓 Offre Gratuite
-
-**Idéal pour démarrer**
-
-### Inclus :
-- ✅ Fiche entreprise basique
-- ✅ Coordonnées (adresse, téléphone, email)
-- ✅ Horaires d'ouverture
-- ✅ Catégorie d'activité
-- ✅ Localisation sur carte
-
-### Prix : **Gratuit**
-
-[Créer mon profil gratuit](#)
-
----
-
-## ⭐ Offre Premium
-
-**Pour se démarquer**
-
-### Inclus :
-Tout de l'offre Gratuite, plus :
-- ✅ **Mise en avant** dans les résultats de recherche
-- ✅ **Photos illimitées** (galerie)
-- ✅ **Description détaillée** de vos services
-- ✅ **Promotions et offres spéciales**
-- ✅ **Badge "Professionnel Vérifié"**
-- ✅ **Statistiques de visibilité**
-- ✅ **Réponse aux avis clients**
-
-### Prix : **29€ HT/mois**
-*Engagement 12 mois : 25€ HT/mois*
-
-[Choisir Premium](#)
-
----
-
-## 🚀 Offre Business
-
-**Pour maximiser votre visibilité**
-
-### Inclus :
-Tout de l'offre Premium, plus :
-- ✅ **Position prioritaire** en tête de liste
-- ✅ **Page entreprise personnalisée**
-- ✅ **Vidéo de présentation**
-- ✅ **Articles/actualités** de votre entreprise
-- ✅ **Formulaire de contact direct**
-- ✅ **Intégration réseaux sociaux**
-- ✅ **Support prioritaire**
-- ✅ **Rapport mensuel détaillé**
-
-### Prix : **79€ HT/mois**
-*Engagement 12 mois : 69€ HT/mois*
-
-[Choisir Business](#)
-
----
-
-## 💼 Offre Sur Mesure
-
-**Pour les besoins spécifiques**
-
-Vous avez des besoins particuliers ? Nous créons une offre personnalisée adaptée à votre activité.
-
-### Possibilités :
-- Multi-établissements
-- Intégration API
-- Campagnes publicitaires ciblées
-- Formation à l'utilisation de la plateforme
-- Gestion de votre présence en ligne
-
-### Prix : **Sur devis**
-
-[Nous contacter](#)
-
----
-
-## 📊 Comparatif des offres
-
-| Fonctionnalité | Gratuit | Premium | Business |
-|----------------|---------|---------|----------|
-| Fiche entreprise | ✅ | ✅ | ✅ |
-| Photos | 3 max | Illimité | Illimité |
-| Mise en avant | ❌ | ✅ | ✅✅ |
-| Badge vérifié | ❌ | ✅ | ✅ |
-| Statistiques | ❌ | Basiques | Détaillées |
-| Vidéo | ❌ | ❌ | ✅ |
-| Articles | ❌ | ❌ | ✅ |
-| Support | Standard | Prioritaire | Prioritaire |
-
----
-
-## ❓ Questions Fréquentes
-
-### Comment souscrire ?
-Créez votre compte et choisissez l'offre qui vous convient. Vous pouvez commencer gratuitement et upgrader à tout moment.
-
-### Puis-je changer d'offre ?
-Oui, vous pouvez upgrader ou downgrader votre offre à tout moment.
-
-### Y a-t-il un engagement ?
-L'offre gratuite n'a pas d'engagement. Les offres payantes sont sans engagement ou avec engagement 12 mois (tarif réduit).
-
-### Quels moyens de paiement ?
-Nous acceptons les cartes bancaires, virements et prélèvements SEPA.
-
-### Puis-je annuler ?
-Oui, vous pouvez annuler votre abonnement à tout moment depuis votre espace client.
-
----
-
-## 📞 Besoin d'aide ?
-
-Notre équipe est à votre disposition pour vous conseiller.
-
-**Email** : contact@bas-rhin.pro  
-**Téléphone** : [Votre téléphone]
-
----
-
-*Prix valables au ${new Date().toLocaleDateString('fr-FR')}. TVA non applicable, art. 293 B du CGI.*
-`
-  }
 ];
 
 async function main() {
-  console.log('🔄 Seeding legal pages...\n');
+  console.log('🌱 Seeding legal pages...');
 
   for (const page of legalPages) {
-    const result = await prisma.legalPage.upsert({
-      where: { slug: page.slug },
-      update: {
-        title: page.title,
-        content: page.content,
-      },
-      create: {
+    console.log(`Creating: ${page.title}`);
+
+    const existingPage = await prisma.legalPage.findFirst({
+      where: {
         slug: page.slug,
-        title: page.title,
-        content: page.content,
-        domainId: null, // Global pour tous les domains
+        domainId: null,
       },
     });
-    
-    console.log(`✅ ${result.title} (/${result.slug})`);
+
+    if (existingPage) {
+      await prisma.legalPage.update({
+        where: { id: existingPage.id },
+        data: {
+          title: page.title,
+          content: page.content,
+          isActive: true,
+        },
+      });
+    } else {
+      await prisma.legalPage.create({
+        data: {
+          slug: page.slug,
+          title: page.title,
+          content: page.content,
+          domainId: null,
+          isActive: true,
+        },
+      });
+    }
+
+    console.log(`  ✅ ${page.title}`);
   }
 
-  console.log('\n✨ Legal pages seeded successfully!');
+  console.log('\n✅ Legal pages seeded successfully!');
 }
 
 main()
