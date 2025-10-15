@@ -17,6 +17,7 @@
     "test:ci": "jest --ci --coverage --maxWorkers=2",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:business": "tsx prisma/seed-business-owners.ts",
     "db:studio": "prisma studio",
     "db:optimize": "tsx scripts/apply-database-optimization.ts",
     "postinstall": "prisma generate"
@@ -26,6 +27,9 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.0",
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
+    "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.17.1",
     "@tanstack/react-query": "^5.90.2",
     "bcryptjs": "^3.0.2",
@@ -37,8 +41,10 @@
     "prisma": "^6.17.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-hook-form": "^7.65.0",
     "react-hot-toast": "^2.6.0",
     "react-markdown": "^10.1.0",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "zod": "^4.1.12"
   },
