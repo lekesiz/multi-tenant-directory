@@ -184,9 +184,23 @@ export default async function AnnuairePage({
             isVisible: true,
           },
         },
+        reviews: {
+          where: {
+            isApproved: true,
+            isVisible: true,
+          },
+          select: {
+            rating: true,
+          },
+        },
         _count: {
           select: {
-            reviews: true,
+            reviews: {
+              where: {
+                isApproved: true,
+                isVisible: true,
+              },
+            },
           },
         },
       },
@@ -448,12 +462,20 @@ export default async function AnnuairePage({
                         )}
                       </div>
 
-                      {/* Reviews Count */}
+                      {/* Reviews and Rating */}
                       {company._count && company._count.reviews > 0 && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <span className="text-yellow-500 mr-1">⭐</span>
-                            {company._count.reviews} avis
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center text-gray-600">
+                              <span className="text-yellow-500 mr-1">⭐</span>
+                              {company._count.reviews} avis
+                            </div>
+                            {company.reviews && company.reviews.length > 0 && (
+                              <div className="flex items-center font-semibold text-gray-900">
+                                <span className="text-yellow-500 mr-1">⭐</span>
+                                {(company.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / company.reviews.length).toFixed(1)}
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
