@@ -9,6 +9,7 @@ import GoogleMap from '@/components/GoogleMap';
 import BusinessHours from '@/components/BusinessHours';
 import PhotoGallery from '@/components/PhotoGallery';
 import SocialLinks from '@/components/SocialLinks';
+import ContactForm from '@/components/ContactForm';
 import { Metadata } from 'next';
 
 async function getDomainFromHost(host: string) {
@@ -302,6 +303,11 @@ export default async function CompanyDetailPage({
 
             {/* Reviews */}
             <CompanyReviews companyId={company.id} companyName={company.name} />
+
+            {/* Contact Form */}
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6 lg:p-8">
+              <ContactForm domainColor={currentDomain.primaryColor || '#3B82F6'} />
+            </div>
           </div>
 
           {/* Sidebar */}
