@@ -1,22 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
-import { z } from 'zod';
+import { sendVerificationEmail } from '@/lib/email';
 
-// Generate verification token
-function generateVerificationToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+
+// Verify email with token
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const token = searchParams.get('token');
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token de vérification manquant' },
+        { status: 400 }
+      );
+    }
+
+    // Decode token
+    let businessOwnerId: string;
+    let timestamp: number;
+    
+    try {
+      const decoded = Buffer.from(token, 'base64').toString('utf-8');
+      [businessOwnerId, timestamp] = decoded.split(':');
+      
+      // Check if token is expired (24 hours)
+      if (Date.now() - parseInt(timestamp) > 24 * 60 * 60 * 1000) {
+        return NextResponse.json(
+          { error: 'Le lien de vérification a expiré' },
+          { status: 400 }
+        );
+      }
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Token invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Find business owner
+    const businessOwner = await prisma.businessOwner.findUnique({
+      where: { id: businessOwnerId },
+    });
+
+    if (!businessOwner) {
+      return NextResponse.json(
+        { error: 'Utilisateur non trouvé' },
+        { status: 404 }
+      );
+    }
+
+    if (businessOwner.emailVerified) {
+      // Already verified, redirect to login
+      return NextResponse.redirect(
+        new URL('/business/login?message=already-verified', request.url)
+      );
+    }
+
+    // Update email verification status
+    await prisma.businessOwner.update({
+      where: { id: businessOwnerId },
+      data: { emailVerified: new Date() },
+    });
+
+    // Redirect to login with success message
+    return NextResponse.redirect(
+      new URL('/business/login?message=email-verified', request.url)
+    );
+  } catch (error) {
+    console.error('Email verification error:', error);
+    return NextResponse.json(
+      { error: 'Erreur lors de la vérification' },
+      { status: 500 }
+    );
+  }
 }
 
-// Send verification email
+// Resend verification email
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email } = body;
+    const { email } = await request.json();
 
     if (!email) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Email requis' },
         { status: 400 }
       );
     }
@@ -27,87 +94,45 @@ export async function POST(request: NextRequest) {
     });
 
     if (!businessOwner) {
-      return NextResponse.json(
-        { error: 'Business owner not found' },
-        { status: 404 }
-      );
+      // Don't reveal if email exists or not for security
+      return NextResponse.json({
+        success: true,
+        message: 'Si cet email existe, un lien de vérification a été envoyé.',
+      });
     }
 
     if (businessOwner.emailVerified) {
-      return NextResponse.json(
-        { message: 'Email already verified' },
-        { status: 200 }
-      );
+      return NextResponse.json({
+        success: true,
+        message: 'Cet email est déjà vérifié.',
+      });
     }
 
-    // Generate verification token
-    const token = generateVerificationToken();
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    // Store token in database (you might want to create a VerificationToken model)
-    // For now, we'll use a simple approach with customFields or create a new table
-
-    // TODO: Send email with verification link
-    const verificationUrl = `${process.env.NEXTAUTH_URL}/business/verify-email?token=${token}&email=${email}`;
-    
-    console.log('Verification URL:', verificationUrl);
-    // await sendEmail({
-    //   to: email,
-    //   subject: 'Vérifiez votre adresse email',
-    //   html: `
-    //     <h1>Bienvenue sur notre plateforme!</h1>
-    //     <p>Cliquez sur le lien ci-dessous pour vérifier votre adresse email:</p>
-    //     <a href="${verificationUrl}">Vérifier mon email</a>
-    //     <p>Ce lien expire dans 24 heures.</p>
-    //   `,
-    // });
+    // Generate new verification token and send email
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const verificationToken = Buffer.from(`${businessOwner.id}:${Date.now()}`).toString('base64');
+        const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/business/verify-email?token=${verificationToken}`;
+        
+        await sendVerificationEmail({
+          to: businessOwner.email,
+          verificationUrl,
+          firstName: businessOwner.firstName,
+        });
+        console.log('✅ Verification email resent to:', businessOwner.email);
+      } catch (error) {
+        console.error('Error sending verification email:', error);
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Verification email sent',
+      message: 'Si cet email existe, un lien de vérification a été envoyé.',
     });
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    console.error('Resend verification error:', error);
     return NextResponse.json(
-      { error: 'Failed to send verification email' },
-      { status: 500 }
-    );
-  }
-}
-
-// Verify email with token
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const token = searchParams.get('token');
-    const email = searchParams.get('email');
-
-    if (!token || !email) {
-      return NextResponse.json(
-        { error: 'Token and email are required' },
-        { status: 400 }
-      );
-    }
-
-    // TODO: Verify token from database
-    // For now, we'll just verify the email
-
-    // Find and update business owner
-    const businessOwner = await prisma.businessOwner.update({
-      where: { email },
-      data: {
-        emailVerified: new Date(),
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Email verified successfully',
-    });
-  } catch (error) {
-    console.error('Error verifying email:', error);
-    return NextResponse.json(
-      { error: 'Failed to verify email' },
+      { error: 'Erreur lors de l\'envoi' },
       { status: 500 }
     );
   }
