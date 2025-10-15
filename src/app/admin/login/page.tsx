@@ -142,14 +142,7 @@ export default function AdminLoginPage() {
           </button>
         </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-600">
-            Admin Hesabı: <span className="font-mono text-blue-600">mikail@netzinformatique.fr</span>
-          </p>
-          <p className="text-sm text-gray-600">
-            Şifre: <span className="font-mono text-blue-600">Admin@2025!</span>
-          </p>
-        </div>
+
       </div>
     </div>
   );
