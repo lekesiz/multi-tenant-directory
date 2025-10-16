@@ -20,10 +20,21 @@ export async function POST(request: Request) {
     }
 
     // Generate AI-powered business insights
-    const insights = await generateBusinessInsights(
-      analyticsData,
-      businessContext
-    );
+    const aiResponse = await generateBusinessInsights({
+      companyName: businessContext.name,
+      category: businessContext.category,
+      reviews: analyticsData.reviews || [],
+      stats: {
+        totalReviews: analyticsData.totalReviews || 0,
+        averageRating: analyticsData.averageRating || 0,
+        viewCount: analyticsData.viewCount,
+      },
+    });
+
+    // Parse AI response
+    const insights = typeof aiResponse.content === 'string' 
+      ? JSON.parse(aiResponse.content) 
+      : aiResponse.content;
 
     // Add metadata and formatting
     const formattedInsights = {

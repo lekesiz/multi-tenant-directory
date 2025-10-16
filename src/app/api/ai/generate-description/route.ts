@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Verify company ownership
-    const ownership = await prisma.businessOwnership.findFirst({
+    const ownership = await prisma.companyOwnership.findFirst({
       where: {
         companyId: parseInt(companyId),
         ownerId: businessOwner.id,

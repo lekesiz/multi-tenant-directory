@@ -28,15 +28,13 @@ export async function POST(request: Request) {
     }
 
     // Generate SEO content
-    const content = await generateSEOContent(
-      {
-        name: businessData.name,
-        category: businessData.category,
-        city: businessData.city,
-        services: businessData.services || [],
-      },
-      contentType
-    );
+    const content = await generateSEOContent({
+      companyName: businessData.name,
+      category: businessData.category,
+      location: businessData.city,
+      keywords: businessData.keywords || [],
+      contentType: contentType,
+    });
 
     // Analyze content for SEO metrics
     const analysis = analyzeSEOContent(content, businessData, contentType);

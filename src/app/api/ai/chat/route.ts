@@ -13,10 +13,10 @@ export async function POST(request: Request) {
     }
 
     // Generate AI response
-    const response = await generateChatbotResponse(
-      message,
-      history || []
-    );
+    const response = await generateChatbotResponse({
+      userMessage: message,
+      conversationHistory: history || [],
+    });
 
     return NextResponse.json({
       response,

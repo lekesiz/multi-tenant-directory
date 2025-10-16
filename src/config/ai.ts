@@ -228,3 +228,61 @@ export function getEstimatedCost(provider: 'openai' | 'anthropic', model: string
   }
   return 0;
 }
+
+
+
+// Additional AI Prompts (extended)
+export const AI_PROMPTS_EXTENDED = {
+  /**
+   * Chatbot conversation
+   */
+  chatbot: `Vous êtes un assistant IA pour un annuaire d'entreprises locales.
+
+Contexte: {context}
+Historique: {history}
+Message utilisateur: {message}
+
+Répondez de manière utile et professionnelle en français.`,
+
+  /**
+   * Business insights
+   */
+  insights: `Analysez les performances de cette entreprise et générez des insights:
+
+Entreprise: {companyName}
+Catégorie: {category}
+Avis: {reviews}
+Statistiques: {stats}
+
+Retournez un JSON avec: strengths, weaknesses, opportunities, threats.`,
+
+  /**
+   * Business recommendations
+   */
+  recommendations: `Suggérez des améliorations pour cette entreprise:
+
+Entreprise: {companyName}
+Catégorie: {category}
+Note actuelle: {rating}/5
+Problèmes courants: {issues}
+Points forts: {strengths}
+
+Retournez un JSON avec un tableau de recommendations.`,
+
+  /**
+   * SEO content generation
+   */
+  seoContent: `Générez du contenu SEO optimisé:
+
+Entreprise: {companyName}
+Catégorie: {category}
+Localisation: {location}
+Mots-clés: {keywords}
+Type de contenu: {contentType}
+
+Créez un contenu optimisé pour le SEO local en français.`,
+};
+
+// Merge extended prompts into main AI_PROMPTS
+Object.assign(AI_PROMPTS, AI_PROMPTS_EXTENDED);
+

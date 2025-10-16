@@ -20,15 +20,22 @@ export async function POST(request: Request) {
     }
 
     // Generate AI recommendations
-    const suggestions = await suggestBusinessImprovements({
+    const aiResponse = await suggestBusinessImprovements({
+      companyName: businessData.name || 'Entreprise',
       category: businessData.category,
-      city: businessData.city,
-      currentFeatures: businessData.currentFeatures || [],
-      analytics: businessData.analytics || {},
+      currentRating: businessData.analytics?.averageRating || 0,
+      commonIssues: businessData.analytics?.commonIssues || [],
+      strengths: businessData.analytics?.strengths || [],
     });
 
+    // Parse AI response
+    const suggestions = typeof aiResponse.content === 'string' 
+      ? JSON.parse(aiResponse.content) 
+      : aiResponse.content;
+
     // Add unique IDs and format for frontend
-    const formattedSuggestions = suggestions.suggestions.map((suggestion: any, index: number) => ({
+    const recommendationsList = Array.isArray(suggestions) ? suggestions : (suggestions.recommendations || suggestions.suggestions || []);
+    const formattedSuggestions = recommendationsList.map((suggestion: any, index: number) => ({
       id: `${companyId}-${index}-${Date.now()}`,
       title: suggestion.title,
       description: suggestion.description,
