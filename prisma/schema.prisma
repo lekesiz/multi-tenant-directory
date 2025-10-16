@@ -65,6 +65,7 @@ model Company {
   photos         Photo[]
   hours          BusinessHours?
   analytics      CompanyAnalytics[]
+  coupons        Coupon[]
 
   @@index([slug])
   @@index([city])
@@ -198,14 +199,30 @@ model BusinessOwner {
   emailMarketing       Boolean  @default(false) // Marketing and promotional emails
   unsubscribeToken     String   @unique @default(cuid())
   
+  // Subscription & Billing
+  subscriptionTier     String   @default("free") // "free", "basic", "pro", "enterprise"
+  subscriptionStatus   String   @default("active") // "active", "canceled", "past_due", "trialing"
+  subscriptionStart    DateTime?
+  subscriptionEnd      DateTime?
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean  @default(false)
+  trialStart           DateTime?
+  trialEnd             DateTime?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   companies     CompanyOwnership[]
   reviewReplies ReviewReply[]
+  referralsGiven Referral[] @relation("Referrer")
+  referralsReceived Referral[] @relation("Referred")
 
   @@index([email])
   @@index([unsubscribeToken])
+  @@index([subscriptionTier, subscriptionStatus])
   @@map("business_owners")
 }
 
@@ -353,4 +370,102 @@ model ReviewReport {
   @@index([status])
   @@index([createdAt(sort: Desc)])
   @@map("review_reports")
+}
+
+// Referral Program - Viral Growth
+model Referral {
+  id              String   @id @default(cuid())
+  referrerId      String   // Business owner who refers
+  referredId      String?  // Business owner who was referred
+  code            String   @unique // Unique referral code (e.g., "CAFE123")
+
+  // Tracking
+  clicks          Int      @default(0)
+  signups         Int      @default(0)
+  conversions     Int      @default(0) // Paid subscriptions
+
+  // Rewards
+  referrerReward  String?  // "1_month_free", "50_euro_credit", "lifetime_pro"
+  referredReward  String?  // "50_percent_discount", "14_day_trial"
+  rewardedAt      DateTime?
+
+  status          String   @default("active") // "active", "completed", "expired"
+
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime?
+
+  referrer        BusinessOwner  @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred        BusinessOwner? @relation("Referred", fields: [referredId], references: [id], onDelete: SetNull)
+
+  @@index([code])
+  @@index([referrerId])
+  @@index([status])
+  @@map("referrals")
+}
+
+// Coupons & Promotions
+model Coupon {
+  id              String   @id @default(cuid())
+  companyId       Int
+  code            String   @unique // "SUMMER2025", "WELCOME20"
+
+  title           String   // "20% de réduction"
+  description     String   @db.Text
+  terms           String?  @db.Text // Terms and conditions
+
+  type            String   // "percentage", "fixed_amount", "free_item"
+  value           Float    // 20 (for 20%) or 10 (for €10 off)
+
+  minPurchase     Float?   // Minimum purchase amount
+  maxDiscount     Float?   // Maximum discount amount (for percentage)
+  maxUses         Int?     // Total redemption limit
+  maxUsesPerUser  Int?     @default(1)
+
+  usedCount       Int      @default(0)
+
+  validFrom       DateTime
+  validUntil      DateTime
+
+  isActive        Boolean  @default(true)
+
+  // Tracking
+  views           Int      @default(0)
+  claims          Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  redemptions     CouponRedemption[]
+
+  @@index([code])
+  @@index([companyId, isActive])
+  @@index([validFrom, validUntil])
+  @@map("coupons")
+}
+
+// Coupon Redemption Tracking
+model CouponRedemption {
+  id              String   @id @default(cuid())
+  couponId        String
+  userId          String?  // User who redeemed (if logged in)
+  userEmail       String?
+  userName        String?
+
+  redemptionCode  String   // Unique code shown to cashier
+  isVerified      Boolean  @default(false) // Verified by business owner
+  verifiedAt      DateTime?
+  verifiedBy      String?  // BusinessOwner ID
+
+  purchaseAmount  Float?
+  discountAmount  Float?
+
+  createdAt       DateTime @default(now())
+
+  coupon          Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([redemptionCode])
+  @@index([createdAt(sort: Desc)])
+  @@map("coupon_redemptions")
 }
