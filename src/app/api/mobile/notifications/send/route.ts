@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     // Get business owner's companies to verify permission
     const ownerships = await prisma.companyOwnership.findMany({
-      where: { businessOwnerId: authResult.user.userId },
+      where: { ownerId: authResult.user.userId },
       select: { companyId: true },
     });
 

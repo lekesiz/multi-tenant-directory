@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
     // Build query filters
     const where: any = {
-      businessOwnerId: authResult.user.userId,
+      ownerId: authResult.user.userId,
     };
 
     if (status) where.status = status;

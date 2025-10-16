@@ -64,7 +64,7 @@ export async function GET(
     const ownership = await prisma.companyOwnership.findFirst({
       where: {
         companyId: company.id,
-        businessOwnerId: authResult.user.userId,
+        ownerId: authResult.user.userId,
       },
     });
 
