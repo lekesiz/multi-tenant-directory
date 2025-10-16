@@ -123,11 +123,12 @@ Please provide:
     const geminiResponse = result.responses.find((r) => r.model === 'gemini');
 
     // Extract data from responses (simplified - in production, use proper parsing)
+    const consensus = result.consensus || description;
     return {
-      improvedDescription: result.consensus || description,
-      suggestedKeywords: this.extractKeywords(result.consensus),
-      suggestedCategories: this.extractCategories(result.consensus),
-      seoScore: this.calculateSeoScore(result.consensus),
+      improvedDescription: consensus,
+      suggestedKeywords: this.extractKeywords(consensus),
+      suggestedCategories: this.extractCategories(consensus),
+      seoScore: this.calculateSeoScore(consensus),
     };
   }
 
@@ -205,10 +206,11 @@ Provide:
     };
 
     const result = await this.executeTask(task);
+    const consensus = result.consensus || query;
 
     return {
-      optimizedQuery: result.consensus || query,
-      suggestedFilters: this.extractFilters(result.consensus),
+      optimizedQuery: consensus,
+      suggestedFilters: this.extractFilters(consensus),
       searchStrategy: 'semantic',
     };
   }
@@ -253,13 +255,14 @@ Generate:
     };
 
     const result = await this.executeTask(task);
+    const consensus = result.consensus || '';
 
     // Parse result (simplified)
     return {
-      title: this.extractTitle(result.consensus, data.name),
-      metaDescription: this.extractMetaDescription(result.consensus),
+      title: this.extractTitle(consensus, data.name),
+      metaDescription: this.extractMetaDescription(consensus),
       h1: data.name,
-      content: result.consensus || '',
+      content: consensus,
       structuredData: {},
     };
   }
