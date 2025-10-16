@@ -88,7 +88,7 @@ export async function getCachedData<T>(
   ttlSeconds: number = 300
 ): Promise<T> {
   // Try memory cache first
-  const cached = memoryCache.get<T>(key);
+  const cached = memoryCache.get(key) as T | null;
   if (cached !== null) {
     return cached;
   }
