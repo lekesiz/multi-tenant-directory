@@ -145,7 +145,7 @@ export async function GET(
         id: coupon.id,
         title: coupon.title,
         description: coupon.description,
-        discount: coupon.discount,
+        discount: coupon.value,
         code: coupon.code,
         expiresAt: coupon.validUntil,
       })),
