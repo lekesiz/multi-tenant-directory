@@ -132,18 +132,13 @@ async function importBusinesses() {
           email: null,
           latitude: business.latitude,
           longitude: business.longitude,
-          description: business.descriptionEnhanced || business.description,
-          descriptionShort: business.descriptionShort || null,
-          keywords: business.keywords || business.categories,
-          hours: business.hours,
           rating: 4.5, // Default estimate
           reviewCount: 0,
-          verified: false,
-          photos: [],
           content: {
             create: {
               domainId: domain.id,
               isVisible: true,
+              customDescription: business.descriptionEnhanced || business.description || null,
             },
           },
         },
