@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { trackReferralConversion } from '@/lib/referral';
+import { STRIPE_WEBHOOK_EVENTS } from '@/lib/stripe-config';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -31,6 +32,9 @@ export async function POST(request: Request) {
       );
     }
 
+    // Log the event for tracking
+    await logStripeEvent(event);
+
     // Handle the event
     switch (event.type) {
       case 'checkout.session.completed':
@@ -49,12 +53,28 @@ export async function POST(request: Request) {
         await handleSubscriptionDeleted(event.data.object);
         break;
         
-      case 'invoice.payment_succeeded':
+      case 'customer.subscription.trial_will_end':
+        await handleTrialWillEnd(event.data.object);
+        break;
+        
+      case 'invoice.created':
+        await handleInvoiceCreated(event.data.object);
+        break;
+        
+      case 'invoice.paid':
         await handleInvoicePaymentSucceeded(event.data.object);
         break;
         
       case 'invoice.payment_failed':
         await handleInvoicePaymentFailed(event.data.object);
+        break;
+        
+      case 'invoice.payment_action_required':
+        await handleInvoicePaymentActionRequired(event.data.object);
+        break;
+        
+      case 'payment_method.attached':
+        await handlePaymentMethodAttached(event.data.object);
         break;
         
       default:
@@ -223,6 +243,18 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
       });
     }
 
+    // Update invoice record in database
+    await prisma.invoice.updateMany({
+      where: { stripeInvoiceId: invoice.id },
+      data: {
+        status: 'paid',
+        amountPaid: invoice.amount_paid,
+        paidAt: new Date(invoice.status_transitions?.paid_at * 1000 || Date.now()),
+        paymentStatus: 'succeeded',
+        paymentMethod: invoice.payment_intent?.payment_method_types?.[0] || 'unknown',
+      },
+    });
+
     console.log(`Payment succeeded for business owner: ${businessOwner.id}`);
   } catch (error) {
     console.error('Error handling invoice payment succeeded:', error);
@@ -253,5 +285,172 @@ async function handleInvoicePaymentFailed(invoice: any) {
     console.log(`Payment failed for business owner: ${businessOwner.id}`);
   } catch (error) {
     console.error('Error handling invoice payment failed:', error);
+  }
+}
+
+// Log Stripe events for audit trail
+async function logStripeEvent(event: any) {
+  try {
+    // Extract business owner ID from metadata if available
+    let businessOwnerId = null;
+    if (event.data.object.metadata?.businessOwnerId) {
+      businessOwnerId = event.data.object.metadata.businessOwnerId;
+    } else if (event.data.object.customer) {
+      // Try to find business owner by Stripe customer ID
+      const businessOwner = await prisma.businessOwner.findUnique({
+        where: { stripeCustomerId: event.data.object.customer },
+        select: { id: true },
+      });
+      if (businessOwner) {
+        businessOwnerId = businessOwner.id;
+      }
+    }
+
+    await prisma.stripeEvent.create({
+      data: {
+        eventType: event.type,
+        stripeId: event.id,
+        businessOwnerId,
+        data: event.data.object,
+        processed: false,
+      },
+    });
+  } catch (error) {
+    console.error('Error logging Stripe event:', error);
+  }
+}
+
+// Handle trial will end notification
+async function handleTrialWillEnd(subscription: any) {
+  const customerId = subscription.customer;
+  
+  try {
+    const businessOwner = await prisma.businessOwner.findUnique({
+      where: { stripeCustomerId: customerId },
+    });
+
+    if (!businessOwner) {
+      console.error(`Business owner not found for customer: ${customerId}`);
+      return;
+    }
+
+    // Send trial ending notification email
+    // This would integrate with your email service
+    console.log(`Trial ending soon for business owner: ${businessOwner.id}`);
+    
+    // Record in subscription history
+    await prisma.subscriptionHistory.create({
+      data: {
+        businessOwnerId: businessOwner.id,
+        action: 'trial_ending',
+        effectiveDate: new Date(subscription.trial_end * 1000),
+        stripeEventId: subscription.id,
+      },
+    });
+
+  } catch (error) {
+    console.error('Error handling trial will end:', error);
+  }
+}
+
+// Handle invoice creation
+async function handleInvoiceCreated(invoice: any) {
+  const customerId = invoice.customer;
+  
+  try {
+    const businessOwner = await prisma.businessOwner.findUnique({
+      where: { stripeCustomerId: customerId },
+    });
+
+    if (!businessOwner) {
+      console.error(`Business owner not found for customer: ${customerId}`);
+      return;
+    }
+
+    // Create invoice record in database
+    await prisma.invoice.create({
+      data: {
+        businessOwnerId: businessOwner.id,
+        stripeInvoiceId: invoice.id,
+        number: invoice.number,
+        status: invoice.status,
+        description: invoice.description,
+        subtotal: invoice.subtotal,
+        tax: invoice.tax || 0,
+        total: invoice.total,
+        amountDue: invoice.amount_due,
+        currency: invoice.currency,
+        invoiceDate: new Date(invoice.created * 1000),
+        dueDate: invoice.due_date ? new Date(invoice.due_date * 1000) : null,
+        metadata: invoice.metadata || {},
+      },
+    });
+
+    console.log(`Invoice created for business owner: ${businessOwner.id}`);
+
+  } catch (error) {
+    console.error('Error handling invoice created:', error);
+  }
+}
+
+// Handle payment action required
+async function handleInvoicePaymentActionRequired(invoice: any) {
+  const customerId = invoice.customer;
+  
+  try {
+    const businessOwner = await prisma.businessOwner.findUnique({
+      where: { stripeCustomerId: customerId },
+    });
+
+    if (!businessOwner) {
+      console.error(`Business owner not found for customer: ${customerId}`);
+      return;
+    }
+
+    // Update invoice status
+    await prisma.invoice.updateMany({
+      where: { stripeInvoiceId: invoice.id },
+      data: {
+        status: invoice.status,
+        paymentStatus: 'requires_action',
+      },
+    });
+
+    // Send payment action required notification
+    console.log(`Payment action required for business owner: ${businessOwner.id}`);
+
+  } catch (error) {
+    console.error('Error handling payment action required:', error);
+  }
+}
+
+// Handle payment method attached
+async function handlePaymentMethodAttached(paymentMethod: any) {
+  const customerId = paymentMethod.customer;
+  
+  try {
+    const businessOwner = await prisma.businessOwner.findUnique({
+      where: { stripeCustomerId: customerId },
+    });
+
+    if (!businessOwner) {
+      console.error(`Business owner not found for customer: ${customerId}`);
+      return;
+    }
+
+    console.log(`Payment method attached for business owner: ${businessOwner.id}`);
+    
+    // Record in subscription history
+    await prisma.subscriptionHistory.create({
+      data: {
+        businessOwnerId: businessOwner.id,
+        action: 'payment_method_added',
+        effectiveDate: new Date(),
+        stripeEventId: paymentMethod.id,
+      },
+    });
+
+  } catch (error) {
+    console.error('Error handling payment method attached:', error);
   }
 }

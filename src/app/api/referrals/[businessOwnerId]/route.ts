@@ -3,10 +3,10 @@ import { getReferralStats } from '@/lib/referral';
 
 export async function GET(
   request: Request,
-  { params }: { params: { businessOwnerId: string } }
+  { params }: { params: Promise<{ businessOwnerId: string }> }
 ) {
   try {
-    const { businessOwnerId } = params;
+    const { businessOwnerId } = await params;
 
     if (!businessOwnerId) {
       return NextResponse.json(
