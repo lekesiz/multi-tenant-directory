@@ -130,35 +130,4 @@ export const authBusinessOptions: NextAuthOptions = {
 };
 
 // Type augmentation for TypeScript
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      role: string;
-      emailVerified: Date | null;
-      companies: Array<{
-        id: number;
-        name: string;
-        role: string;
-        verified: boolean;
-      }>;
-    };
-  }
-  
-  interface User {
-    role: string;
-    emailVerified: Date | null;
-    companies: any[];
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string;
-    role: string;
-    emailVerified: Date | null;
-    companies: any[];
-  }
-}
+// Type declarations moved to src/types/next-auth.d.ts to avoid conflicts
