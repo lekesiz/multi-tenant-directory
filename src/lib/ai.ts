@@ -351,3 +351,83 @@ export function parseAIJSON<T = any>(content: string): T | null {
     return null;
   }
 }
+
+
+/**
+ * Generate chatbot response
+ */
+export async function generateChatbotResponse(data: {
+  userMessage: string;
+  conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  context?: string;
+}): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.chatbot
+    .replace('{context}', data.context || 'Aucun contexte spécifique')
+    .replace('{history}', JSON.stringify(data.conversationHistory || []))
+    .replace('{message}', data.userMessage);
+
+  return callAI(prompt);
+}
+
+/**
+ * Generate business insights
+ */
+export async function generateBusinessInsights(data: {
+  companyName: string;
+  category: string;
+  reviews: Array<{ rating: number; comment: string }>;
+  stats: {
+    totalReviews: number;
+    averageRating: number;
+    viewCount?: number;
+  };
+}): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.insights
+    .replace('{companyName}', data.companyName)
+    .replace('{category}', data.category)
+    .replace('{reviews}', JSON.stringify(data.reviews))
+    .replace('{stats}', JSON.stringify(data.stats));
+
+  return callAI(prompt);
+}
+
+/**
+ * Suggest business improvements
+ */
+export async function suggestBusinessImprovements(data: {
+  companyName: string;
+  category: string;
+  currentRating: number;
+  commonIssues: string[];
+  strengths: string[];
+}): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.recommendations
+    .replace('{companyName}', data.companyName)
+    .replace('{category}', data.category)
+    .replace('{rating}', data.currentRating.toString())
+    .replace('{issues}', data.commonIssues.join(', '))
+    .replace('{strengths}', data.strengths.join(', '));
+
+  return callAI(prompt);
+}
+
+/**
+ * Generate SEO content
+ */
+export async function generateSEOContent(data: {
+  companyName: string;
+  category: string;
+  location: string;
+  keywords?: string[];
+  contentType: 'meta_description' | 'page_title' | 'blog_post' | 'social_media';
+}): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.seoContent
+    .replace('{companyName}', data.companyName)
+    .replace('{category}', data.category)
+    .replace('{location}', data.location)
+    .replace('{keywords}', (data.keywords || []).join(', '))
+    .replace('{contentType}', data.contentType);
+
+  return callAI(prompt);
+}
+

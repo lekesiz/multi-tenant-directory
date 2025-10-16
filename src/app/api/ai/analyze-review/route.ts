@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       include: {
         company: {
           include: {
-            businessOwnerships: {
+            ownerships: {
               where: {
                 ownerId: businessOwner.id,
               },
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!review || review.company.businessOwnerships.length === 0) {
+    if (!review || review.company.ownerships.length === 0) {
       return NextResponse.json(
         { error: 'Avis non trouvé ou non autorisé' },
         { status: 403 }
