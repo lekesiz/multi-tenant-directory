@@ -9,9 +9,9 @@ import { authenticateMobileUser } from '@/lib/mobile-auth';
 export async function POST(request: Request) {
   try {
     const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: authResult.error || 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     // Get business owner's companies to verify permission
     const ownerships = await prisma.companyOwnership.findMany({
-      where: { businessOwnerId: authResult.user.userId },
+      where: { ownerId: authResult.user.userId },
       select: { companyId: true },
     });
 

@@ -12,9 +12,9 @@ export async function POST(request: Request) {
   try {
     // Authenticate user
     const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: authResult.error || 'Unauthorized' },
         { status: 401 }
       );
     }

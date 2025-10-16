@@ -25,9 +25,9 @@ const updateProfileSchema = z.object({
 export async function GET(request: Request) {
   try {
     const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: authResult.error || 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -104,9 +104,9 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: authResult.error || 'Unauthorized' },
         { status: 401 }
       );
     }

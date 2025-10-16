@@ -11,9 +11,9 @@ export async function GET(
     
     // Authenticate user
     const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: authResult.error || 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -64,7 +64,7 @@ export async function GET(
     const ownership = await prisma.companyOwnership.findFirst({
       where: {
         companyId: company.id,
-        businessOwnerId: authResult.user.userId,
+        ownerId: authResult.user.userId,
       },
     });
 

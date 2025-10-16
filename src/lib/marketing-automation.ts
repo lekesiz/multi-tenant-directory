@@ -10,11 +10,13 @@ import { nanoid } from 'nanoid';
 export interface MarketingCampaign {
   id: string;
   name: string;
+  description?: string;
   type: 'email' | 'sms' | 'push' | 'automation';
   status: 'draft' | 'active' | 'paused' | 'completed';
   triggers: CampaignTrigger[];
   actions: CampaignAction[];
   segment?: CustomerSegment;
+  segmentId?: string;
   analytics: CampaignAnalytics;
 }
 
@@ -34,6 +36,7 @@ export interface CampaignAction {
 export interface CustomerSegment {
   id: string;
   name: string;
+  description?: string;
   rules: SegmentRule[];
   dynamicRefresh: boolean;
 }

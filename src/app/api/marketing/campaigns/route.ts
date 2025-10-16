@@ -28,9 +28,9 @@ const createCampaignSchema = z.object({
 export async function GET(request: Request) {
   try {
     const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: authResult.error || 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
     // Build query filters
     const where: any = {
-      businessOwnerId: authResult.user.userId,
+      ownerId: authResult.user.userId,
     };
 
     if (status) where.status = status;
@@ -114,9 +114,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: authResult.error || 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
         type: validatedData.type,
         triggers: validatedData.triggers,
         actions: validatedData.actions,
-        segment: validatedData.segmentId ? { id: validatedData.segmentId } : undefined,
+        segmentId: validatedData.segmentId,
       }
     );
 
