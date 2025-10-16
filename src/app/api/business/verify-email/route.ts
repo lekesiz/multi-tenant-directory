@@ -117,11 +117,7 @@ export async function POST(request: NextRequest) {
         await sendVerificationEmail({
           to: businessOwner.email,
           verificationUrl,
-<<<<<<< HEAD
-          firstName: businessOwner.firstName || undefined,
-=======
           firstName: businessOwner.firstName ?? undefined,
->>>>>>> a0d8014 (fix: correct timestamp type in email verification route)
         });
         console.log('✅ Verification email resent to:', businessOwner.email);
       } catch (error) {
