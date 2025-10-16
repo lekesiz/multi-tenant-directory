@@ -37,7 +37,7 @@ export function createMockRequest(options: {
     requestInit.body = JSON.stringify(body);
   }
 
-  const request = new NextRequest(url, requestInit);
+  const request = new NextRequest(url, requestInit as any);
 
   // Add cookies
   Object.entries(cookies).forEach(([key, value]) => {
@@ -123,7 +123,7 @@ export function createAuthenticatedRequest(options: {
       'next-auth.session-token': sessionToken,
     },
     headers: {
-      ...requestOptions.headers,
+      ...(requestOptions as any).headers,
       Authorization: `Bearer ${sessionToken}`,
     },
   });

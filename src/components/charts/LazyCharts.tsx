@@ -76,9 +76,9 @@ export const Tooltip = dynamic(
 );
 
 export const Legend = dynamic(
-  () => import('recharts').then((mod) => mod.Legend),
+  () => import('recharts').then((mod) => mod.Legend as any),
   { ssr: false }
-);
+) as any;
 
 // Loading skeleton for charts
 function ChartSkeleton() {
