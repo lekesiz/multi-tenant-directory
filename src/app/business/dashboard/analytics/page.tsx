@@ -10,8 +10,8 @@ import {
   PhoneIcon,
   GlobeAltIcon,
   MapPinIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
 
@@ -178,12 +178,12 @@ export default function AnalyticsPage() {
                             }`}
                           >
                             {stat.changeType === 'increase' ? (
-                              <TrendingUpIcon
+                              <ArrowTrendingUpIcon
                                 className="self-center flex-shrink-0 h-5 w-5 text-green-500"
                                 aria-hidden="true"
                               />
                             ) : (
-                              <TrendingDownIcon
+                              <ArrowTrendingDownIcon
                                 className="self-center flex-shrink-0 h-5 w-5 text-red-500"
                                 aria-hidden="true"
                               />
