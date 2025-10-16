@@ -51,10 +51,15 @@ export default function SyncReviewsButton({ companyId }: { companyId?: number })
       <button
         onClick={handleSync}
         disabled={loading}
-        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        className={`${
+          companyId
+            ? 'bg-green-500 hover:bg-green-600 px-2 py-1 text-xs'
+            : 'bg-green-600 hover:bg-green-700 px-4 py-2 text-sm'
+        } text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5`}
+        title={loading ? 'Senkronize ediliyor...' : companyId ? 'Google yorumlarını çek' : 'Tüm işletmeler için Google yorumlarını çek'}
       >
         <svg
-          className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`}
+          className={`${companyId ? 'w-3.5 h-3.5' : 'w-5 h-5'} ${loading ? 'animate-spin' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -66,10 +71,10 @@ export default function SyncReviewsButton({ companyId }: { companyId?: number })
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
           />
         </svg>
-        {loading ? 'Senkronize ediliyor...' : companyId ? 'Yorumları Çek' : 'Tüm Yorumları Çek'}
+        {loading ? (companyId ? '...' : 'Sync...') : companyId ? 'Sync' : 'Sync Tous'}
       </button>
       {message && (
-        <p className="mt-2 text-sm text-gray-700">{message}</p>
+        <p className={`mt-2 text-xs ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>{message}</p>
       )}
     </div>
   );

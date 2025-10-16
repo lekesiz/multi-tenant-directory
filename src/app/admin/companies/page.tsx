@@ -75,6 +75,9 @@ export default async function AdminCompaniesPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Avis
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Google
+              </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
@@ -104,6 +107,20 @@ export default async function AdminCompaniesPage() {
                   <div className="text-sm text-gray-900">
                     {company._count.reviews} avis
                   </div>
+                </td>
+                <td className="px-6 py-4">
+                  {company.googlePlaceId ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                        ✓ Lié
+                      </span>
+                      <SyncReviewsButton companyId={company.id} />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded">
+                      Non lié
+                    </span>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-right text-sm font-medium">
                   <Link
