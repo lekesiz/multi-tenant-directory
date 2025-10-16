@@ -13,7 +13,7 @@ export async function PATCH(
   try {
     // Check auth
     const session = await auth();
-    if (!session || !session.businessOwner) {
+    if (!session || !session.user) {
       return NextResponse.json(
         { error: 'Non autorisé' },
         { status: 401 }
@@ -35,7 +35,7 @@ export async function PATCH(
         company: {
           owners: {
             some: {
-              ownerId: session.businessOwner.id,
+              ownerId: session.user.id,
               verified: true,
             },
           },
@@ -56,7 +56,7 @@ export async function PATCH(
       data: {
         isVerified: !review.isVerified,
         verifiedAt: !review.isVerified ? new Date() : null,
-        verifiedBy: !review.isVerified ? session.businessOwner.id : null,
+        verifiedBy: !review.isVerified ? session.user.id : null,
       },
     });
 

@@ -18,7 +18,7 @@ const preferencesSchema = z.object({
 export async function GET() {
   try {
     const session = await auth();
-    if (!session || !session.businessOwner) {
+    if (!session || !session.user) {
       return NextResponse.json(
         { error: 'Non autorisé' },
         { status: 401 }
@@ -26,7 +26,7 @@ export async function GET() {
     }
 
     const businessOwner = await prisma.businessOwner.findUnique({
-      where: { id: session.businessOwner.id },
+      where: { id: session.user.id },
       select: {
         emailNewReview: true,
         emailReviewReply: true,
@@ -58,7 +58,7 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await auth();
-    if (!session || !session.businessOwner) {
+    if (!session || !session.user) {
       return NextResponse.json(
         { error: 'Non autorisé' },
         { status: 401 }
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest) {
 
     // Update preferences
     const updatedOwner = await prisma.businessOwner.update({
-      where: { id: session.businessOwner.id },
+      where: { id: session.user.id },
       data: validatedData,
       select: {
         emailNewReview: true,

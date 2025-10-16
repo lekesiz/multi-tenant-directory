@@ -19,7 +19,7 @@ export async function POST(
   try {
     // Check auth
     const session = await auth();
-    if (!session || !session.businessOwner) {
+    if (!session || !session.user) {
       return NextResponse.json(
         { error: 'Non autorisé' },
         { status: 401 }
@@ -45,7 +45,7 @@ export async function POST(
         company: {
           owners: {
             some: {
-              ownerId: session.businessOwner.id,
+              ownerId: session.user.id,
               verified: true,
             },
           },
@@ -83,7 +83,7 @@ export async function POST(
       const newReply = await prisma.reviewReply.create({
         data: {
           reviewId,
-          ownerId: session.businessOwner.id,
+          ownerId: session.user.id,
           content: validatedData.content,
         },
       });
@@ -121,7 +121,7 @@ export async function DELETE(
   try {
     // Check auth
     const session = await auth();
-    if (!session || !session.businessOwner) {
+    if (!session || !session.user) {
       return NextResponse.json(
         { error: 'Non autorisé' },
         { status: 401 }
@@ -140,7 +140,7 @@ export async function DELETE(
     const reply = await prisma.reviewReply.findFirst({
       where: {
         reviewId,
-        ownerId: session.businessOwner.id,
+        ownerId: session.user.id,
       },
     });
 
