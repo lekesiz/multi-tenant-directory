@@ -44,7 +44,12 @@ export async function POST(
       promotions,
       metaTitle,
       metaDescription,
+      priority,
+      featuredUntil,
     } = body;
+
+    // Convert featuredUntil to Date if provided
+    const featuredUntilDate = featuredUntil ? new Date(featuredUntil) : null;
 
     // Upsert: Varsa güncelle, yoksa oluştur
     const content = await prisma.companyContent.upsert({
@@ -61,6 +66,8 @@ export async function POST(
         promotions,
         metaTitle,
         metaDescription,
+        priority: priority !== undefined ? priority : 0,
+        featuredUntil: featuredUntilDate,
       },
       create: {
         companyId,
@@ -71,6 +78,8 @@ export async function POST(
         promotions,
         metaTitle,
         metaDescription,
+        priority: priority || 0,
+        featuredUntil: featuredUntilDate,
       },
     });
 

@@ -28,6 +28,8 @@ interface Company {
     customDescription: string | null;
     customImages: any;
     promotions: string | null;
+    priority: number;
+    featuredUntil: Date | null;
     domain: {
       id: number;
       name: string;
@@ -87,6 +89,8 @@ export default function CompanyEditForm({
         isVisible: boolean;
         customDescription: string;
         promotions: string;
+        priority: number;
+        featuredUntil: string;
       }
     >
   >(
@@ -96,6 +100,8 @@ export default function CompanyEditForm({
         isVisible: content?.isVisible || false,
         customDescription: content?.customDescription || '',
         promotions: content?.promotions || '',
+        priority: content?.priority || 0,
+        featuredUntil: content?.featuredUntil ? new Date(content.featuredUntil).toISOString().split('T')[0] : '',
       };
       return acc;
     }, {} as any)
@@ -540,6 +546,79 @@ export default function CompanyEditForm({
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                         placeholder="Özel teklifler, indirimler..."
                       />
+                    </div>
+
+                    {/* Featured Section */}
+                    <div className="border-t pt-4 mt-4">
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <h4 className="text-sm font-medium text-amber-900 mb-3 flex items-center">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          Entreprise Mise en Avant
+                        </h4>
+                        <p className="text-xs text-amber-700 mb-3">
+                          Les entreprises mises en avant apparaissent en premier dans les résultats de recherche
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Priorité (0-100)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={settings.priority}
+                              onChange={(e) =>
+                                setDomainSettings({
+                                  ...domainSettings,
+                                  [domain.id]: {
+                                    ...settings,
+                                    priority: parseInt(e.target.value) || 0,
+                                  },
+                                })
+                              }
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                              placeholder="0"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Plus élevé = Plus visible
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Mise en avant jusqu'au
+                            </label>
+                            <input
+                              type="date"
+                              value={settings.featuredUntil}
+                              onChange={(e) =>
+                                setDomainSettings({
+                                  ...domainSettings,
+                                  [domain.id]: {
+                                    ...settings,
+                                    featuredUntil: e.target.value,
+                                  },
+                                })
+                              }
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Laissez vide pour illimité
+                            </p>
+                          </div>
+                        </div>
+
+                        {settings.priority > 0 && (
+                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+                            ✓ Cette entreprise sera mise en avant sur {domain.name}
+                            {settings.featuredUntil && ` jusqu'au ${new Date(settings.featuredUntil).toLocaleDateString('fr-FR')}`}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
