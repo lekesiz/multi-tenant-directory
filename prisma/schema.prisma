@@ -66,6 +66,9 @@ model Company {
   hours          BusinessHours?
   analytics      CompanyAnalytics[]
   coupons        Coupon[]
+  notifications  Notification[]
+  leadScores     LeadScore[]
+  customerJourney CustomerJourney[]
 
   @@index([slug])
   @@index([city])
@@ -212,6 +215,26 @@ model BusinessOwner {
   trialStart           DateTime?
   trialEnd             DateTime?
 
+  // Mobile App Support
+  deviceId             String?
+  deviceType           String?  // "ios" or "android"
+  fcmToken             String?  // Firebase Cloud Messaging token
+  lastLoginAt          DateTime?
+  profileImageUrl      String?
+  isEmailVerified      Boolean  @default(false)
+  
+  // Notification Preferences
+  pushNotifications    Boolean  @default(true)
+  emailNotifications   Boolean  @default(true)
+  marketingEmails      Boolean  @default(false)
+  reviewNotifications  Boolean  @default(true)
+
+  // AI Usage Tracking
+  aiUsageCount         Int      @default(0) // Daily AI request count
+  aiUsageResetDate     DateTime? // Date when usage count resets (24h)
+  aiTotalRequests      Int      @default(0) // Lifetime AI requests
+  aiTotalCost          Float    @default(0) // Total cost in cents
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -219,6 +242,21 @@ model BusinessOwner {
   reviewReplies ReviewReply[]
   referralsGiven Referral[] @relation("Referrer")
   referralsReceived Referral[] @relation("Referred")
+  notifications Notification[]
+  
+  // Marketing Automation Relations
+  marketingCampaigns MarketingCampaign[]
+  customerSegments CustomerSegment[]
+  segmentMemberships SegmentMember[]
+  leadScores LeadScore[]
+  campaignEvents CampaignEvent[]
+  customerJourney CustomerJourney[]
+  emailTemplates EmailTemplate[]
+  
+  // Stripe Relations
+  stripeEvents StripeEvent[]
+  subscriptionHistory SubscriptionHistory[]
+  invoices Invoice[]
 
   @@index([email])
   @@index([unsubscribeToken])
@@ -468,4 +506,294 @@ model CouponRedemption {
   @@index([redemptionCode])
   @@index([createdAt(sort: Desc)])
   @@map("coupon_redemptions")
+}
+
+// Push Notifications
+model Notification {
+  id              String   @id @default(cuid())
+  recipientId     String   // BusinessOwner ID
+  type            String   // "new_review", "marketing_blast", "system_announcement"
+  title           String
+  message         String   @db.Text
+  companyId       Int?     // Related company (optional)
+  
+  // Status
+  isRead          Boolean  @default(false)
+  readAt          DateTime?
+  sentAt          DateTime @default(now())
+  
+  // Metadata
+  data            Json?    // Additional data for the notification
+  
+  createdAt       DateTime @default(now())
+  
+  recipient       BusinessOwner @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  company         Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([recipientId, isRead])
+  @@index([recipientId, sentAt(sort: Desc)])
+  @@index([type])
+  @@map("notifications")
+}
+
+// Marketing Automation System
+model MarketingCampaign {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  name            String
+  description     String?  @db.Text
+  type            String   // "email", "sms", "push", "automation"
+  status          String   @default("draft") // "draft", "active", "paused", "completed"
+  
+  // Campaign Configuration
+  triggers        Json     // Array of trigger conditions
+  actions         Json     // Array of actions to execute
+  segmentId       String?  // Target segment (optional)
+  
+  // Scheduling
+  startDate       DateTime?
+  endDate         DateTime?
+  nextRunAt       DateTime?
+  
+  // Analytics
+  analytics       Json     @default("{}")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  segment         CustomerSegment? @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+  events          CampaignEvent[]
+  abTests         ABTest[]
+  
+  @@index([businessOwnerId, status])
+  @@index([status, nextRunAt])
+  @@index([type, status])
+  @@map("marketing_campaigns")
+}
+
+// Customer Segmentation
+model CustomerSegment {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  name            String
+  description     String?  @db.Text
+  rules           Json     // Segmentation rules
+  dynamicRefresh  Boolean  @default(true)
+  
+  memberCount     Int      @default(0)
+  lastRefreshed   DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  members         SegmentMember[]
+  campaigns       MarketingCampaign[]
+  
+  @@index([businessOwnerId])
+  @@index([dynamicRefresh, lastRefreshed])
+  @@map("customer_segments")
+}
+
+// Segment Membership
+model SegmentMember {
+  id              String   @id @default(cuid())
+  segmentId       String
+  userId          String   // BusinessOwner ID
+  addedAt         DateTime @default(now())
+  
+  segment         CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  user            BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([segmentId, userId])
+  @@index([segmentId])
+  @@index([userId])
+  @@map("segment_members")
+}
+
+// Lead Scoring
+model LeadScore {
+  id              String   @id @default(cuid())
+  userId          String   // BusinessOwner ID
+  companyId       Int
+  score           Int      @default(0)
+  factors         Json     @default("[]") // Array of scoring factors
+  lastUpdated     DateTime @default(now())
+  
+  user            BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company         Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, companyId])
+  @@index([companyId, score(sort: Desc)])
+  @@index([userId])
+  @@map("lead_scores")
+}
+
+// Campaign Event Tracking
+model CampaignEvent {
+  id              String   @id @default(cuid())
+  campaignId      String
+  userId          String   // BusinessOwner ID
+  event           String   // "sent", "delivered", "opened", "clicked", "converted"
+  timestamp       DateTime @default(now())
+  metadata        Json?
+  
+  campaign        MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user            BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([campaignId, event])
+  @@index([userId, timestamp(sort: Desc)])
+  @@index([event, timestamp(sort: Desc)])
+  @@map("campaign_events")
+}
+
+// A/B Testing
+model ABTest {
+  id              String   @id @default(cuid())
+  campaignId      String
+  name            String
+  variants        Json     // Array of test variants
+  status          String   @default("active") // "active", "paused", "completed"
+  results         Json     @default("{}")
+  
+  startDate       DateTime @default(now())
+  endDate         DateTime?
+  
+  campaign        MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  @@index([campaignId])
+  @@index([status])
+  @@map("ab_tests")
+}
+
+// Customer Journey Tracking
+model CustomerJourney {
+  id              String   @id @default(cuid())
+  userId          String   // BusinessOwner ID
+  companyId       Int
+  touchpoint      String   // "website_visit", "email_open", "form_submit", etc.
+  timestamp       DateTime @default(now())
+  metadata        Json     @default("{}")
+  
+  user            BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company         Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, timestamp(sort: Desc)])
+  @@index([companyId, touchpoint])
+  @@index([touchpoint, timestamp(sort: Desc)])
+  @@map("customer_journey")
+}
+
+// Email Templates
+model EmailTemplate {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  name            String
+  subject         String
+  htmlContent     String   @db.Text
+  textContent     String?  @db.Text
+  category        String   @default("marketing") // "marketing", "transactional", "automation"
+  isActive        Boolean  @default(true)
+  
+  // Template variables
+  variables       Json     @default("[]")
+  
+  // Analytics
+  usageCount      Int      @default(0)
+  lastUsed        DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  
+  @@index([businessOwnerId, category])
+  @@index([category, isActive])
+  @@map("email_templates")
+}
+
+// Stripe Events Tracking
+model StripeEvent {
+  id              String   @id @default(cuid())
+  eventType       String   // "checkout.session.completed", "invoice.paid", etc.
+  stripeId        String   @unique // Stripe event ID or object ID
+  businessOwnerId String?  // Related business owner (optional)
+  data            Json     // Event data
+  processed       Boolean  @default(false)
+  processedAt     DateTime?
+  createdAt       DateTime @default(now())
+  
+  businessOwner   BusinessOwner? @relation(fields: [businessOwnerId], references: [id], onDelete: SetNull)
+  
+  @@index([eventType, processed])
+  @@index([businessOwnerId])
+  @@index([createdAt(sort: Desc)])
+  @@map("stripe_events")
+}
+
+// Subscription History
+model SubscriptionHistory {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  action          String   // "created", "updated", "canceled", "reactivated"
+  fromPlan        String?  // Previous plan
+  toPlan          String?  // New plan
+  fromPrice       Float?
+  toPrice         Float?
+  reason          String?  // Reason for change
+  stripeEventId   String?  // Related Stripe event
+  
+  effectiveDate   DateTime
+  createdAt       DateTime @default(now())
+  
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  
+  @@index([businessOwnerId, effectiveDate(sort: Desc)])
+  @@index([action, effectiveDate(sort: Desc)])
+  @@map("subscription_history")
+}
+
+// Invoices and Billing
+model Invoice {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  stripeInvoiceId String   @unique
+  
+  // Invoice details
+  number          String?
+  status          String   // "draft", "open", "paid", "void", "uncollectible"
+  description     String?
+  
+  // Amounts (in cents)
+  subtotal        Int
+  tax             Int      @default(0)
+  total           Int
+  amountPaid      Int      @default(0)
+  amountDue       Int      @default(0)
+  
+  currency        String   @default("eur")
+  
+  // Dates
+  invoiceDate     DateTime
+  dueDate         DateTime?
+  paidAt          DateTime?
+  voidedAt        DateTime?
+  
+  // Payment
+  paymentMethod   String?  // "card", "sepa_debit", etc.
+  paymentStatus   String?  // "succeeded", "failed", "pending"
+  
+  // Metadata
+  metadata        Json     @default("{}")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  
+  @@index([businessOwnerId, invoiceDate(sort: Desc)])
+  @@index([status, dueDate])
+  @@index([stripeInvoiceId])
+  @@map("invoices")
 }

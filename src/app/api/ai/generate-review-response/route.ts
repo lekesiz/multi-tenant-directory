@@ -1,94 +1,152 @@
 /**
- * AI Review Response Generator API
- *
- * Generates professional responses to customer reviews
- * Uses AI orchestration for tone-appropriate responses
+ * AI API Route: Generate Review Response
+ * POST /api/ai/generate-review-response
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { isN8nAvailable } from '@/lib/ai/n8n-client';
-import { getAIOrchestrator } from '@/lib/ai/orchestrator';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { generateReviewResponse } from '@/lib/ai';
+import { getAIRateLimit } from '@/config/ai';
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Check if AI is available
-    if (!isN8nAvailable()) {
+    // 1. Verify authentication
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    }
+
+    // 2. Get business owner
+    const businessOwner = await prisma.businessOwner.findUnique({
+      where: { email: session.user.email },
+      select: {
+        id: true,
+        subscriptionTier: true,
+        aiUsageCount: true,
+        aiUsageResetDate: true,
+      },
+    });
+
+    if (!businessOwner) {
       return NextResponse.json(
-        {
-          error: 'AI service not configured',
-          message: 'Please set N8N_API_KEY and N8N_API_URL environment variables',
-        },
-        { status: 503 }
+        { error: 'Propriétaire d\'entreprise non trouvé' },
+        { status: 404 }
       );
     }
 
-    const body = await request.json();
-    const { reviewId, tone } = body;
+    // 3. Check rate limit
+    const tierRateLimit = getAIRateLimit(
+      businessOwner.subscriptionTier as 'free' | 'basic' | 'pro' | 'enterprise'
+    );
 
-    // Validation
-    if (!reviewId) {
+    const now = new Date();
+    const resetDate = businessOwner.aiUsageResetDate || new Date(0);
+    let currentUsage = businessOwner.aiUsageCount || 0;
+
+    if (now > resetDate) {
+      currentUsage = 0;
+      const nextReset = new Date(now);
+      nextReset.setDate(nextReset.getDate() + 1);
+
+      await prisma.businessOwner.update({
+        where: { id: businessOwner.id },
+        data: {
+          aiUsageCount: 0,
+          aiUsageResetDate: nextReset,
+        },
+      });
+    }
+
+    if (tierRateLimit !== -1 && currentUsage >= tierRateLimit) {
       return NextResponse.json(
         {
-          error: 'Missing required field: reviewId',
+          error: `Limite quotidienne atteinte (${tierRateLimit} requêtes/jour)`,
+          limit: tierRateLimit,
+          usage: currentUsage,
+        },
+        { status: 429 }
+      );
+    }
+
+    // 4. Parse request body
+    const body = await req.json();
+    const { reviewId, companyName, rating, comment, authorName, sentiment } = body;
+
+    if (!reviewId || !companyName || rating === undefined || !comment || !authorName) {
+      return NextResponse.json(
+        {
+          error:
+            'Paramètres manquants (reviewId, companyName, rating, comment, authorName requis)',
         },
         { status: 400 }
       );
     }
 
-    // Fetch review from database
+    // 5. Verify review ownership
     const review = await prisma.review.findUnique({
-      where: { id: parseInt(reviewId) },
+      where: { id: reviewId },
       include: {
         company: {
-          select: {
-            name: true,
+          include: {
+            businessOwnerships: {
+              where: {
+                ownerId: businessOwner.id,
+              },
+            },
           },
         },
       },
     });
 
-    if (!review) {
+    if (!review || review.company.businessOwnerships.length === 0) {
       return NextResponse.json(
-        {
-          error: 'Review not found',
-        },
-        { status: 404 }
+        { error: 'Avis non trouvé ou non autorisé' },
+        { status: 403 }
       );
     }
 
-    // Get AI orchestrator
-    const orchestrator = getAIOrchestrator();
+    // 6. Generate response with AI
+    const aiResponse = await generateReviewResponse({
+      companyName,
+      rating,
+      comment,
+      authorName,
+      sentiment,
+    });
 
-    // Generate response
-    const response = await orchestrator.generateReviewResponse(
-      {
-        rating: review.rating,
-        comment: review.comment || '',
-        authorName: review.authorName,
+    if (!aiResponse.success) {
+      return NextResponse.json(
+        { error: aiResponse.error || 'Erreur lors de la génération' },
+        { status: 500 }
+      );
+    }
+
+    // 7. Update usage count
+    await prisma.businessOwner.update({
+      where: { id: businessOwner.id },
+      data: {
+        aiUsageCount: currentUsage + 1,
       },
-      review.company.name,
-      tone || 'professional'
-    );
+    });
 
+    // 8. Return generated response
     return NextResponse.json({
       success: true,
-      data: {
-        reviewId: review.id,
-        generatedResponse: response,
-        tone: tone || 'professional',
+      response: aiResponse.content,
+      provider: aiResponse.provider,
+      model: aiResponse.model,
+      tokensUsed: aiResponse.tokensUsed,
+      costCents: aiResponse.costCents,
+      usage: {
+        current: currentUsage + 1,
+        limit: tierRateLimit,
       },
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('AI review response generation error:', error);
-
-    return NextResponse.json(
-      {
-        error: 'Failed to generate review response',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    console.error('[AI Generate Review Response] Error:', error);
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

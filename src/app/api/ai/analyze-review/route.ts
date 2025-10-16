@@ -1,14 +1,29 @@
 /**
- * AI API Route: Generate Business Description
- * POST /api/ai/generate-description
+ * AI API Route: Analyze Review
+ * POST /api/ai/analyze-review
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { generateBusinessDescription } from '@/lib/ai';
+import { analyzeReview, parseAIJSON } from '@/lib/ai';
 import { getAIRateLimit } from '@/config/ai';
+
+interface ReviewAnalysis {
+  sentiment: 'positive' | 'neutral' | 'negative';
+  keywords: string[];
+  topics: {
+    service?: 'positive' | 'neutral' | 'negative' | null;
+    quality?: 'positive' | 'neutral' | 'negative' | null;
+    price?: 'positive' | 'neutral' | 'negative' | null;
+    ambiance?: 'positive' | 'neutral' | 'negative' | null;
+    hygiene?: 'positive' | 'neutral' | 'negative' | null;
+  };
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,14 +57,11 @@ export async function POST(req: NextRequest) {
       businessOwner.subscriptionTier as 'free' | 'basic' | 'pro' | 'enterprise'
     );
 
-    // Reset usage count if past reset date
     const now = new Date();
     const resetDate = businessOwner.aiUsageResetDate || new Date(0);
-
     let currentUsage = businessOwner.aiUsageCount || 0;
 
     if (now > resetDate) {
-      // Reset usage (24 hours)
       currentUsage = 0;
       const nextReset = new Date(now);
       nextReset.setDate(nextReset.getDate() + 1);
@@ -63,11 +75,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Check if over limit
     if (tierRateLimit !== -1 && currentUsage >= tierRateLimit) {
       return NextResponse.json(
         {
-          error: `Limite quotidienne atteinte (${tierRateLimit} requêtes/jour). Passez à un plan supérieur.`,
+          error: `Limite quotidienne atteinte (${tierRateLimit} requêtes/jour)`,
           limit: tierRateLimit,
           usage: currentUsage,
         },
@@ -77,47 +88,73 @@ export async function POST(req: NextRequest) {
 
     // 4. Parse request body
     const body = await req.json();
-    const { companyId, name, category, city, address, existingDescription } = body;
+    const { reviewId, rating, comment, authorName } = body;
 
-    if (!companyId || !name || !category || !city) {
+    if (!reviewId || rating === undefined || !comment || !authorName) {
       return NextResponse.json(
-        { error: 'Paramètres manquants (companyId, name, category, city requis)' },
+        { error: 'Paramètres manquants (reviewId, rating, comment, authorName requis)' },
         { status: 400 }
       );
     }
 
-    // 5. Verify company ownership
-    const ownership = await prisma.businessOwnership.findFirst({
-      where: {
-        companyId: parseInt(companyId),
-        ownerId: businessOwner.id,
+    // 5. Verify review ownership (check if review belongs to owner's company)
+    const review = await prisma.review.findUnique({
+      where: { id: reviewId },
+      include: {
+        company: {
+          include: {
+            businessOwnerships: {
+              where: {
+                ownerId: businessOwner.id,
+              },
+            },
+          },
+        },
       },
     });
 
-    if (!ownership) {
+    if (!review || review.company.businessOwnerships.length === 0) {
       return NextResponse.json(
-        { error: 'Vous ne possédez pas cette entreprise' },
+        { error: 'Avis non trouvé ou non autorisé' },
         { status: 403 }
       );
     }
 
-    // 6. Generate description with AI
-    const aiResponse = await generateBusinessDescription({
-      name,
-      category,
-      city,
-      address,
-      existingDescription,
+    // 6. Analyze review with AI
+    const aiResponse = await analyzeReview({
+      rating,
+      comment,
+      authorName,
     });
 
     if (!aiResponse.success) {
       return NextResponse.json(
-        { error: aiResponse.error || 'Erreur lors de la génération' },
+        { error: aiResponse.error || 'Erreur lors de l\'analyse' },
         { status: 500 }
       );
     }
 
-    // 7. Update usage count
+    // 7. Parse AI response
+    const analysis = parseAIJSON<ReviewAnalysis>(aiResponse.content);
+
+    if (!analysis) {
+      return NextResponse.json(
+        { error: 'Format de réponse AI invalide' },
+        { status: 500 }
+      );
+    }
+
+    // 8. Save analysis to database (optional - extend Review model if needed)
+    // await prisma.review.update({
+    //   where: { id: reviewId },
+    //   data: {
+    //     aiSentiment: analysis.sentiment,
+    //     aiKeywords: analysis.keywords,
+    //     aiSummary: analysis.summary,
+    //   },
+    // });
+
+    // 9. Update usage count
     await prisma.businessOwner.update({
       where: { id: businessOwner.id },
       data: {
@@ -125,10 +162,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 8. Return generated description
+    // 10. Return analysis
     return NextResponse.json({
       success: true,
-      description: aiResponse.content,
+      analysis,
       provider: aiResponse.provider,
       model: aiResponse.model,
       tokensUsed: aiResponse.tokensUsed,
@@ -139,10 +176,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[AI Generate Description] Error:', error);
-    return NextResponse.json(
-      { error: 'Erreur serveur' },
-      { status: 500 }
-    );
+    console.error('[AI Analyze Review] Error:', error);
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

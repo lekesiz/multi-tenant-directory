@@ -1,263 +1,353 @@
-import { openai } from '@ai-sdk/openai';
-import { generateText, streamText } from 'ai';
+/**
+ * AI Helper Functions
+ * Provides unified interface for OpenAI and Anthropic APIs
+ */
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY is not defined in environment variables');
+import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
+import { AI_CONFIG, AI_PROMPTS, isAIAvailable } from '@/config/ai';
+
+/**
+ * AI Response Type
+ */
+export interface AIResponse {
+  success: boolean;
+  content: string;
+  error?: string;
+  provider: 'openai' | 'anthropic';
+  model: string;
+  tokensUsed?: number;
+  costCents?: number;
 }
 
-// AI Models configuration
-export const AI_MODELS = {
-  CHAT: openai('gpt-4o-mini'), // Fast and cost-effective for chat
-  CONTENT: openai('gpt-4o'), // Higher quality for content generation
-  ANALYSIS: openai('gpt-4o-mini'), // Good for analysis tasks
-} as const;
+/**
+ * Call OpenAI API
+ */
+async function callOpenAI(prompt: string): Promise<AIResponse> {
+  const { apiKey, model, temperature, maxTokens } = AI_CONFIG.openai;
 
-// Chatbot system prompt
-export const CHATBOT_SYSTEM_PROMPT = `Tu es un assistant virtuel intelligent pour une plateforme d'annuaire professionnel français. 
+  if (!apiKey) {
+    return {
+      success: false,
+      content: '',
+      error: 'OpenAI API key not configured',
+      provider: 'openai',
+      model,
+    };
+  }
 
-Tu aides les utilisateurs avec:
-- Trouver des entreprises locales
-- Comprendre les services offerts
-- Naviguer sur la plateforme
-- Questions sur les tarifs et abonnements
-- Support technique de base
-
-Instructions:
-- Réponds toujours en français
-- Sois professionnel mais amical
-- Propose des solutions concrètes
-- Si tu ne connais pas une réponse spécifique, dirige vers le support humain
-- Utilise des émojis occasionnellement pour rendre la conversation plus agréable
-- Reste dans le contexte de l'annuaire professionnel
-
-Évite:
-- Les sujets non liés à la plateforme
-- Les conseils médicaux ou juridiques
-- Les informations personnelles sensibles`;
-
-// Review response generator prompt
-export const REVIEW_RESPONSE_PROMPT = `Tu es un assistant qui aide les propriétaires d'entreprises à répondre aux avis clients de manière professionnelle.
-
-Génère une réponse appropriée selon ces critères:
-- Ton professionnel et courtois
-- Remercie toujours le client
-- Adresse les points spécifiques mentionnés
-- Propose une solution si c'est un avis négatif
-- Encourage à revenir pour les avis positifs
-- Maximum 150 mots
-- En français
-
-Contexte de l'entreprise: {businessContext}
-Avis du client: {reviewText}
-Note: {rating}/5 étoiles`;
-
-// SEO content generation prompt
-export const SEO_CONTENT_PROMPT = `Tu es un expert en rédaction SEO pour les entreprises locales françaises.
-
-Génère un contenu optimisé SEO selon ces critères:
-- Français naturel et engageant
-- Mots-clés locaux intégrés naturellement
-- Structure claire avec sous-titres
-- Call-to-action à la fin
-- Adapté au secteur d'activité
-
-Informations sur l'entreprise:
-- Nom: {businessName}
-- Secteur: {category}
-- Ville: {city}
-- Services: {services}
-
-Type de contenu à générer: {contentType}`;
-
-// Business insights analysis prompt
-export const INSIGHTS_PROMPT = `Tu es un analyste business qui fournit des insights actionnables basés sur les données d'une entreprise.
-
-Analyse les métriques suivantes et fournis:
-- 3 points forts identifiés
-- 3 axes d'amélioration
-- 2 recommandations concrètes
-- 1 alerte si applicable
-
-Données analytiques: {analyticsData}
-Informations contextuelles: {businessContext}
-
-Format de réponse en JSON:
-{
-  "strengths": ["point1", "point2", "point3"],
-  "improvements": ["axe1", "axe2", "axe3"],
-  "recommendations": ["rec1", "rec2"],
-  "alerts": ["alerte"] ou []
-}`;
-
-// Helper function to generate chatbot response
-export async function generateChatbotResponse(userMessage: string, conversationHistory: string[] = []) {
   try {
-    const context = conversationHistory.length > 0 
-      ? `Historique de conversation:\n${conversationHistory.join('\n')}\n\n`
-      : '';
+    const openai = new OpenAI({ apiKey });
 
-    const { text } = await generateText({
-      model: AI_MODELS.CHAT,
-      system: CHATBOT_SYSTEM_PROMPT,
-      prompt: `${context}Utilisateur: ${userMessage}`,
-      temperature: 0.7,
-      maxTokens: 200,
+    const completion = await openai.chat.completions.create({
+      model,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Vous êtes un assistant IA spécialisé dans le marketing local et la gestion d\'avis clients en France.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature,
+      max_tokens: maxTokens,
     });
 
-    return text;
+    const content = completion.choices[0]?.message?.content || '';
+    const tokensUsed = completion.usage?.total_tokens || 0;
+
+    return {
+      success: true,
+      content,
+      provider: 'openai',
+      model,
+      tokensUsed,
+      costCents: calculateCost('openai', model, tokensUsed),
+    };
   } catch (error) {
-    console.error('Error generating chatbot response:', error);
-    throw new Error('Erreur lors de la génération de la réponse');
+    console.error('[AI] OpenAI error:', error);
+    return {
+      success: false,
+      content: '',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      provider: 'openai',
+      model,
+    };
   }
 }
 
-// Helper function to generate streaming chatbot response
-export async function streamChatbotResponse(userMessage: string, conversationHistory: string[] = []) {
-  try {
-    const context = conversationHistory.length > 0 
-      ? `Historique de conversation:\n${conversationHistory.join('\n')}\n\n`
-      : '';
+/**
+ * Call Anthropic (Claude) API
+ */
+async function callAnthropic(prompt: string): Promise<AIResponse> {
+  const { apiKey, model, maxTokens } = AI_CONFIG.anthropic;
 
-    const result = await streamText({
-      model: AI_MODELS.CHAT,
-      system: CHATBOT_SYSTEM_PROMPT,
-      prompt: `${context}Utilisateur: ${userMessage}`,
-      temperature: 0.7,
-      maxTokens: 200,
+  if (!apiKey) {
+    return {
+      success: false,
+      content: '',
+      error: 'Anthropic API key not configured',
+      provider: 'anthropic',
+      model,
+    };
+  }
+
+  try {
+    const anthropic = new Anthropic({ apiKey });
+
+    const message = await anthropic.messages.create({
+      model,
+      max_tokens: maxTokens,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
     });
 
-    return result.toDataStreamResponse();
+    const content =
+      message.content[0]?.type === 'text' ? message.content[0].text : '';
+    const tokensUsed =
+      (message.usage.input_tokens || 0) + (message.usage.output_tokens || 0);
+
+    return {
+      success: true,
+      content,
+      provider: 'anthropic',
+      model,
+      tokensUsed,
+      costCents: calculateCost('anthropic', model, tokensUsed),
+    };
   } catch (error) {
-    console.error('Error streaming chatbot response:', error);
-    throw new Error('Erreur lors de la génération de la réponse');
+    console.error('[AI] Anthropic error:', error);
+    return {
+      success: false,
+      content: '',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      provider: 'anthropic',
+      model,
+    };
   }
 }
 
-// Helper function to generate review response
-export async function generateReviewResponse(
-  reviewText: string,
-  rating: number,
-  businessContext: { name: string; category: string; city: string }
-) {
-  try {
-    const prompt = REVIEW_RESPONSE_PROMPT
-      .replace('{businessContext}', `${businessContext.name} (${businessContext.category}) à ${businessContext.city}`)
-      .replace('{reviewText}', reviewText)
-      .replace('{rating}', rating.toString());
+/**
+ * Calculate cost based on tokens used
+ */
+function calculateCost(
+  provider: 'openai' | 'anthropic',
+  model: string,
+  tokens: number
+): number {
+  // Approximate cost calculation
+  // OpenAI: gpt-4o-mini is $0.15/$0.60 per 1M tokens (input/output)
+  // Anthropic: claude-3-5-haiku is $0.25/$1.25 per 1M tokens
 
-    const { text } = await generateText({
-      model: AI_MODELS.CONTENT,
-      prompt,
-      temperature: 0.8,
-      maxTokens: 200,
-    });
-
-    return text;
-  } catch (error) {
-    console.error('Error generating review response:', error);
-    throw new Error('Erreur lors de la génération de la réponse à l\'avis');
+  if (provider === 'openai' && model === 'gpt-4o-mini') {
+    return (tokens / 1000000) * 0.375; // Average of input/output
   }
+
+  if (provider === 'anthropic' && model === 'claude-3-5-haiku-20241022') {
+    return (tokens / 1000000) * 0.75; // Average of input/output
+  }
+
+  return 0;
 }
 
-// Helper function to generate SEO content
-export async function generateSEOContent(
-  businessData: {
-    name: string;
-    category: string;
-    city: string;
-    services: string[];
-  },
-  contentType: 'description' | 'about' | 'services' | 'meta'
-) {
-  try {
-    const prompt = SEO_CONTENT_PROMPT
-      .replace('{businessName}', businessData.name)
-      .replace('{category}', businessData.category)
-      .replace('{city}', businessData.city)
-      .replace('{services}', businessData.services.join(', '))
-      .replace('{contentType}', contentType);
-
-    const { text } = await generateText({
-      model: AI_MODELS.CONTENT,
-      prompt,
-      temperature: 0.7,
-      maxTokens: 400,
-    });
-
-    return text;
-  } catch (error) {
-    console.error('Error generating SEO content:', error);
-    throw new Error('Erreur lors de la génération du contenu SEO');
+/**
+ * Main AI call function (auto-selects provider)
+ */
+async function callAI(prompt: string): Promise<AIResponse> {
+  if (!isAIAvailable()) {
+    return {
+      success: false,
+      content: '',
+      error: 'AI provider not configured',
+      provider: AI_CONFIG.provider,
+      model: '',
+    };
   }
+
+  if (AI_CONFIG.provider === 'openai') {
+    return callOpenAI(prompt);
+  }
+
+  if (AI_CONFIG.provider === 'anthropic') {
+    return callAnthropic(prompt);
+  }
+
+  return {
+    success: false,
+    content: '',
+    error: 'Invalid AI provider',
+    provider: AI_CONFIG.provider,
+    model: '',
+  };
 }
 
-// Helper function to generate business insights
-export async function generateBusinessInsights(
-  analyticsData: any,
-  businessContext: { name: string; category: string; city: string }
-) {
-  try {
-    const prompt = INSIGHTS_PROMPT
-      .replace('{analyticsData}', JSON.stringify(analyticsData))
-      .replace('{businessContext}', JSON.stringify(businessContext));
-
-    const { text } = await generateText({
-      model: AI_MODELS.ANALYSIS,
-      prompt,
-      temperature: 0.3,
-      maxTokens: 300,
-    });
-
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Error generating business insights:', error);
-    throw new Error('Erreur lors de la génération des insights business');
-  }
-}
-
-// Helper function to suggest business improvements
-export async function suggestBusinessImprovements(businessData: {
+/**
+ * Generate business description
+ */
+export async function generateBusinessDescription(data: {
+  name: string;
   category: string;
   city: string;
-  currentFeatures: string[];
-  analytics: any;
-}) {
-  try {
-    const prompt = `En tant qu'expert en développement commercial pour les entreprises locales, analyse cette entreprise et suggère 5 améliorations concrètes:
+  address?: string;
+  existingDescription?: string;
+}): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.generateDescription(data);
+  return callAI(prompt);
+}
 
-Secteur: ${businessData.category}
-Ville: ${businessData.city}
-Fonctionnalités actuelles: ${businessData.currentFeatures.join(', ')}
-Analytics: ${JSON.stringify(businessData.analytics)}
+/**
+ * Analyze review sentiment and extract insights
+ */
+export async function analyzeReview(review: {
+  rating: number;
+  comment: string;
+  authorName: string;
+}): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.analyzeReview(review);
+  const response = await callAI(prompt);
 
-Pour chaque suggestion, fournis:
-- Le titre de l'amélioration
-- Une explication courte (max 50 mots)
-- L'impact estimé (Faible/Moyen/Élevé)
-- La difficulté d'implémentation (Facile/Modéré/Difficile)
-
-Format JSON attendu:
-{
-  "suggestions": [
-    {
-      "title": "Titre",
-      "description": "Description",
-      "impact": "Élevé",
-      "difficulty": "Facile"
+  if (response.success) {
+    try {
+      // Validate JSON response
+      JSON.parse(response.content);
+    } catch (error) {
+      return {
+        ...response,
+        success: false,
+        error: 'Invalid JSON response from AI',
+      };
     }
-  ]
-}`;
+  }
 
-    const { text } = await generateText({
-      model: AI_MODELS.ANALYSIS,
-      prompt,
-      temperature: 0.6,
-      maxTokens: 500,
-    });
+  return response;
+}
 
-    return JSON.parse(text);
+/**
+ * Generate review response
+ */
+export async function generateReviewResponse(data: {
+  companyName: string;
+  rating: number;
+  comment: string;
+  authorName: string;
+  sentiment?: 'positive' | 'neutral' | 'negative';
+}): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.generateReviewResponse(data);
+  return callAI(prompt);
+}
+
+/**
+ * Generate SEO keywords
+ */
+export async function generateSEOKeywords(data: {
+  name: string;
+  category: string;
+  city: string;
+  services?: string[];
+}): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.generateKeywords(data);
+  const response = await callAI(prompt);
+
+  if (response.success) {
+    try {
+      // Validate JSON array response
+      const keywords = JSON.parse(response.content);
+      if (!Array.isArray(keywords)) {
+        throw new Error('Response is not an array');
+      }
+    } catch (error) {
+      return {
+        ...response,
+        success: false,
+        error: 'Invalid JSON array response from AI',
+      };
+    }
+  }
+
+  return response;
+}
+
+/**
+ * Analyze multiple reviews for insights
+ */
+export async function analyzeMultipleReviews(
+  reviews: Array<{ rating: number; comment: string }>
+): Promise<AIResponse> {
+  const prompt = AI_PROMPTS.analyzeMultipleReviews(reviews);
+  const response = await callAI(prompt);
+
+  if (response.success) {
+    try {
+      // Validate JSON response
+      JSON.parse(response.content);
+    } catch (error) {
+      return {
+        ...response,
+        success: false,
+        error: 'Invalid JSON response from AI',
+      };
+    }
+  }
+
+  return response;
+}
+
+/**
+ * Retry logic for AI calls
+ */
+export async function callAIWithRetry(
+  fn: () => Promise<AIResponse>,
+  maxRetries = 3
+): Promise<AIResponse> {
+  let lastError: AIResponse | null = null;
+
+  for (let i = 0; i < maxRetries; i++) {
+    const result = await fn();
+
+    if (result.success) {
+      return result;
+    }
+
+    lastError = result;
+
+    // Wait before retry (exponential backoff)
+    if (i < maxRetries - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, i)));
+    }
+  }
+
+  return (
+    lastError || {
+      success: false,
+      content: '',
+      error: 'Max retries exceeded',
+      provider: AI_CONFIG.provider,
+      model: '',
+    }
+  );
+}
+
+/**
+ * Parse JSON response safely
+ */
+export function parseAIJSON<T = any>(content: string): T | null {
+  try {
+    // Remove markdown code blocks if present
+    const cleaned = content
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
+    return JSON.parse(cleaned) as T;
   } catch (error) {
-    console.error('Error suggesting business improvements:', error);
-    throw new Error('Erreur lors de la génération des suggestions d\'amélioration');
+    console.error('[AI] Failed to parse JSON:', error);
+    return null;
   }
 }
