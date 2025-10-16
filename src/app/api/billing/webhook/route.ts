@@ -228,13 +228,13 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Send payment failed email
   if (businessOwner.email && process.env.RESEND_API_KEY) {
     try {
+      const inv = invoice as any;
       await sendPaymentFailedEmail({
-        email: businessOwner.email,
-        firstName: businessOwner.firstName,
-        planName: businessOwner.subscriptionTier,
-        amount: invoice.amount_due / 100,
-        currency: invoice.currency,
-        unsubscribeToken: businessOwner.unsubscribeToken,
+        to: businessOwner.email,
+        businessOwnerName: businessOwner.firstName || undefined,
+        amount: inv.amount_due / 100,
+        nextRetryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        unsubscribeToken: businessOwner.unsubscribeToken || '',
       });
       logger.warn('Payment failed email sent', { businessOwnerId: businessOwner.id });
     } catch (error) {
