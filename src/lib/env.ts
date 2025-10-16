@@ -12,9 +12,9 @@ const serverSchema = z.object({
   NEXTAUTH_URL: z.string().url().optional(),
   NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET must be at least 32 characters'),
   
-  // Admin Credentials (for initial setup)
-  ADMIN_EMAIL: z.string().email(),
-  ADMIN_PASSWORD: z.string().min(8, 'Admin password must be at least 8 characters'),
+  // Admin Credentials (for initial setup - optional)
+  ADMIN_EMAIL: z.string().email().optional(),
+  ADMIN_PASSWORD: z.string().min(8, 'Admin password must be at least 8 characters').optional(),
   
   // Upstash Redis (optional in development)
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
@@ -28,6 +28,9 @@ const serverSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+  
+  // Grok AI (optional)
+  XAI_API_KEY: z.string().optional(),
   
   // Node Environment
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -56,8 +59,8 @@ const processEnv = {
   DATABASE_URL: process.env.DATABASE_URL,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
-  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || undefined,
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || undefined,
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL || undefined,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN || undefined,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || undefined,
@@ -65,6 +68,7 @@ const processEnv = {
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || undefined,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || undefined,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || undefined,
+  XAI_API_KEY: process.env.XAI_API_KEY || undefined,
   NODE_ENV: process.env.NODE_ENV,
 
   // Client

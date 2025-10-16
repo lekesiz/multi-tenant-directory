@@ -7,6 +7,21 @@ declare module 'next-auth' {
       id: string;
       email: string;
       name: string;
+      role?: string;
+      type?: string;
+      emailVerified?: Date | null;
+      companies?: Array<{
+        id: string;
+        name: string;
+        slug: string;
+        role: string;
+        company: {
+          id: string;
+          name: string;
+          slug: string;
+          city: string;
+        };
+      }>;
     };
     businessOwner?: {
       id: string;
@@ -19,6 +34,10 @@ declare module 'next-auth' {
     id: string;
     email: string;
     name: string;
+    role?: string;
+    type?: string;
+    emailVerified?: Date | null;
+    companies?: any[];
   }
 }
 
@@ -27,5 +46,10 @@ declare module 'next-auth/jwt' {
     id: string;
     email: string;
     name: string;
+    role?: string;
+    type?: string;
+    emailVerified?: Date | null;
+    companies?: any[];
   }
 }
+
