@@ -9,9 +9,9 @@ import { authenticateMobileUser } from '@/lib/mobile-auth';
 export async function POST(request: Request) {
   try {
     const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: authResult.error || 'Unauthorized' },
         { status: 401 }
       );
     }
