@@ -2,8 +2,9 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function UnsubscribeSuccessPage() {
+function UnsubscribeSuccessContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get('type') || 'all';
 
@@ -61,3 +62,16 @@ export default function UnsubscribeSuccessPage() {
     </div>
   );
 }
+
+export default function UnsubscribeSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">Chargement...</div>
+      </div>
+    }>
+      <UnsubscribeSuccessContent />
+    </Suspense>
+  );
+}
+
