@@ -8,7 +8,7 @@ const auth = () => getServerSession(authOptions);
 // Verify or unverify a review
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     // Check auth

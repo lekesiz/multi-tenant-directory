@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // PUT: Set photo as primary
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { photoId: string } }
+  { params }: { params: Promise<{ photoId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,7 +15,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
 
-    const { photoId } = params;
+    const { photoId } = await params;
 
     // Get the user's company
     const ownership = await prisma.companyOwnership.findFirst({

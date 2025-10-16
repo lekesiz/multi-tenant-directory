@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // DELETE: Remove special hour
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,7 +15,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Get the user's company
     const ownership = await prisma.companyOwnership.findFirst({

@@ -14,7 +14,7 @@ const replySchema = z.object({
 // Create or update review reply
 export async function POST(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     // Check auth
@@ -116,7 +116,7 @@ export async function POST(
 // Delete review reply
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     // Check auth
