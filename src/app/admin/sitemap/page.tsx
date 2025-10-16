@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { generateAllSitemaps, getSitemapStats } from '@/lib/sitemap-generator';
+// API routes will be used instead of direct imports
 
 interface SitemapStats {
   domain: string;
@@ -32,23 +32,15 @@ export default function SitemapAdminPage() {
       setLoading(true);
       setError(null);
 
-      // Get all active domains
-      const response = await fetch('/api/domains');
-      const domains = await response.json();
+      // Fetch stats from API
+      const response = await fetch('/api/admin/sitemap/stats');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch sitemap stats');
+      }
 
-      const statsPromises = domains
-        .filter((domain: any) => domain.isActive)
-        .map(async (domain: any) => {
-          try {
-            return await getSitemapStats(domain.name);
-          } catch (error) {
-            console.error(`Error getting stats for ${domain.name}:`, error);
-            return null;
-          }
-        });
-
-      const statsResults = await Promise.all(statsPromises);
-      setStats(statsResults.filter(Boolean) as SitemapStats[]);
+      const statsData = await response.json();
+      setStats(statsData);
 
     } catch (error) {
       console.error('Error loading sitemap stats:', error);
@@ -63,7 +55,16 @@ export default function SitemapAdminPage() {
       setLoading(true);
       setError(null);
 
-      const results = await generateAllSitemaps();
+      // Generate sitemaps via API
+      const response = await fetch('/api/admin/sitemap/generate', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate sitemaps');
+      }
+
+      const results = await response.json();
       setGenerationResults(results);
 
       // Reload stats after generation
