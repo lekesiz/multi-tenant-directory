@@ -25,6 +25,106 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Form Input Readability - Make text more visible */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+select {
+  color: #1f2937 !important; /* gray-800 - Much darker for better readability */
+}
+
+/* Placeholder text should be lighter but still readable */
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important; /* gray-500 - Lighter than text but still visible */
+  opacity: 1 !important;
+}
+
+/* Autofill background fix - prevent white text on white background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: #1f2937 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Disabled inputs should be clearly distinguishable */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  color: #9ca3af !important; /* gray-400 */
+  background-color: #f3f4f6 !important; /* gray-100 */
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Focus state for better visibility */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid #3b82f6; /* blue-500 */
+  outline-offset: 2px;
+}
+
+/* Dark mode input colors */
+@media (prefers-color-scheme: dark) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    color: #f3f4f6 !important; /* gray-100 - Light text on dark background */
+    background-color: #1f2937 !important; /* gray-800 */
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af !important; /* gray-400 */
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f3f4f6 !important;
+    -webkit-box-shadow: 0 0 0 1000px #1f2937 inset !important;
+  }
+
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    color: #6b7280 !important; /* gray-500 */
+    background-color: #374151 !important; /* gray-700 */
+  }
+}
+
 /* Print Styles */
 @media print {
   /* Hide non-essential elements when printing */
