@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     // Generate AI-powered business insights
-    const insights = await generateBusinessInsights({
+    const aiResponse = await generateBusinessInsights({
       companyName: businessContext.name,
       category: businessContext.category,
       reviews: analyticsData.reviews || [],
@@ -30,6 +30,11 @@ export async function POST(request: Request) {
         viewCount: analyticsData.viewCount,
       },
     });
+
+    // Parse AI response
+    const insights = typeof aiResponse.content === 'string' 
+      ? JSON.parse(aiResponse.content) 
+      : aiResponse.content;
 
     // Add metadata and formatting
     const formattedInsights = {
