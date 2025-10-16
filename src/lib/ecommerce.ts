@@ -789,14 +789,7 @@ export class CartService {
   }
 }
 
-// Export all services
-export {
-  ProductService,
-  BookingService, 
-  OrderService,
-  EcommerceAnalytics,
-  CartService
-};
+// Services are already exported with class declarations above
 
 // Helper functions
 export const formatPrice = (price: number, currency: string = 'EUR'): string => {
