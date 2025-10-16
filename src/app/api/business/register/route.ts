@@ -61,7 +61,7 @@ export async function POST(request: Request) {
         await sendVerificationEmail({
           to: businessOwner.email,
           verificationUrl,
-          firstName: businessOwner.firstName,
+          firstName: businessOwner.firstName ?? undefined,
         });
         console.log('✅ Verification email sent to:', businessOwner.email);
       } catch (error) {
