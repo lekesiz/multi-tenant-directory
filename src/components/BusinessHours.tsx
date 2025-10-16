@@ -4,13 +4,9 @@ import { useState } from 'react';
 
 interface BusinessHoursData {
   [key: string]: {
-    isOpen: boolean;
-    openTime?: string;
-    closeTime?: string;
-    breaks?: {
-      start: string;
-      end: string;
-    }[];
+    open?: string;
+    close?: string;
+    closed: boolean;
   };
 }
 
@@ -48,39 +44,20 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
 
   // Check if currently open
   const todayHours = businessHours[currentDay];
-  const isOpenNow = todayHours && todayHours.isOpen && todayHours.openTime && todayHours.closeTime ? 
+  const isOpenNow = todayHours && !todayHours.closed && todayHours.open && todayHours.close ?
     (() => {
-      const openTime = parseInt(todayHours.openTime.replace(':', ''));
-      const closeTime = parseInt(todayHours.closeTime.replace(':', ''));
-      
-      // Check main hours
-      if (currentHour >= openTime && currentHour < closeTime) {
-        // Check if in break time
-        if (todayHours.breaks && todayHours.breaks.length > 0) {
-          for (const breakTime of todayHours.breaks) {
-            const breakStart = parseInt(breakTime.start.replace(':', ''));
-            const breakEnd = parseInt(breakTime.end.replace(':', ''));
-            if (currentHour >= breakStart && currentHour < breakEnd) {
-              return false;
-            }
-          }
-        }
-        return true;
-      }
-      return false;
+      const openTime = parseInt(todayHours.open.replace(':', ''));
+      const closeTime = parseInt(todayHours.close.replace(':', ''));
+
+      return currentHour >= openTime && currentHour < closeTime;
     })() : false;
 
   // Format time display
   const formatTimeRange = (day: string) => {
     const hours = businessHours[day];
-    if (!hours || !hours.isOpen) return 'Fermé';
-    
-    let timeStr = `${hours.openTime} - ${hours.closeTime}`;
-    if (hours.breaks && hours.breaks.length > 0) {
-      const breakStr = hours.breaks.map(b => `${b.start}-${b.end}`).join(', ');
-      timeStr += ` (Pause: ${breakStr})`;
-    }
-    return timeStr;
+    if (!hours || hours.closed) return 'Fermé';
+
+    return `${hours.open} - ${hours.close}`;
   };
 
   // Show only today's hours when collapsed
