@@ -27,11 +27,12 @@ export async function POST(request: Request) {
     }
 
     // Generate AI response
-    const response = await generateReviewResponse(
-      reviewText,
+    const response = await generateReviewResponse({
+      companyName: businessContext.name,
       rating,
-      businessContext
-    );
+      comment: reviewText,
+      authorName: 'Client',
+    });
 
     return NextResponse.json({
       response,
