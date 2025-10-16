@@ -15,8 +15,8 @@ import {
   getAverageRatingByDomain
 } from '@/lib/queries/review';
 
-// ISR: Revalidate every 60 seconds
-export const revalidate = 60;
+// ISR: Revalidate every 5 minutes for better performance
+export const revalidate = 300;
 
 /**
  * Get domain statistics (companies, reviews, average rating)

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { PhotoLightbox } from './PhotoLightbox';
+import { OptimizedImage } from './ui/OptimizedImage';
+import { LazySection } from './ui/LazySection';
 
 interface PhotoGalleryProps {
   photos: string[] | null;
@@ -30,7 +31,19 @@ export default function PhotoGallery({ photos, companyName, coverImage }: PhotoG
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+      <LazySection
+        className="bg-white rounded-lg shadow p-4 sm:p-6"
+        skeleton={
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+            <div className="h-6 bg-gray-200 rounded w-24 mb-4"></div>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="col-span-2 row-span-2 h-40 sm:h-64 bg-gray-200 rounded-lg"></div>
+              <div className="h-20 sm:h-32 bg-gray-200 rounded-lg"></div>
+              <div className="h-20 sm:h-32 bg-gray-200 rounded-lg"></div>
+            </div>
+          </div>
+        }
+      >
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
           Photos
         </h3>
@@ -45,13 +58,14 @@ export default function PhotoGallery({ photos, companyName, coverImage }: PhotoG
               onClick={() => !imageError[photo] && (setLightboxIndex(index), setLightboxOpen(true))}
             >
               {!imageError[photo] ? (
-                <Image
+                <OptimizedImage
                   src={photo}
                   alt={`${companyName} - Photo ${index + 1}`}
                   fill
                   sizes={index === 0 && allPhotos.length > 1 ? "(max-width: 768px) 100vw, 400px" : "(max-width: 768px) 50vw, 200px"}
                   className="object-cover hover:scale-105 transition-transform duration-300"
-                  onError={() => handleImageError(photo)}
+                  priority={index === 0}
+                  quality={index === 0 ? 85 : 75}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -76,7 +90,7 @@ export default function PhotoGallery({ photos, companyName, coverImage }: PhotoG
             Voir toutes les photos ({allPhotos.length})
           </button>
         )}
-      </div>
+      </LazySection>
 
       {/* Lightbox */}
       <PhotoLightbox

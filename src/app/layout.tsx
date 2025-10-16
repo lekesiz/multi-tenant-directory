@@ -5,6 +5,7 @@ import Providers from "@/components/Providers";
 import ToastProvider from "@/components/ToastProvider";
 import CookieBanner from "@/components/CookieBanner";
 import { WebVitals } from "@/components/WebVitals";
+import { PerformanceMonitor } from "@/components/PerformanceMonitor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,11 +40,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="//maps.googleapis.com" />
+        <link rel="dns-prefetch" href="//res.cloudinary.com" />
+        <meta name="theme-color" content="#3B82F6" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
           <WebVitals />
+          <PerformanceMonitor />
           <ToastProvider />
           {children}
           <CookieBanner />

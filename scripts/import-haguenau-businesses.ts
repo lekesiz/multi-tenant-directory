@@ -139,7 +139,6 @@ async function importBusinesses() {
           rating: 4.5, // Default estimate
           reviewCount: 0,
           verified: false,
-          photos: [],
           content: {
             create: {
               domainId: domain.id,
