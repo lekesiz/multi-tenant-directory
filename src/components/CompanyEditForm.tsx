@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import BusinessHoursForm from './BusinessHoursForm';
 
 interface Company {
   id: number;
@@ -58,7 +59,7 @@ export default function CompanyEditForm({
   domains: Domain[];
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'info' | 'domains' | 'reviews'>(
+  const [activeTab, setActiveTab] = useState<'info' | 'hours' | 'domains' | 'reviews'>(
     'info'
   );
   const [loading, setLoading] = useState(false);
@@ -74,6 +75,8 @@ export default function CompanyEditForm({
     phone: company.phone || '',
     email: company.email || '',
     website: company.website || '',
+    latitude: company.latitude?.toString() || '',
+    longitude: company.longitude?.toString() || '',
     categories: company.categories,
   });
 
@@ -214,6 +217,16 @@ export default function CompanyEditForm({
             }`}
           >
             Temel Bilgiler
+          </button>
+          <button
+            onClick={() => setActiveTab('hours')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'hours'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Horaires d'ouverture
           </button>
           <button
             onClick={() => setActiveTab('domains')}
@@ -372,6 +385,60 @@ export default function CompanyEditForm({
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />
               </div>
+
+              {/* Coordinates Section */}
+              <div className="md:col-span-2">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <h3 className="text-sm font-medium text-blue-900 mb-2 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Konum Koordinatları (GPS)
+                  </h3>
+                  <p className="text-xs text-blue-700 mb-3">
+                    Haritadaki konumunu ayarlamak için enlem (latitude) ve boylam (longitude) değerlerini girin.
+                    Google Maps'ten alabilirsiniz.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Enlem (Latitude)
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={formData.latitude}
+                        onChange={(e) =>
+                          setFormData({ ...formData, latitude: e.target.value })
+                        }
+                        placeholder="48.8156"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Boylam (Longitude)
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={formData.longitude}
+                        onChange={(e) =>
+                          setFormData({ ...formData, longitude: e.target.value })
+                        }
+                        placeholder="7.7889"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      />
+                    </div>
+                  </div>
+                  {formData.latitude && formData.longitude && (
+                    <div className="mt-2 text-xs text-green-700">
+                      ✓ Koordinatlar ayarlandı: {formData.latitude}, {formData.longitude}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end">
@@ -385,6 +452,10 @@ export default function CompanyEditForm({
             </div>
           </form>
         </div>
+      )}
+
+      {activeTab === 'hours' && (
+        <BusinessHoursForm companyId={company.id} />
       )}
 
       {activeTab === 'domains' && (
