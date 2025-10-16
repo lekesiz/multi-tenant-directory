@@ -34,7 +34,7 @@ export async function PATCH(
       where: {
         id: reviewId,
         company: {
-          owners: {
+          ownerships: {
             some: {
               ownerId: session.user.id,
               verified: true,

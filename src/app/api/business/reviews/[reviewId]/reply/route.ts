@@ -44,7 +44,7 @@ export async function POST(
       where: {
         id: reviewId,
         company: {
-          owners: {
+          ownerships: {
             some: {
               ownerId: session.user.id,
               verified: true,
