@@ -80,9 +80,18 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check authentication
-    const session = await getServerSession(authBusinessOptions);
-    if (!session || session.user.role !== 'business_owner') {
+    // Try business authentication first, then admin authentication
+    let session = await getServerSession(authBusinessOptions);
+    let isAdmin = false;
+
+    if (!session) {
+      // Try admin authentication
+      const { authOptions } = await import('@/lib/auth');
+      session = await getServerSession(authOptions);
+      isAdmin = session?.user?.role?.toUpperCase() === 'ADMIN';
+    }
+
+    if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -99,19 +108,21 @@ export async function PUT(
       );
     }
 
-    // Check ownership
-    const ownership = await prisma.companyOwnership.findFirst({
-      where: {
-        companyId,
-        ownerId: session.user.id,
-      },
-    });
+    // Check ownership for business owners (admins can edit any company)
+    if (!isAdmin && session.user.role === 'business_owner') {
+      const ownership = await prisma.companyOwnership.findFirst({
+        where: {
+          companyId,
+          ownerId: session.user.id,
+        },
+      });
 
-    if (!ownership) {
-      return NextResponse.json(
-        { error: 'You do not have permission to edit this company' },
-        { status: 403 }
-      );
+      if (!ownership) {
+        return NextResponse.json(
+          { error: 'You do not have permission to edit this company' },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await request.json();
