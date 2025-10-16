@@ -117,17 +117,20 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     unpaid: 'past_due',
   };
 
+  // Type assertion for Stripe subscription properties
+  const sub = subscription as any;
+  
   await prisma.businessOwner.update({
     where: { id: businessOwner.id },
     data: {
       subscriptionStatus: statusMap[subscription.status] || 'active',
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-      trialStart: subscription.trial_start
-        ? new Date(subscription.trial_start * 1000)
+      currentPeriodStart: new Date((sub.current_period_start || sub.currentPeriodStart) * 1000),
+      currentPeriodEnd: new Date((sub.current_period_end || sub.currentPeriodEnd) * 1000),
+      cancelAtPeriodEnd: sub.cancel_at_period_end ?? sub.cancelAtPeriodEnd ?? false,
+      trialStart: (sub.trial_start || sub.trialStart)
+        ? new Date((sub.trial_start || sub.trialStart) * 1000)
         : null,
-      trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+      trialEnd: (sub.trial_end || sub.trialEnd) ? new Date((sub.trial_end || sub.trialEnd) * 1000) : null,
     },
   });
 
@@ -162,7 +165,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  * Handle successful payment
  */
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  // Type assertion for Stripe invoice properties
+  const inv = invoice as any;
+  const subscriptionId = inv.subscription as string;
 
   if (!subscriptionId) {
     return;
@@ -180,12 +185,13 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   if (businessOwner.email && process.env.RESEND_API_KEY) {
     try {
       await sendPaymentSuccessEmail({
-        email: businessOwner.email,
-        firstName: businessOwner.firstName,
-        planName: businessOwner.subscriptionTier,
-        amount: invoice.amount_paid / 100,
-        currency: invoice.currency,
-        unsubscribeToken: businessOwner.unsubscribeToken,
+        to: businessOwner.email,
+        businessOwnerName: businessOwner.firstName || undefined,
+        plan: businessOwner.subscriptionTier || 'Basic',
+        amount: inv.amount_paid / 100,
+        nextBillingDate: new Date(inv.period_end * 1000),
+        invoiceUrl: inv.hosted_invoice_url || '',
+        unsubscribeToken: businessOwner.unsubscribeToken || '',
       });
       logger.info('Payment success email sent', { businessOwnerId: businessOwner.id });
     } catch (error) {
