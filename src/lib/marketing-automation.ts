@@ -36,6 +36,7 @@ export interface CampaignAction {
 export interface CustomerSegment {
   id: string;
   name: string;
+  description?: string;
   rules: SegmentRule[];
   dynamicRefresh: boolean;
 }
