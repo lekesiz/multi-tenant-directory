@@ -275,7 +275,7 @@ async function applyReward(businessOwnerId: string, rewardType: string): Promise
       break;
 
     default:
-      console.log(`Unknown reward type: ${rewardType}`);
+      // Unknown reward type - log to monitoring service in production
   }
 }
 

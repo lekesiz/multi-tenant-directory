@@ -1231,3 +1231,56 @@ model DeveloperAccount {
   @@index([isApproved])
   @@map("developer_accounts")
 }
+
+// Monitoring & Error Tracking Models
+
+// Error Logs for monitoring
+model ErrorLog {
+  id              String   @id @default(cuid())
+  message         String   @db.Text
+  stack           String?  @db.Text
+  url             String?
+  userId          String?
+  severity        String   // "low", "medium", "high", "critical"
+  context         Json     @default("{}")
+  timestamp       DateTime @default(now())
+  resolved        Boolean  @default(false)
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  
+  @@index([severity, timestamp(sort: Desc)])
+  @@index([resolved, timestamp(sort: Desc)])
+  @@index([userId, timestamp(sort: Desc)])
+  @@map("error_logs")
+}
+
+// Performance Metrics
+model PerformanceMetric {
+  id              String   @id @default(cuid())
+  operation       String   // "api_call", "db_query", "stripe_operation"
+  duration        Int      // Duration in milliseconds
+  timestamp       DateTime @default(now())
+  userId          String?
+  success         Boolean
+  metadata        Json     @default("{}")
+  
+  @@index([operation, timestamp(sort: Desc)])
+  @@index([success, duration(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+  @@map("performance_metrics")
+}
+
+// System Health Checks
+model HealthCheckLog {
+  id              String   @id @default(cuid())
+  service         String   // "database", "stripe", "storage", "external_apis"
+  status          String   // "healthy", "degraded", "unhealthy"
+  responseTime    Int      // Response time in milliseconds
+  error           String?  @db.Text
+  timestamp       DateTime @default(now())
+  metadata        Json     @default("{}")
+  
+  @@index([service, timestamp(sort: Desc)])
+  @@index([status, timestamp(sort: Desc)])
+  @@map("health_check_logs")
+}

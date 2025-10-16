@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendContactEmail } from '@/lib/email';
+import { logger } from '@/lib/logger';
 
 interface ContactFormData {
   name: string;
@@ -67,17 +68,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log contact request (for now)
-    console.log('📧 Contact Form Submission:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('From:', name, `<${email}>`);
-    if (phone) console.log('Phone:', phone);
-    console.log('Subject:', subject);
-    if (companyName) console.log('To Company:', companyName);
-    if (companyEmail) console.log('Company Email:', companyEmail);
-    console.log('Message:', message);
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    // Log contact request
+    logger.business('Contact form submission', {
+      from: `${name} <${email}>`,
+      phone,
+      subject,
+      companyName,
+      companyEmail,
+      messageLength: message.length,
+    });
 
     // Track contact analytics (if companyId provided)
     if (companyId) {
@@ -87,9 +86,30 @@ export async function POST(request: NextRequest) {
         });
 
         if (company) {
-          // TODO: Track contact event in CompanyAnalytics
-          // This will be implemented when analytics tracking is ready
-          console.log('📊 Analytics: Contact form submitted for company:', company.name);
+          // Track contact event in analytics
+          try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            await prisma.companyAnalytics.upsert({
+              where: {
+                companyId_date: {
+                  companyId: company.id,
+                  date: today,
+                }
+              },
+              update: {
+                emailClicks: { increment: 1 }
+              },
+              create: {
+                companyId: company.id,
+                date: today,
+                emailClicks: 1,
+              }
+            });
+          } catch (analyticsError) {
+            // Analytics tracking failed - continue without blocking the main process
+          }
         }
       } catch (error) {
         // Non-critical error, don't fail the request
@@ -109,7 +129,7 @@ export async function POST(request: NextRequest) {
           companyName: companyName || 'Unknown Company',
           companyEmail,
         });
-        console.log('✅ Contact email sent to:', companyEmail);
+        logger.info('Contact email sent', { to: companyEmail });
       } catch (error) {
         // Non-critical error, don't fail the request
         console.error('⚠️ Error sending email:', error);

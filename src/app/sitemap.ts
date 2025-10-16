@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 import { headers } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 async function getDomainFromHost(host: string) {
   let domain = host.split(':')[0];
@@ -156,16 +157,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     );
 
-    console.log(`📊 Sitemap generated for ${currentDomain.name}:`);
-    console.log(`  - Static pages: ${staticPages.length}`);
-    console.log(`  - Company pages: ${companyPages.length}`);
-    console.log(`  - Category pages: ${categoryPages.length}`);
-    console.log(`  - Total URLs: ${staticPages.length + companyPages.length + categoryPages.length}`);
+    logger.info('Sitemap generated', {
+      domain: currentDomain.name,
+      staticPages: staticPages.length,
+      companyPages: companyPages.length,
+      categoryPages: categoryPages.length,
+      totalUrls: staticPages.length + companyPages.length + categoryPages.length,
+    });
 
     // Combine all pages
     return [...staticPages, ...companyPages, ...categoryPages];
   } catch (error) {
-    console.error('❌ Error generating sitemap:', error);
+    logger.error('Error generating sitemap', error);
     // Return default sitemap on error
     return getDefaultSitemap('haguenau.pro');
   }

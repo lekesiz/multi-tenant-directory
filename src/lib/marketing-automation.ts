@@ -248,7 +248,7 @@ export class MarketingAutomation {
       });
 
       if (!user || !user.emailNotifications) {
-        console.log('User not found or email notifications disabled');
+        // User not found or email notifications disabled - skip silently
         return false;
       }
 
@@ -258,7 +258,7 @@ export class MarketingAutomation {
       );
 
       if (!emailAction) {
-        console.log('No email action found in campaign');
+        // No email action configured in campaign
         return false;
       }
 
