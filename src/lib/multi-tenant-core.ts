@@ -513,10 +513,4 @@ export function useTenantContext() {
   };
 }
 
-// Export main services
-export {
-  TenantResolver,
-  TenantIsolation,
-  TenantPerformance,
-  TenantSecurity,
-};
+// Services are already exported with class declarations above
