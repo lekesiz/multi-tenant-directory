@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     if (openNow) {
       // Get current day and time
       const now = new Date();
-      const dayOfWeek = now.toLocaleLowerCase('en-US', { weekday: 'long' });
+      const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now
         .getMinutes()
         .toString()

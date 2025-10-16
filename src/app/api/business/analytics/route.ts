@@ -52,19 +52,19 @@ export async function GET(request: NextRequest) {
 
     // Calculate summary statistics
     const totalViews = company.analytics.reduce(
-      (sum, day) => sum + day.viewCount,
+      (sum, day) => sum + day.profileViews,
       0
     );
     const totalPhoneClicks = company.analytics.reduce(
-      (sum, day) => sum + day.phoneClickCount,
+      (sum, day) => sum + day.phoneClicks,
       0
     );
     const totalWebsiteClicks = company.analytics.reduce(
-      (sum, day) => sum + day.websiteClickCount,
+      (sum, day) => sum + day.websiteClicks,
       0
     );
     const totalDirectionClicks = company.analytics.reduce(
-      (sum, day) => sum + day.directionClickCount,
+      (sum, day) => sum + day.directionsClicks,
       0
     );
 
@@ -73,11 +73,11 @@ export async function GET(request: NextRequest) {
     const previous7Days = company.analytics.slice(7, 14);
 
     const last7DaysViews = last7Days.reduce(
-      (sum, day) => sum + day.viewCount,
+      (sum, day) => sum + day.profileViews,
       0
     );
     const previous7DaysViews = previous7Days.reduce(
-      (sum, day) => sum + day.viewCount,
+      (sum, day) => sum + day.profileViews,
       0
     );
 
@@ -108,11 +108,11 @@ export async function GET(request: NextRequest) {
       },
       daily: company.analytics.map((day) => ({
         date: day.date,
-        views: day.viewCount,
-        phoneClicks: day.phoneClickCount,
-        websiteClicks: day.websiteClickCount,
-        directionClicks: day.directionClickCount,
-        searchAppearances: day.searchAppearanceCount,
+        views: day.profileViews,
+        phoneClicks: day.phoneClicks,
+        websiteClicks: day.websiteClicks,
+        directionClicks: day.directionsClicks,
+        searchAppearances: day.sourceSearch,
       })),
       recentReviews: recentReviews.map((review) => ({
         id: review.id,
@@ -163,19 +163,19 @@ export async function POST(request: NextRequest) {
 
     switch (eventType) {
       case 'view':
-        updateData.viewCount = { increment: 1 };
+        updateData.profileViews = { increment: 1 };
         break;
       case 'phone_click':
-        updateData.phoneClickCount = { increment: 1 };
+        updateData.phoneClicks = { increment: 1 };
         break;
       case 'website_click':
-        updateData.websiteClickCount = { increment: 1 };
+        updateData.websiteClicks = { increment: 1 };
         break;
       case 'direction_click':
-        updateData.directionClickCount = { increment: 1 };
+        updateData.directionsClicks = { increment: 1 };
         break;
       case 'search_appearance':
-        updateData.searchAppearanceCount = { increment: 1 };
+        updateData.sourceSearch = { increment: 1 };
         break;
       default:
         return NextResponse.json(
@@ -195,11 +195,11 @@ export async function POST(request: NextRequest) {
       create: {
         companyId: company.id,
         date: today,
-        viewCount: eventType === 'view' ? 1 : 0,
-        phoneClickCount: eventType === 'phone_click' ? 1 : 0,
-        websiteClickCount: eventType === 'website_click' ? 1 : 0,
-        directionClickCount: eventType === 'direction_click' ? 1 : 0,
-        searchAppearanceCount: eventType === 'search_appearance' ? 1 : 0,
+        profileViews: eventType === 'view' ? 1 : 0,
+        phoneClicks: eventType === 'phone_click' ? 1 : 0,
+        websiteClicks: eventType === 'website_click' ? 1 : 0,
+        directionsClicks: eventType === 'direction_click' ? 1 : 0,
+        sourceSearch: eventType === 'search_appearance' ? 1 : 0,
       },
     });
 
