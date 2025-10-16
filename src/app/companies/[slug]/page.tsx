@@ -12,6 +12,7 @@ import SocialLinks from '@/components/SocialLinks';
 import ContactForm from '@/components/ContactForm';
 import { SocialShareButtons } from '@/components/SocialShareButtons';
 import RelatedCompanies from '@/components/RelatedCompanies';
+import MobileActions from '@/components/MobileActions';
 import { Metadata } from 'next';
 
 // ISR: Revalidate every 300 seconds (5 minutes)
@@ -367,6 +368,20 @@ export default async function CompanyDetailPage({
 
           {/* Sidebar */}
           <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+            {/* Mobile Actions - Only visible on mobile */}
+            <div className="block lg:hidden">
+              <MobileActions company={{
+                name: company.name,
+                phone: company.phone,
+                website: company.website,
+                email: company.email,
+                latitude: company.latitude,
+                longitude: company.longitude,
+                address: company.address,
+                slug: company.slug
+              }} />
+            </div>
+
             {/* Contact Card */}
             <div className="bg-white rounded-lg shadow p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">

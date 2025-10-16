@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateMetaTags } from '@/lib/seo';
 import StructuredData from '@/components/StructuredData';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 
 // Query utilities
 import { getCurrentDomainInfo } from '@/lib/queries/domain';
@@ -622,6 +623,9 @@ export default async function Home() {
       </footer>
 
       {/* Structured Data (JSON-LD) */}
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
       </div>
     </>
   );
