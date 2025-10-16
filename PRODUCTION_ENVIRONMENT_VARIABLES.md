@@ -263,7 +263,35 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID="G-XXXXXXXXXX"
 
 ---
 
-### 10. Monitoring et Logging (Optionnel)
+### 10. AI Integration (Optionnel)
+
+```bash
+# n8n Workflow Automation Platform
+N8N_API_URL="https://netzfrance.app.n8n.cloud"
+N8N_API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# AI Features Configuration
+ENABLE_AI_FEATURES="true"
+AI_RATE_LIMIT="100"  # AI requests per day
+```
+
+**Obtenir:**
+1. API Key depuis CLAUDE.md (à la racine du projet)
+2. Ou créer un compte sur [n8n.cloud](https://n8n.cloud)
+3. Créer un workflow "AI Orchestration"
+4. Générer une API key dans Settings
+
+**Fonctionnalités activées:**
+- Company analysis (description optimization, keyword extraction)
+- Review response generator (AI-powered responses)
+- Search optimization (query enhancement)
+- SEO content generator (automated content creation)
+
+**Note:** Voir [AI_INTEGRATION_GUIDE.md](./AI_INTEGRATION_GUIDE.md) pour setup complet.
+
+---
+
+### 11. Monitoring et Logging (Optionnel)
 
 ```bash
 # Sentry (Error tracking)
