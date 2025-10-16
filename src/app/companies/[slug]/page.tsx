@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import ReviewCard from "@/components/ReviewCard";
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import StructuredData from '@/components/StructuredData';
 import CompanyReviews from '@/components/CompanyReviews';
 import GoogleMap from '@/components/GoogleMap';
@@ -127,6 +127,11 @@ export default async function CompanyDetailPage({
   }
 
   const { slug } = await params;
+
+  // Special case: redirect 'annuaire' to the directory page
+  if (slug === 'annuaire') {
+    redirect('/annuaire');
+  }
 
   const company = await prisma.company.findFirst({
     where: {
