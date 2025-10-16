@@ -28,13 +28,18 @@ export async function POST(request: Request) {
     }
 
     // Generate SEO content
-    const content = await generateSEOContent({
+    const aiResponse = await generateSEOContent({
       companyName: businessData.name,
       category: businessData.category,
       location: businessData.city,
       keywords: businessData.keywords || [],
       contentType: contentType,
     });
+
+    // Parse AI response
+    const content = typeof aiResponse.content === 'string' 
+      ? aiResponse.content 
+      : JSON.stringify(aiResponse.content);
 
     // Analyze content for SEO metrics
     const analysis = analyzeSEOContent(content, businessData, contentType);
