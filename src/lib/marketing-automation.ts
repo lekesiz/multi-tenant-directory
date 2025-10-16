@@ -15,6 +15,7 @@ export interface MarketingCampaign {
   triggers: CampaignTrigger[];
   actions: CampaignAction[];
   segment?: CustomerSegment;
+  segmentId?: string;
   analytics: CampaignAnalytics;
 }
 

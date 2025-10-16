@@ -132,7 +132,7 @@ export async function POST(request: Request) {
         type: validatedData.type,
         triggers: validatedData.triggers,
         actions: validatedData.actions,
-        segment: validatedData.segmentId ? { id: validatedData.segmentId } : undefined,
+        segmentId: validatedData.segmentId,
       }
     );
 
