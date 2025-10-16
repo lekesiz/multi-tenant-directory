@@ -354,39 +354,11 @@ export default async function CompanyDetailPage({
             </div>
 
             {/* Photo Gallery */}
-            <PhotoGallery
+            <PhotoGallery 
               photos={content?.customImages as string[] | null}
               companyName={company.name}
               coverImage={company.coverImageUrl}
             />
-
-            {/* YouTube Videos */}
-            {company.youtubeVideos && company.youtubeVideos.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-                  Vidéos
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {company.youtubeVideos.map((videoUrl, index) => {
-                    const videoId = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')
-                      ? videoUrl.split('v=')[1]?.split('&')[0] || videoUrl.split('/').pop()
-                      : videoUrl;
-
-                    return (
-                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-900">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${videoId}`}
-                          title={`Vidéo ${index + 1}`}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="absolute inset-0 w-full h-full"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Reviews */}
             <CompanyReviews companyId={company.id} companyName={company.name} />
