@@ -15,19 +15,20 @@ export async function generateMetadata() {
 
 export default async function MentionsLegalesPage() {
   const { domain, displayName, domainData } = await getCurrentDomainInfo();
-  
+
   // Company information (can be customized per domain if needed)
+  const settings = domainData?.settings as Record<string, any> | null | undefined;
   const companyInfo = {
-    name: domainData?.settings?.companyName || 'NETZ FRANCE',
-    legalForm: domainData?.settings?.legalForm || 'SARL',
-    capital: domainData?.settings?.capital || '10.000',
-    address: domainData?.settings?.address || '1 rue de la Paix, 67500 Haguenau',
-    siret: domainData?.settings?.siret || '123 456 789 00012',
-    rcs: domainData?.settings?.rcs || 'Strasbourg B 123 456 789',
-    vat: domainData?.settings?.vat || 'FR12 123456789',
-    director: domainData?.settings?.director || 'Mikail LEKESIZ',
+    name: settings?.companyName || 'NETZ FRANCE',
+    legalForm: settings?.legalForm || 'SARL',
+    capital: settings?.capital || '10.000',
+    address: settings?.address || '1 rue de la Paix, 67500 Haguenau',
+    siret: settings?.siret || '123 456 789 00012',
+    rcs: settings?.rcs || 'Strasbourg B 123 456 789',
+    vat: settings?.vat || 'FR12 123456789',
+    director: settings?.director || 'Mikail LEKESIZ',
     email: `contact@${domain}`,
-    phone: domainData?.settings?.phone || '03 88 00 00 00',
+    phone: settings?.phone || '03 88 00 00 00',
   };
 
   return (

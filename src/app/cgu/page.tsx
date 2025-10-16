@@ -15,13 +15,14 @@ export async function generateMetadata() {
 
 export default async function CGUPage() {
   const { domain, displayName, domainData } = await getCurrentDomainInfo();
-  
+
+  const settings = domainData?.settings as Record<string, any> | null | undefined;
   const companyInfo = {
-    name: domainData?.settings?.companyName || 'NETZ FRANCE',
-    address: domainData?.settings?.address || '1 rue de la Paix, 67500 Haguenau',
+    name: settings?.companyName || 'NETZ FRANCE',
+    address: settings?.address || '1 rue de la Paix, 67500 Haguenau',
     email: `contact@${domain}`,
     supportEmail: `support@${domain}`,
-    legalForm: domainData?.settings?.legalForm || 'SARL',
+    legalForm: settings?.legalForm || 'SARL',
   };
   return (
     <LegalPageLayout title="Conditions Générales d'Utilisation" lastUpdated="15 octobre 2025">

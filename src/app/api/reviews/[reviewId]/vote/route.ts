@@ -13,7 +13,8 @@ export async function POST(
   { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
-    const reviewId = parseInt(params.reviewId);
+    const { reviewId: reviewIdParam } = await params;
+    const reviewId = parseInt(reviewIdParam);
     if (isNaN(reviewId)) {
       return NextResponse.json(
         { error: 'ID de review invalide' },
@@ -139,7 +140,8 @@ export async function GET(
   { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
-    const reviewId = parseInt(params.reviewId);
+    const { reviewId: reviewIdParam } = await params;
+    const reviewId = parseInt(reviewIdParam);
     if (isNaN(reviewId)) {
       return NextResponse.json(
         { error: 'ID de review invalide' },

@@ -15,10 +15,11 @@ export async function generateMetadata() {
 
 export default async function PolitiqueConfidentialitePage() {
   const { domain, displayName, domainData } = await getCurrentDomainInfo();
-  
+
+  const settings = domainData?.settings as Record<string, any> | null | undefined;
   const companyInfo = {
-    name: domainData?.settings?.companyName || 'NETZ FRANCE',
-    address: domainData?.settings?.address || '1 rue de la Paix, 67500 Haguenau',
+    name: settings?.companyName || 'NETZ FRANCE',
+    address: settings?.address || '1 rue de la Paix, 67500 Haguenau',
     email: `contact@${domain}`,
     dpoEmail: `dpo@${domain}`,
   };

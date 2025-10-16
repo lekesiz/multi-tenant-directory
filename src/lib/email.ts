@@ -1,6 +1,8 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 export interface EmailOptions {
   to: string;
@@ -56,7 +58,7 @@ export async function sendEmail({
   html,
 }: EmailOptions) {
   try {
-    if (!process.env.RESEND_API_KEY) {
+    if (!resend || !process.env.RESEND_API_KEY) {
       console.warn('⚠️ RESEND_API_KEY not configured. Email not sent.');
       return { success: false, error: 'Email service not configured' };
     }

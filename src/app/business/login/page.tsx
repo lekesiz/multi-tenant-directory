@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-export default function BusinessLoginPage() {
+// Mark as dynamic to prevent static prerendering
+export const dynamic = 'force-dynamic';
+
+function BusinessLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -158,5 +161,13 @@ export default function BusinessLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BusinessLoginPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <BusinessLoginForm />
+    </Suspense>
   );
 }

@@ -18,12 +18,12 @@ export async function GET(request: NextRequest) {
 
     // Decode token
     let businessOwnerId: string;
-    let timestamp: number;
-    
+    let timestamp: string;
+
     try {
       const decoded = Buffer.from(token, 'base64').toString('utf-8');
       [businessOwnerId, timestamp] = decoded.split(':');
-      
+
       // Check if token is expired (24 hours)
       if (Date.now() - parseInt(timestamp) > 24 * 60 * 60 * 1000) {
         return NextResponse.json(
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         await sendVerificationEmail({
           to: businessOwner.email,
           verificationUrl,
-          firstName: businessOwner.firstName,
+          firstName: businessOwner.firstName || undefined,
         });
         console.log('✅ Verification email resent to:', businessOwner.email);
       } catch (error) {

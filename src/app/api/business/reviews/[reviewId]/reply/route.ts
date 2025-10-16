@@ -26,7 +26,8 @@ export async function POST(
       );
     }
 
-    const reviewId = parseInt(params.reviewId);
+    const { reviewId: reviewIdParam } = await params;
+    const reviewId = parseInt(reviewIdParam);
     if (isNaN(reviewId)) {
       return NextResponse.json(
         { error: 'ID de review invalide' },
@@ -43,7 +44,7 @@ export async function POST(
       where: {
         id: reviewId,
         company: {
-          owners: {
+          ownerships: {
             some: {
               ownerId: session.user.id,
               verified: true,
@@ -128,7 +129,8 @@ export async function DELETE(
       );
     }
 
-    const reviewId = parseInt(params.reviewId);
+    const { reviewId: reviewIdParam } = await params;
+    const reviewId = parseInt(reviewIdParam);
     if (isNaN(reviewId)) {
       return NextResponse.json(
         { error: 'ID de review invalide' },
