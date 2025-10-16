@@ -20,6 +20,10 @@
     "db:seed:business": "tsx prisma/seed-business-owners.ts",
     "db:studio": "prisma studio",
     "db:optimize": "tsx scripts/apply-database-optimization.ts",
+    "import:process": "tsx scripts/process-businesses.ts",
+    "import:enhance": "tsx scripts/enhance-with-ai.ts",
+    "import:db": "tsx scripts/import-haguenau-businesses.ts",
+    "import:all": "npm run import:process && npm run import:enhance && npm run import:db",
     "postinstall": "prisma generate"
   },
   "prisma": {

@@ -31,5 +31,11 @@
       "source": "/:path*",
       "destination": "/:path*"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/sync-google-reviews",
+      "schedule": "0 2 * * *"
+    }
   ]
 }

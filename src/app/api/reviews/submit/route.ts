@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { put } from '@vercel/blob';
 import { z } from 'zod';
+import { sendNewReviewEmail } from '@/lib/email';
 
 // Validation schema
 const reviewSchema = z.object({
@@ -33,9 +34,24 @@ export async function POST(request: NextRequest) {
       comment: comment || undefined,
     });
 
-    // Verify company exists
+    // Verify company exists and get business owners
     const company = await prisma.company.findUnique({
       where: { id: validatedData.companyId },
+      include: {
+        ownerships: {
+          where: { verified: true },
+          include: {
+            owner: {
+              select: {
+                id: true,
+                email: true,
+                emailNewReview: true,
+                unsubscribeToken: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!company) {
@@ -101,8 +117,30 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Send notification email to business owner (if configured)
-    // TODO: Implement email notification
+    // Send notification emails to business owners
+    const emailPromises = company.ownerships
+      .filter((ownership) => ownership.owner.emailNewReview) // Only send to those who opted in
+      .map((ownership) => {
+        const reviewUrl = `${process.env.NEXTAUTH_URL}/business/dashboard/reviews`;
+        
+        return sendNewReviewEmail({
+          to: ownership.owner.email,
+          businessName: company.name,
+          reviewerName: validatedData.authorName,
+          rating: validatedData.rating,
+          comment: validatedData.comment,
+          reviewUrl,
+          unsubscribeToken: ownership.owner.unsubscribeToken,
+        }).catch((error) => {
+          console.error('Failed to send review notification email:', error);
+          // Don't throw, continue with other emails
+        });
+      });
+
+    // Send emails in parallel but don't wait for them
+    Promise.all(emailPromises).catch((error) => {
+      console.error('Error sending review notification emails:', error);
+    });
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
+import { sendReviewReplyEmail } from '@/lib/email';
 
 const auth = () => getServerSession(authOptions);
 import { z } from 'zod';
@@ -54,6 +55,13 @@ export async function POST(
       },
       include: {
         reply: true,
+        company: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
       },
     });
 
@@ -89,8 +97,21 @@ export async function POST(
         },
       });
 
-      // TODO: Send email notification to reviewer if email is available
-      // This would require storing reviewer email in the Review model
+      // Send email notification to reviewer if email is available
+      if (review.authorEmail) {
+        const reviewUrl = `${process.env.NEXTAUTH_URL}/companies/${review.company.slug}#reviews`;
+        
+        sendReviewReplyEmail({
+          to: review.authorEmail,
+          reviewerName: review.authorName,
+          businessName: review.company.name,
+          replyContent: validatedData.content,
+          reviewUrl,
+        }).catch((error) => {
+          console.error('Failed to send review reply email:', error);
+          // Don't throw, the reply was created successfully
+        });
+      }
 
       return NextResponse.json({
         success: true,
