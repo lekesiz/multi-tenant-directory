@@ -62,6 +62,7 @@ export async function generateMetadata({
           },
         },
         reviews: true,
+        hours: true,
       },
     });
 
@@ -149,6 +150,7 @@ export default async function CompanyDetailPage({
           reviewDate: 'desc',
         },
       },
+      hours: true,
     },
   });
 
@@ -498,12 +500,12 @@ export default async function CompanyDetailPage({
             </div>
 
             {/* Business Hours */}
-            {company.businessHours && (
+            {company.hours && (
               <div className="bg-white rounded-lg shadow p-4 sm:p-6">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
                   Horaires d'ouverture
                 </h3>
-                <BusinessHours businessHours={company.businessHours as any} />
+                <BusinessHours businessHours={company.hours as any} />
               </div>
             )}
 
