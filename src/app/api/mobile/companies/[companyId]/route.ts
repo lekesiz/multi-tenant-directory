@@ -114,7 +114,7 @@ export async function GET(
       recentReviews: company.reviews.map(review => ({
         id: review.id,
         rating: review.rating,
-        content: review.content,
+        content: review.comment,
         authorName: review.authorName,
         createdAt: review.createdAt,
         hasReply: !!review.reply,
