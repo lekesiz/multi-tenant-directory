@@ -14,15 +14,8 @@ export async function getCompanyBySlug(slug: string) {
       return prisma.company.findUnique({
         where: { slug },
         include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
           reviews: {
-            where: { status: 'APPROVED' },
+            where: { isApproved: true },
             orderBy: { createdAt: 'desc' },
             take: 10,
             select: {
@@ -36,7 +29,7 @@ export async function getCompanyBySlug(slug: string) {
           _count: {
             select: {
               reviews: {
-                where: { status: 'APPROVED' },
+                where: { isApproved: true },
               },
             },
           },
@@ -66,14 +59,11 @@ export async function getCompanies(options: {
     cacheKey,
     async () => {
       const where: Prisma.CompanyWhereInput = {
-        status: 'ACTIVE',
-        ...(categoryId && { categoryId }),
-        ...(featured && { featured: true }),
         ...(search && {
           OR: [
             { name: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } },
             { address: { contains: search, mode: 'insensitive' } },
+            { city: { contains: search, mode: 'insensitive' } },
           ],
         }),
       };
@@ -84,29 +74,26 @@ export async function getCompanies(options: {
           skip,
           take: limit,
           orderBy: [
-            { featured: 'desc' },
-            { averageRating: 'desc' },
+            { rating: 'desc' },
             { reviewCount: 'desc' },
+            { createdAt: 'desc' },
           ],
           select: {
             id: true,
             name: true,
             slug: true,
-            description: true,
-            logo: true,
+            categories: true,
+            logoUrl: true,
+            coverImageUrl: true,
             address: true,
+            city: true,
+            postalCode: true,
             phone: true,
             website: true,
-            averageRating: true,
+            rating: true,
             reviewCount: true,
-            featured: true,
-            category: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-              },
-            },
+            latitude: true,
+            longitude: true,
           },
         }),
         prisma.company.count({ where }),
@@ -124,27 +111,25 @@ export async function getCompanies(options: {
 }
 
 // Get all categories (cached)
+// Note: Categories are stored as String[] in Company model, not as a separate table
 export async function getCategories() {
   return cacheWrapper(
     CacheKeys.categories(),
     async () => {
-      return prisma.category.findMany({
-        orderBy: { name: 'asc' },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          icon: true,
-          _count: {
-            select: {
-              companies: {
-                where: { status: 'ACTIVE' },
-              },
-            },
-          },
-        },
+      // Get all unique categories from companies
+      const companies = await prisma.company.findMany({
+        select: { categories: true },
       });
+
+      const categoriesSet = new Set<string>();
+      companies.forEach((company) => {
+        company.categories?.forEach((cat) => categoriesSet.add(cat));
+      });
+
+      return Array.from(categoriesSet).sort().map((name) => ({
+        name,
+        slug: name.toLowerCase().replace(/\s+/g, '-'),
+      }));
     },
     { ttl: 3600 } // 1 hour
   );
@@ -156,12 +141,13 @@ export async function getCompanyReviews(companyId: string, page: number = 1, lim
     CacheKeys.reviews(companyId, page),
     async () => {
       const skip = (page - 1) * limit;
+      const companyIdNum = parseInt(companyId, 10);
 
       const [reviews, total] = await Promise.all([
         prisma.review.findMany({
           where: {
-            companyId,
-            status: 'APPROVED',
+            companyId: companyIdNum,
+            isApproved: true,
           },
           skip,
           take: limit,
@@ -172,16 +158,19 @@ export async function getCompanyReviews(companyId: string, page: number = 1, lim
             comment: true,
             authorName: true,
             authorEmail: true,
+            authorPhoto: true,
+            photos: true,
+            reviewDate: true,
+            helpfulCount: true,
+            isVerified: true,
             createdAt: true,
-            helpful: true,
-            response: true,
-            responseDate: true,
+            reply: true,
           },
         }),
         prisma.review.count({
           where: {
-            companyId,
-            status: 'APPROVED',
+            companyId: companyIdNum,
+            isApproved: true,
           },
         }),
       ]);
@@ -202,6 +191,8 @@ export async function getCompanyStats(companyId: string) {
   return cacheWrapper(
     CacheKeys.stats(companyId),
     async () => {
+      const companyIdNum = parseInt(companyId, 10);
+
       const [
         totalReviews,
         averageRating,
@@ -210,14 +201,14 @@ export async function getCompanyStats(companyId: string) {
       ] = await Promise.all([
         prisma.review.count({
           where: {
-            companyId,
-            status: 'APPROVED',
+            companyId: companyIdNum,
+            isApproved: true,
           },
         }),
         prisma.review.aggregate({
           where: {
-            companyId,
-            status: 'APPROVED',
+            companyId: companyIdNum,
+            isApproved: true,
           },
           _avg: {
             rating: true,
@@ -226,8 +217,8 @@ export async function getCompanyStats(companyId: string) {
         prisma.review.groupBy({
           by: ['rating'],
           where: {
-            companyId,
-            status: 'APPROVED',
+            companyId: companyIdNum,
+            isApproved: true,
           },
           _count: {
             rating: true,
@@ -235,8 +226,8 @@ export async function getCompanyStats(companyId: string) {
         }),
         prisma.review.count({
           where: {
-            companyId,
-            status: 'APPROVED',
+            companyId: companyIdNum,
+            isApproved: true,
             createdAt: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
             },

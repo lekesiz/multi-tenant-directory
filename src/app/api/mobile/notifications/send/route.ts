@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     // Log notification in database
     await prisma.notification.createMany({
       data: fcmTokens.map(token => ({
-        recipientId: authResult.user.userId, // This should be mapped to actual recipient
+        recipientId: authResult.user?.userId || '', // This should be mapped to actual recipient
         type,
         title: getNotificationTitle(type),
         message,

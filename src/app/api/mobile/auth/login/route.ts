@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const businessOwner = await prisma.businessOwner.findUnique({
       where: { email: validatedData.email },
       include: {
-        ownerships: {
+        companies: {
           include: {
             company: {
               select: {
@@ -94,9 +94,9 @@ export async function POST(request: Request) {
       phone: businessOwner.phone,
       subscriptionTier: businessOwner.subscriptionTier,
       subscriptionStatus: businessOwner.subscriptionStatus,
-      isEmailVerified: businessOwner.isEmailVerified,
-      profileImageUrl: businessOwner.profileImageUrl,
-      companies: businessOwner.ownerships.map(ownership => ownership.company),
+      isEmailVerified: businessOwner.emailVerified ? true : false,
+      profileImageUrl: null, // Add this field to BusinessOwner model if needed
+      companies: businessOwner.companies.map(ownership => ownership.company),
     };
 
     return NextResponse.json({

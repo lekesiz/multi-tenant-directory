@@ -13,8 +13,8 @@ import {
   UserGroupIcon,
   ShoppingBagIcon,
   CalendarIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon as TrendingUpIcon,
+  ArrowTrendingDownIcon as TrendingDownIcon,
   CogIcon,
   PlusIcon,
   EyeIcon,
@@ -581,7 +581,7 @@ function TrafficSourcesWidget({ data }: { data?: any }) {
       </div>
       
       <div className="space-y-2">
-        {sources.map((source, index) => (
+        {sources.map((source: { name: string; percentage: number; color: string }, index: number) => (
           <div key={index} className="flex items-center justify-between">
             <div className="flex items-center">
               <div className={`w-3 h-3 rounded-full mr-2 ${source.color}`} />

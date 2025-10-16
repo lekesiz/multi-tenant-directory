@@ -60,9 +60,11 @@ export default function SubscriptionCard({ businessOwner, onSuccess }: Subscript
 
       if (url) {
         window.location.href = url;
-      } else {
+      } else if (sessionId) {
         const stripe = await stripePromise;
-        await stripe?.redirectToCheckout({ sessionId });
+        if (stripe && 'redirectToCheckout' in stripe) {
+          await (stripe as any).redirectToCheckout({ sessionId });
+        }
       }
 
     } catch (error) {
@@ -75,7 +77,7 @@ export default function SubscriptionCard({ businessOwner, onSuccess }: Subscript
 
   const handleManageBilling = () => {
     // Redirect to Stripe customer portal
-    toast.info('Redirection vers le portail de facturation...');
+    toast('Redirection vers le portail de facturation...');
     // This would typically open the Stripe customer portal
   };
 

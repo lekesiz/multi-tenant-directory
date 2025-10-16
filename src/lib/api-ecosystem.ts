@@ -664,7 +664,7 @@ export class ApiAnalyticsService {
 
     return Object.entries(grouped).map(([date, stats]) => ({
       date,
-      ...stats,
+      ...(stats as object),
     }));
   }
 }

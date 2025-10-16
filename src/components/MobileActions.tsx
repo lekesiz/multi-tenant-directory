@@ -187,7 +187,7 @@ export default function MobileActions({ company }: MobileActionsProps) {
       {/* Share status message */}
       {shareStatus === 'success' && (
         <p className="text-center text-sm text-green-600">
-          {navigator.share ? 'Partagé avec succès!' : 'Lien copié dans le presse-papiers!'}
+          {('share' in navigator) ? 'Partagé avec succès!' : 'Lien copié dans le presse-papiers!'}
         </p>
       )}
     </div>

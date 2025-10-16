@@ -101,7 +101,6 @@ export async function generateChatbotResponse(userMessage: string, conversationH
       system: CHATBOT_SYSTEM_PROMPT,
       prompt: `${context}Utilisateur: ${userMessage}`,
       temperature: 0.7,
-      maxTokens: 200,
     });
 
     return text;
@@ -123,10 +122,9 @@ export async function streamChatbotResponse(userMessage: string, conversationHis
       system: CHATBOT_SYSTEM_PROMPT,
       prompt: `${context}Utilisateur: ${userMessage}`,
       temperature: 0.7,
-      maxTokens: 200,
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Error streaming chatbot response:', error);
     throw new Error('Erreur lors de la génération de la réponse');
@@ -149,7 +147,6 @@ export async function generateReviewResponse(
       model: AI_MODELS.CONTENT,
       prompt,
       temperature: 0.8,
-      maxTokens: 200,
     });
 
     return text;
@@ -181,7 +178,6 @@ export async function generateSEOContent(
       model: AI_MODELS.CONTENT,
       prompt,
       temperature: 0.7,
-      maxTokens: 400,
     });
 
     return text;
@@ -205,7 +201,6 @@ export async function generateBusinessInsights(
       model: AI_MODELS.ANALYSIS,
       prompt,
       temperature: 0.3,
-      maxTokens: 300,
     });
 
     return JSON.parse(text);
@@ -252,7 +247,6 @@ Format JSON attendu:
       model: AI_MODELS.ANALYSIS,
       prompt,
       temperature: 0.6,
-      maxTokens: 500,
     });
 
     return JSON.parse(text);

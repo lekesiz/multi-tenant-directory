@@ -355,16 +355,20 @@ export function parseAIJSON<T = any>(content: string): T | null {
 
 /**
  * Generate chatbot response
+ * TODO: Add chatbot prompt to AI_PROMPTS config
  */
 export async function generateChatbotResponse(data: {
   userMessage: string;
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
   context?: string;
 }): Promise<AIResponse> {
-  const prompt = AI_PROMPTS.chatbot
-    .replace('{context}', data.context || 'Aucun contexte spécifique')
-    .replace('{history}', JSON.stringify(data.conversationHistory || []))
-    .replace('{message}', data.userMessage);
+  // Temporary implementation until chatbot prompt is added to config
+  const prompt = `Vous êtes un assistant IA pour un annuaire professionnel local.
+Context: ${data.context || 'Aucun contexte spécifique'}
+Histoire: ${JSON.stringify(data.conversationHistory || [])}
+Message utilisateur: ${data.userMessage}
+
+Répondez de manière professionnelle et utile.`;
 
   return callAI(prompt);
 }
@@ -382,11 +386,15 @@ export async function generateBusinessInsights(data: {
     viewCount?: number;
   };
 }): Promise<AIResponse> {
-  const prompt = AI_PROMPTS.insights
-    .replace('{companyName}', data.companyName)
-    .replace('{category}', data.category)
-    .replace('{reviews}', JSON.stringify(data.reviews))
-    .replace('{stats}', JSON.stringify(data.stats));
+  // Temporary implementation until insights prompt is added to config
+  const prompt = `Analysez les données de cette entreprise et générez des insights:
+
+Entreprise: ${data.companyName}
+Catégorie: ${data.category}
+Avis: ${JSON.stringify(data.reviews)}
+Statistiques: ${JSON.stringify(data.stats)}
+
+Fournissez des insights actionnables pour améliorer l'entreprise.`;
 
   return callAI(prompt);
 }
@@ -401,12 +409,16 @@ export async function suggestBusinessImprovements(data: {
   commonIssues: string[];
   strengths: string[];
 }): Promise<AIResponse> {
-  const prompt = AI_PROMPTS.recommendations
-    .replace('{companyName}', data.companyName)
-    .replace('{category}', data.category)
-    .replace('{rating}', data.currentRating.toString())
-    .replace('{issues}', data.commonIssues.join(', '))
-    .replace('{strengths}', data.strengths.join(', '));
+  // Temporary implementation until recommendations prompt is added to config
+  const prompt = `Suggérez des améliorations pour cette entreprise:
+
+Entreprise: ${data.companyName}
+Catégorie: ${data.category}
+Note actuelle: ${data.currentRating}/5
+Problèmes courants: ${data.commonIssues.join(', ')}
+Points forts: ${data.strengths.join(', ')}
+
+Fournissez des recommandations concrètes et actionnables.`;
 
   return callAI(prompt);
 }
@@ -421,12 +433,16 @@ export async function generateSEOContent(data: {
   keywords?: string[];
   contentType: 'meta_description' | 'page_title' | 'blog_post' | 'social_media';
 }): Promise<AIResponse> {
-  const prompt = AI_PROMPTS.seoContent
-    .replace('{companyName}', data.companyName)
-    .replace('{category}', data.category)
-    .replace('{location}', data.location)
-    .replace('{keywords}', (data.keywords || []).join(', '))
-    .replace('{contentType}', data.contentType);
+  // Temporary implementation until seoContent prompt is added to config
+  const prompt = `Générez du contenu SEO pour cette entreprise:
+
+Entreprise: ${data.companyName}
+Catégorie: ${data.category}
+Localisation: ${data.location}
+Mots-clés: ${(data.keywords || []).join(', ')}
+Type de contenu: ${data.contentType}
+
+Créez du contenu optimisé SEO et professionnel.`;
 
   return callAI(prompt);
 }

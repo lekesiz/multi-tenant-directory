@@ -45,7 +45,7 @@ export async function GET(
         coupons: {
           where: {
             isActive: true,
-            expiresAt: {
+            validUntil: {
               gt: new Date(),
             },
           },
@@ -114,7 +114,7 @@ export async function GET(
       recentReviews: company.reviews.map(review => ({
         id: review.id,
         rating: review.rating,
-        content: review.content,
+        content: review.comment || '',
         authorName: review.authorName,
         createdAt: review.createdAt,
         hasReply: !!review.reply,
@@ -145,9 +145,10 @@ export async function GET(
         id: coupon.id,
         title: coupon.title,
         description: coupon.description,
-        discount: coupon.discount,
+        value: coupon.value,
+        type: coupon.type,
         code: coupon.code,
-        expiresAt: coupon.expiresAt,
+        validUntil: coupon.validUntil,
       })),
     };
 

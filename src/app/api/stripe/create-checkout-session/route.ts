@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stripeService, SUBSCRIPTION_PLANS } from '@/lib/stripe-config';
+import { stripeService, SUBSCRIPTION_PLANS, ANNUAL_PLANS } from '@/lib/stripe-config';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     // Get plan details
-    const plan = SUBSCRIPTION_PLANS[planId];
+    const plan = SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS];
     
     if (!plan) {
       return NextResponse.json(
@@ -47,9 +47,15 @@ export async function POST(request: Request) {
     }
 
     // Get price ID based on interval
-    const priceId = interval === 'year' && plan.annual 
-      ? plan.annual.stripePriceId 
-      : plan.stripePriceId;
+    let priceId: string | null | undefined;
+
+    if (interval === 'year') {
+      // Check if annual plan exists for this plan
+      const annualPlan = ANNUAL_PLANS[planId as keyof typeof ANNUAL_PLANS];
+      priceId = annualPlan?.stripePriceId;
+    } else {
+      priceId = plan.stripePriceId;
+    }
 
     if (!priceId) {
       return NextResponse.json(
@@ -61,16 +67,16 @@ export async function POST(request: Request) {
     // Create checkout session using stripe service
     const checkoutSession = await stripeService.createCheckoutSession({
       priceId,
-      customerId: businessOwner.stripeCustomerId,
+      customerId: businessOwner.stripeCustomerId || undefined,
       businessOwnerId: businessOwner.id,
       successUrl,
       cancelUrl,
       trial: true, // 14 day trial
-      referralCode,
       metadata: {
         planId: plan.id,
         interval,
         businessOwnerId: businessOwner.id,
+        ...(referralCode && { referralCode }),
       }
     });
 

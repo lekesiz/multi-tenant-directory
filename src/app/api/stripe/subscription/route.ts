@@ -3,6 +3,7 @@ import { stripeService, getPlanById, canUpgrade, canDowngrade } from '@/lib/stri
 import { prisma } from '@/lib/prisma';
 import { authenticateMobileUser } from '@/lib/mobile-auth';
 import { z } from 'zod';
+import Stripe from 'stripe';
 
 const updateSubscriptionSchema = z.object({
   planId: z.string(),
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
     }
 
     let subscriptionDetails = null;
-    let invoices = [];
+    let invoices: Stripe.Invoice[] = [];
     
     if (businessOwner.stripeSubscriptionId) {
       try {
@@ -254,9 +255,11 @@ export async function DELETE(request: Request) {
         action: 'canceled',
         fromPlan: businessOwner.subscriptionTier,
         reason: validatedData.reason,
-        effectiveDate: validatedData.immediately 
-          ? new Date() 
-          : new Date(canceledSubscription.current_period_end * 1000),
+        effectiveDate: validatedData.immediately
+          ? new Date()
+          : canceledSubscription.current_period_end
+            ? new Date(canceledSubscription.current_period_end * 1000)
+            : new Date(),
         stripeEventId: canceledSubscription.id,
       },
     });

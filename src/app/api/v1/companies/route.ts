@@ -57,8 +57,8 @@ export async function GET(request: Request) {
     const validation = await validateApiRequest(request);
     
     if ('error' in validation) {
-      statusCode = validation.status;
-      const response = NextResponse.json({ error: validation.error }, { status: validation.status });
+      statusCode = validation.status || 401;
+      const response = NextResponse.json({ error: validation.error }, { status: validation.status || 401 });
       
       if (validation.headers) {
         Object.entries(validation.headers).forEach(([key, value]) => {

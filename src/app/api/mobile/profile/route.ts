@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     const businessOwner = await prisma.businessOwner.findUnique({
       where: { id: authResult.user.userId },
       include: {
-        ownerships: {
+        companies: {
           include: {
             company: {
               select: {
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
       trialEnd: businessOwner.trialEnd,
       lastLoginAt: businessOwner.lastLoginAt,
       createdAt: businessOwner.createdAt,
-      companies: businessOwner.ownerships.map(ownership => ownership.company),
+      companies: businessOwner.companies.map(ownership => ownership.company),
       
       // App-specific settings
       deviceType: businessOwner.deviceType,

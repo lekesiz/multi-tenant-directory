@@ -192,7 +192,7 @@ export class ProductService {
   private static async createLowStockAlert(productId: string, currentStock: number) {
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      include: { company: { include: { ownerships: true } } }
+      include: { company: { include: { companies: true } } }
     });
 
     if (!product) return;
@@ -334,7 +334,7 @@ export class BookingService {
         product: {
           include: {
             company: {
-              include: { ownerships: true }
+              include: { companies: true }
             }
           }
         }
@@ -581,7 +581,7 @@ export class OrderService {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        company: { include: { ownerships: true } }
+        company: { include: { companies: true } }
       }
     });
 

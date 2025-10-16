@@ -50,7 +50,7 @@ export function useWebVitals() {
       const lastEntry = entries[entries.length - 1];
 
       if (lastEntry && 'renderTime' in lastEntry) {
-        const lcp = lastEntry.renderTime || lastEntry.loadTime;
+        const lcp = (lastEntry as any).renderTime || (lastEntry as any).loadTime;
         
         if (process.env.NODE_ENV === 'development') {
           console.log(`LCP: ${lcp}ms`);
