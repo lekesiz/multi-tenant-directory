@@ -1284,3 +1284,20 @@ model HealthCheckLog {
   @@index([status, timestamp(sort: Desc)])
   @@map("health_check_logs")
 }
+
+
+// Dashboard Layout Management
+model DashboardLayout {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  widgets   String   @db.Text // JSON string of widget configurations
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, userId])
+  @@index([tenantId])
+  @@index([userId])
+  @@map("dashboard_layouts")
+}
+
