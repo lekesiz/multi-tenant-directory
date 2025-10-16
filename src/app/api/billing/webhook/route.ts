@@ -186,7 +186,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     try {
       await sendPaymentSuccessEmail({
         to: businessOwner.email,
-        businessOwnerName: businessOwner.firstName,
+        businessOwnerName: businessOwner.firstName || undefined,
         plan: businessOwner.subscriptionTier || 'Basic',
         amount: inv.amount_paid / 100,
         nextBillingDate: new Date(inv.period_end * 1000),
