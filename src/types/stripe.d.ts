@@ -45,7 +45,7 @@ declare module 'stripe' {
     /**
      * Checkout Session extensions
      */
-    interface Checkout {
+    namespace Checkout {
       namespace Session {
         interface Session {
           subscription?: string | Subscription | null;

@@ -7,16 +7,15 @@ import { ComponentType } from 'react';
 export function lazyLoad<P extends object>(
   importFn: () => Promise<{ default: ComponentType<P> }>,
   options?: {
-    loading?: ComponentType;
     ssr?: boolean;
   }
 ) {
   return dynamic(importFn, {
-    loading: options?.loading || (() => (
+    loading: () => (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    )),
+    ),
     ssr: options?.ssr ?? true,
   });
 }
@@ -32,36 +31,30 @@ export function preloadComponent<P extends object>(
 
 /**
  * Lazy load components that are only needed on interaction
+ * Note: Only include components that actually exist in the codebase
  */
 export const LazyComponents = {
-  // Admin components (heavy, only for admins)
-  AdminDashboard: lazyLoad(() => import('@/components/AdminDashboard'), { ssr: false }),
-  
-  // Charts (heavy libraries)
-  Charts: lazyLoad(() => import('@/components/Charts'), { ssr: false }),
-  
-  // Map (Google Maps is heavy)
-  Map: lazyLoad(() => import('@/components/GoogleMap'), { ssr: false }),
-  
-  // Rich text editor (heavy)
-  RichTextEditor: lazyLoad(() => import('@/components/RichTextEditor'), { ssr: false }),
-  
-  // QR Code generator
+  // QR Code generator (exists)
   QRCode: lazyLoad(() => import('@/components/CompanyQRCode'), { ssr: false }),
+
+  // TODO: Add these when components are created:
+  // AdminDashboard: lazyLoad(() => import('@/components/AdminDashboard'), { ssr: false }),
+  // Charts: lazyLoad(() => import('@/components/Charts'), { ssr: false }),
+  // Map: lazyLoad(() => import('@/components/GoogleMap'), { ssr: false }),
+  // RichTextEditor: lazyLoad(() => import('@/components/RichTextEditor'), { ssr: false }),
 };
 
 /**
  * Route-based code splitting helper
+ * Note: These are commented out until the actual pages are created
  */
 export const LazyPages = {
-  // Business dashboard pages
-  BusinessDashboard: lazyLoad(() => import('@/app/business/dashboard/page')),
-  BusinessSettings: lazyLoad(() => import('@/app/business/dashboard/settings/page')),
-  BusinessBilling: lazyLoad(() => import('@/app/business/dashboard/billing/page')),
-  
-  // Admin pages
-  AdminDashboard: lazyLoad(() => import('@/app/admin/dashboard/page'), { ssr: false }),
-  AdminUsers: lazyLoad(() => import('@/app/admin/users/page'), { ssr: false }),
+  // TODO: Add these when pages are created:
+  // BusinessDashboard: lazyLoad(() => import('@/app/business/dashboard/page')),
+  // BusinessSettings: lazyLoad(() => import('@/app/business/dashboard/settings/page')),
+  // BusinessBilling: lazyLoad(() => import('@/app/business/dashboard/billing/page')),
+  // AdminDashboard: lazyLoad(() => import('@/app/admin/dashboard/page'), { ssr: false }),
+  // AdminUsers: lazyLoad(() => import('@/app/admin/users/page'), { ssr: false }),
 };
 
 /**

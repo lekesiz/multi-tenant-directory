@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import { env } from './env';
-import { createPrismaMiddleware } from './prisma-middleware';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -20,8 +19,8 @@ export const prisma =
     },
   });
 
-// Add middleware for query optimization
-prisma.$use(createPrismaMiddleware());
+// Note: Prisma middleware API ($use) deprecated in v5+
+// Use Prisma extensions instead if query optimization needed
 
 if (env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 

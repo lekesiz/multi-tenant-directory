@@ -31,7 +31,7 @@ interface HealthCheckResult {
 }
 
 // Error Tracking Service
-export class ErrorTracker {
+class ErrorTracker {
   
   /**
    * Report error to monitoring service
@@ -159,7 +159,7 @@ export class ErrorTracker {
 }
 
 // Performance Monitoring
-export class PerformanceMonitor {
+class PerformanceMonitor {
   
   /**
    * Track API performance
@@ -262,7 +262,7 @@ export class PerformanceMonitor {
 }
 
 // Health Check Service
-export class HealthCheck {
+class HealthCheck {
   
   /**
    * Check overall system health
@@ -411,7 +411,7 @@ export class HealthCheck {
 }
 
 // Monitoring utilities
-export class MonitoringUtils {
+class MonitoringUtils {
   
   /**
    * Wrapper for async operations with automatic error tracking

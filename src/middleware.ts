@@ -202,8 +202,8 @@ function getClientIP(request: NextRequest): string {
   if (cloudflareIP) return cloudflareIP;
   if (forwarded) return forwarded.split(',')[0].trim();
   if (realIP) return realIP;
-  
-  return request.ip || '127.0.0.1';
+
+  return '127.0.0.1';
 }
 
 export const config = {

@@ -1,36 +1,15 @@
-import { Prisma } from '@prisma/client';
-
 /**
- * Prisma middleware for query optimization and logging
+ * Prisma query optimization and logging utilities
+ * Note: Prisma middleware API deprecated in v5+, use extensions instead
  */
 
-export function createPrismaMiddleware() {
-  return async (
-    params: Prisma.MiddlewareParams,
-    next: (params: Prisma.MiddlewareParams) => Promise<any>
-  ) => {
-    const before = Date.now();
-
-    // Add default select fields to avoid fetching unnecessary data
-    if (params.action === 'findMany' || params.action === 'findFirst') {
-      // Log slow queries in development
-      if (process.env.NODE_ENV === 'development') {
-        const result = await next(params);
-        const after = Date.now();
-        const duration = after - before;
-
-        if (duration > 1000) {
-          console.warn(
-            `⚠️ Slow query detected (${duration}ms): ${params.model}.${params.action}`
-          );
-        }
-
-        return result;
-      }
-    }
-
-    return next(params);
-  };
+// Slow query logging (can be added via Prisma extension if needed)
+export function logSlowQuery(model: string, action: string, duration: number) {
+  if (process.env.NODE_ENV === 'development' && duration > 1000) {
+    console.warn(
+      `⚠️ Slow query detected (${duration}ms): ${model}.${action}`
+    );
+  }
 }
 
 /**

@@ -92,8 +92,8 @@ export class MarketingAutomation {
         name: campaignData.name || 'Nouvelle campagne',
         type: campaignData.type || 'email',
         status: 'draft',
-        triggers: campaignData.triggers || [],
-        actions: campaignData.actions || [],
+        triggers: (campaignData.triggers || []) as any,
+        actions: (campaignData.actions || []) as any,
         segmentId: campaignData.segment?.id,
         analytics: {
           sent: 0,
@@ -121,7 +121,7 @@ export class MarketingAutomation {
       data: {
         businessOwnerId,
         name: segmentData.name || 'Nouveau segment',
-        rules: segmentData.rules || [],
+        rules: (segmentData.rules || []) as any,
         dynamicRefresh: segmentData.dynamicRefresh ?? true,
       },
     });
@@ -142,7 +142,7 @@ export class MarketingAutomation {
 
     if (!segment) throw new Error('Segment not found');
 
-    const rules = segment.rules as SegmentRule[];
+    const rules = segment.rules as unknown as SegmentRule[];
     const query = this.buildSegmentQuery(rules);
     
     // Execute query to find matching business owners
@@ -195,7 +195,7 @@ export class MarketingAutomation {
     }
 
     // Add new scoring factor
-    const factors = leadScore.factors as ScoreFactor[];
+    const factors = leadScore.factors as unknown as unknown as ScoreFactor[];
     factors.push({
       action,
       points,
@@ -211,7 +211,7 @@ export class MarketingAutomation {
       where: { id: leadScore.id },
       data: {
         score: newScore,
-        factors,
+        factors: factors as any,
         lastUpdated: new Date(),
       },
     });
@@ -223,7 +223,7 @@ export class MarketingAutomation {
       userId: updatedLeadScore.userId,
       companyId: updatedLeadScore.companyId,
       score: updatedLeadScore.score,
-      factors: updatedLeadScore.factors as ScoreFactor[],
+      factors: updatedLeadScore.factors as unknown as ScoreFactor[],
       lastUpdated: updatedLeadScore.lastUpdated,
     };
   }
@@ -256,7 +256,7 @@ export class MarketingAutomation {
       }
 
       // Get email template
-      const emailAction = (campaign.actions as CampaignAction[]).find(
+      const emailAction = (campaign.actions as unknown as CampaignAction[]).find(
         action => action.type === 'send_email'
       );
 
@@ -277,7 +277,6 @@ export class MarketingAutomation {
         to: user.email,
         subject: personalizedContent.subject,
         html: personalizedContent.html,
-        from: campaign.businessOwner.email,
       });
 
       // Track campaign metrics
@@ -303,15 +302,11 @@ export class MarketingAutomation {
     const campaigns = await prisma.marketingCampaign.findMany({
       where: {
         status: 'active',
-        triggers: {
-          path: '$[*].type',
-          equals: 'event_based',
-        },
       },
     });
 
     for (const campaign of campaigns) {
-      const triggers = campaign.triggers as CampaignTrigger[];
+      const triggers = campaign.triggers as unknown as CampaignTrigger[];
       const matchingTrigger = triggers.find(
         trigger => 
           trigger.type === 'event_based' && 
@@ -367,12 +362,13 @@ export class MarketingAutomation {
       content: any;
     }[]
   ): Promise<string> {
-    const abTest = await prisma.abTest.create({
+    const abTest = await prisma.aBTest.create({
       data: {
+        name: `AB Test for Campaign ${campaignId}`,
         campaignId,
-        variants,
+        variants: variants as any,
         status: 'active',
-        results: {},
+        results: {} as any,
       },
     });
 
@@ -474,15 +470,11 @@ export class MarketingAutomation {
     const campaigns = await prisma.marketingCampaign.findMany({
       where: {
         status: 'active',
-        triggers: {
-          path: '$[*].type',
-          equals: 'behavior_based',
-        },
       },
     });
 
     for (const campaign of campaigns) {
-      const triggers = campaign.triggers as CampaignTrigger[];
+      const triggers = campaign.triggers as unknown as CampaignTrigger[];
       const scoreTrigger = triggers.find(
         trigger => 
           trigger.type === 'behavior_based' && 
@@ -550,7 +542,7 @@ export class MarketingAutomation {
 
     if (!campaign) return;
 
-    const actions = campaign.actions as CampaignAction[];
+    const actions = campaign.actions as unknown as CampaignAction[];
     
     for (const action of actions) {
       switch (action.type) {
@@ -598,7 +590,7 @@ export class MarketingAutomation {
     }
 
     // Update next run time for recurring campaigns
-    const triggers = campaign.triggers as CampaignTrigger[];
+    const triggers = campaign.triggers as unknown as CampaignTrigger[];
     const timeTrigger = triggers.find(t => t.type === 'time_based');
     
     if (timeTrigger && timeTrigger.condition.recurring) {
@@ -633,12 +625,12 @@ export class MarketingAutomation {
     });
 
     if (campaign) {
-      const analytics = campaign.analytics as CampaignAnalytics;
+      const analytics = campaign.analytics as unknown as CampaignAnalytics;
       analytics[event] = (analytics[event] || 0) + 1;
-      
+
       await prisma.marketingCampaign.update({
         where: { id: campaignId },
-        data: { analytics },
+        data: { analytics: analytics as any },
       });
     }
   }

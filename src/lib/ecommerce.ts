@@ -111,8 +111,8 @@ export class ProductService {
           where: { status: { in: ['confirmed', 'pending'] } },
           select: { id: true, startTime: true, endTime: true }
         },
-        orders: {
-          select: { id: true, quantity: true, status: true }
+        orderItems: {
+          select: { id: true, quantity: true, orderId: true }
         },
       },
     });
@@ -192,7 +192,11 @@ export class ProductService {
   private static async createLowStockAlert(productId: string, currentStock: number) {
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      include: { company: { include: { companies: true } } }
+      include: {
+        company: {
+          include: { ownerships: true }
+        }
+      }
     });
 
     if (!product) return;
@@ -334,7 +338,7 @@ export class BookingService {
         product: {
           include: {
             company: {
-              include: { companies: true }
+              include: { ownerships: true }
             }
           }
         }
@@ -581,7 +585,9 @@ export class OrderService {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        company: { include: { companies: true } }
+        company: {
+          include: { ownerships: true }
+        }
       }
     });
 
