@@ -26,7 +26,8 @@ export async function POST(
       );
     }
 
-    const reviewId = parseInt(params.reviewId);
+    const { reviewId: reviewIdStr } = await params;
+    const reviewId = parseInt(reviewIdStr);
     if (isNaN(reviewId)) {
       return NextResponse.json(
         { error: 'ID de review invalide' },
@@ -128,7 +129,8 @@ export async function DELETE(
       );
     }
 
-    const reviewId = parseInt(params.reviewId);
+    const { reviewId: reviewIdStr } = await params;
+    const reviewId = parseInt(reviewIdStr);
     if (isNaN(reviewId)) {
       return NextResponse.json(
         { error: 'ID de review invalide' },

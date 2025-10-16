@@ -20,7 +20,8 @@ export async function PATCH(
       );
     }
 
-    const reviewId = parseInt(params.reviewId);
+    const { reviewId: reviewIdStr } = await params;
+    const reviewId = parseInt(reviewIdStr);
     if (isNaN(reviewId)) {
       return NextResponse.json(
         { error: 'ID de review invalide' },
