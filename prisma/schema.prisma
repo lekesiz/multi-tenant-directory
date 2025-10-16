@@ -53,6 +53,7 @@ model Company {
   categories     String[]  // İş kategorileri
   logoUrl        String?
   coverImageUrl  String?
+  youtubeVideos  String[]  @default([]) // YouTube video URLs/IDs
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

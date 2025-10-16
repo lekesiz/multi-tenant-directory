@@ -21,6 +21,7 @@ interface Company {
   categories: string[];
   logoUrl: string | null;
   coverImageUrl: string | null;
+  youtubeVideos: string[];
   content: Array<{
     id: number;
     domainId: number;
@@ -82,6 +83,7 @@ export default function CompanyEditForm({
     categories: company.categories,
     logoUrl: company.logoUrl || '',
     coverImageUrl: company.coverImageUrl || '',
+    youtubeVideos: (company.youtubeVideos || []).join(', '),
   });
 
   const [domainSettings, setDomainSettings] = useState<
@@ -116,10 +118,19 @@ export default function CompanyEditForm({
     setSuccess('');
 
     try {
+      // Convert youtubeVideos string to array
+      const submitData = {
+        ...formData,
+        youtubeVideos: formData.youtubeVideos
+          .split(',')
+          .map((v) => v.trim())
+          .filter((v) => v.length > 0),
+      };
+
       const response = await fetch(`/api/companies/${company.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       if (response.ok) {
@@ -495,6 +506,33 @@ export default function CompanyEditForm({
                       )}
                     </div>
                   </div>
+                </div>
+
+                {/* YouTube Videos */}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <h3 className="text-sm font-medium text-red-900 mb-2 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    Vidéos YouTube
+                  </h3>
+                  <p className="text-xs text-red-700 mb-3">
+                    Entrez les URLs YouTube séparées par des virgules (ex: https://www.youtube.com/watch?v=VIDEO_ID, https://youtu.be/VIDEO_ID2)
+                  </p>
+                  <textarea
+                    value={formData.youtubeVideos}
+                    onChange={(e) =>
+                      setFormData({ ...formData, youtubeVideos: e.target.value })
+                    }
+                    placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ, https://youtu.be/abc123"
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                  {formData.youtubeVideos && (
+                    <div className="mt-2 text-xs text-green-700">
+                      ✓ {formData.youtubeVideos.split(',').filter(v => v.trim()).length} vidéo(s)
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
