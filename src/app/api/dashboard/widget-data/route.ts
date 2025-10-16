@@ -83,11 +83,25 @@ async function getWidgetData(
   }
 }
 
+// Helper to get company filter for domain
+function getCompanyFilter(tenantId: string) {
+  return {
+    content: {
+      some: {
+        domainId: parseInt(tenantId),
+        isVisible: true,
+      },
+    },
+  };
+}
+
 // Revenue Chart Data
 async function getRevenueData(tenantId: string, startDate: Date) {
+  const companyFilter = getCompanyFilter(tenantId);
+  
   const orders = await prisma.order.findMany({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       createdAt: { gte: startDate },
       status: { not: 'cancelled' },
     },
@@ -99,24 +113,19 @@ async function getRevenueData(tenantId: string, startDate: Date) {
 
   const subscriptions = await prisma.businessOwner.findMany({
     where: {
-      tenantId,
       subscriptionStatus: 'active',
       currentPeriodStart: { gte: startDate },
     },
     include: {
-      payments: {
+      companies: {
         where: {
-          createdAt: { gte: startDate },
-          status: 'succeeded',
+          company: companyFilter,
         },
       },
     },
   });
 
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0) +
-    subscriptions.reduce((sum, sub) => 
-      sum + sub.payments.reduce((pSum, payment) => pSum + payment.amount, 0), 0
-    );
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
 
   // Calculate growth
   const previousPeriod = new Date(startDate);
@@ -124,7 +133,7 @@ async function getRevenueData(tenantId: string, startDate: Date) {
 
   const previousOrders = await prisma.order.findMany({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       createdAt: { gte: previousPeriod, lt: startDate },
       status: { not: 'cancelled' },
     },
@@ -165,11 +174,13 @@ async function getRevenueData(tenantId: string, startDate: Date) {
 
 // Visitor Statistics
 async function getVisitorStats(tenantId: string, startDate: Date) {
+  const companyFilter = getCompanyFilter(tenantId);
+  
   // In a real implementation, this would connect to analytics service
   // For now, simulate data based on company analytics
   const analytics = await prisma.companyAnalytics.findMany({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       date: { gte: startDate },
     },
   });
@@ -187,9 +198,11 @@ async function getVisitorStats(tenantId: string, startDate: Date) {
 
 // Recent Orders
 async function getRecentOrders(tenantId: string) {
+  const companyFilter = getCompanyFilter(tenantId);
+  
   const orders = await prisma.order.findMany({
     where: {
-      company: { tenantId },
+      company: companyFilter,
     },
     orderBy: { createdAt: 'desc' },
     take: 10,
@@ -214,6 +227,7 @@ async function getRecentOrders(tenantId: string) {
 
 // Real-time Metrics
 async function getRealTimeMetrics(tenantId: string) {
+  const companyFilter = getCompanyFilter(tenantId);
   const now = new Date();
   const last5Minutes = new Date(now.getTime() - 5 * 60 * 1000);
   const lastHour = new Date(now.getTime() - 60 * 60 * 1000);
@@ -225,7 +239,7 @@ async function getRealTimeMetrics(tenantId: string) {
   
   const recentOrders = await prisma.order.count({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       createdAt: { gte: last5Minutes },
     },
   });
@@ -240,6 +254,7 @@ async function getRealTimeMetrics(tenantId: string) {
 
 // Booking Calendar Data
 async function getBookingData(tenantId: string, startDate: Date) {
+  const companyFilter = getCompanyFilter(tenantId);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -248,7 +263,7 @@ async function getBookingData(tenantId: string, startDate: Date) {
   const bookings = await prisma.booking.findMany({
     where: {
       product: {
-        company: { tenantId },
+        company: companyFilter,
       },
       startTime: {
         gte: today,
@@ -294,9 +309,11 @@ async function getTrafficSources(tenantId: string, startDate: Date) {
 
 // Conversion Funnel
 async function getConversionFunnel(tenantId: string, startDate: Date) {
+  const companyFilter = getCompanyFilter(tenantId);
+  
   const analytics = await prisma.companyAnalytics.findMany({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       date: { gte: startDate },
     },
   });
@@ -307,7 +324,7 @@ async function getConversionFunnel(tenantId: string, startDate: Date) {
 
   const orders = await prisma.order.count({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       createdAt: { gte: startDate },
     },
   });
@@ -324,9 +341,11 @@ async function getConversionFunnel(tenantId: string, startDate: Date) {
 
 // Review Sentiment Analysis
 async function getReviewSentiment(tenantId: string, startDate: Date) {
+  const companyFilter = getCompanyFilter(tenantId);
+  
   const reviews = await prisma.review.findMany({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       createdAt: { gte: startDate },
     },
     select: {
@@ -356,13 +375,15 @@ async function getReviewSentiment(tenantId: string, startDate: Date) {
 
 // Performance Metrics
 async function getPerformanceMetrics(tenantId: string, startDate: Date) {
+  const companyFilter = getCompanyFilter(tenantId);
+  
   const companies = await prisma.company.count({
-    where: { tenantId },
+    where: companyFilter,
   });
 
   const orders = await prisma.order.count({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       createdAt: { gte: startDate },
     },
   });
@@ -380,6 +401,8 @@ async function getPerformanceMetrics(tenantId: string, startDate: Date) {
 
 // Goal Tracker
 async function getGoalTracker(tenantId: string, userId: string) {
+  const companyFilter = getCompanyFilter(tenantId);
+  
   // This would typically be stored in a goals table
   // For now, simulate based on actual data
   const thisMonth = new Date();
@@ -388,14 +411,14 @@ async function getGoalTracker(tenantId: string, userId: string) {
 
   const monthlyOrders = await prisma.order.count({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       createdAt: { gte: thisMonth },
     },
   });
 
   const monthlyRevenue = await prisma.order.aggregate({
     where: {
-      company: { tenantId },
+      company: companyFilter,
       createdAt: { gte: thisMonth },
       status: { not: 'cancelled' },
     },
@@ -443,3 +466,4 @@ function getStartDate(range: string): Date {
       return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   }
 }
+
