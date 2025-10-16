@@ -25,7 +25,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Form Input Readability - Make text more visible */
+/* ==========================================
+   READABILITY FIXES - Form Inputs & Buttons
+   ========================================== */
+
+/* Form Input Text - Always Dark and Readable */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -38,7 +42,35 @@ input[type="time"],
 input[type="datetime-local"],
 textarea,
 select {
-  color: #1f2937 !important; /* gray-800 - Much darker for better readability */
+  color: #111827 !important; /* gray-900 - Extremely dark for maximum readability */
+  font-weight: 500 !important; /* Medium weight for better visibility */
+}
+
+/* Button Text - Ensure High Contrast */
+button {
+  font-weight: 600 !important; /* Semi-bold for buttons */
+}
+
+/* Blue Buttons - Force White Text */
+button.bg-blue-600,
+button.bg-blue-500,
+button.bg-blue-700,
+.bg-blue-600 button,
+.bg-blue-500 button,
+.bg-blue-700 button,
+[class*="bg-blue"] button {
+  color: #ffffff !important;
+}
+
+/* Green Buttons - Force White Text */
+button.bg-green-600,
+button.bg-green-500,
+button.bg-green-700,
+.bg-green-600 button,
+.bg-green-500 button,
+.bg-green-700 button,
+[class*="bg-green"] button {
+  color: #ffffff !important;
 }
 
 /* Placeholder text should be lighter but still readable */
