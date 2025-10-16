@@ -14,6 +14,21 @@ import {
   ArrowTrendingDownIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 
 interface AnalyticsSummary {
   totalViews: number;
@@ -26,7 +41,7 @@ interface AnalyticsSummary {
 }
 
 interface DailyData {
-  date: Date;
+  date: string;
   views: number;
   phoneClicks: number;
   websiteClicks: number;
@@ -34,12 +49,15 @@ interface DailyData {
   searchAppearances: number;
 }
 
+const COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B'];
+
 export default function AnalyticsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -124,6 +142,13 @@ export default function AnalyticsPage() {
       color: 'orange',
     },
   ];
+
+  // Prepare pie chart data
+  const pieData = [
+    { name: 'Téléphone', value: summary.totalPhoneClicks },
+    { name: 'Site web', value: summary.totalWebsiteClicks },
+    { name: 'Itinéraire', value: summary.totalDirectionClicks },
+  ].filter((item) => item.value > 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -220,85 +245,183 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Daily Chart */}
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-6">
-            Évolution sur 30 jours
-          </h3>
-          {dailyData.length > 0 ? (
-            <div className="space-y-4">
-              {/* Simple bar chart */}
-              <div className="overflow-x-auto">
-                <div className="min-w-[600px]">
-                  <div className="flex items-end space-x-1 h-48">
-                    {dailyData
-                      .slice()
-                      .reverse()
-                      .map((day, idx) => {
-                        const maxViews = Math.max(
-                          ...dailyData.map((d) => d.views)
-                        );
-                        const height = maxViews > 0 ? (day.views / maxViews) * 100 : 0;
-
-                        return (
-                          <div
-                            key={idx}
-                            className="flex-1 flex flex-col items-center group relative"
-                          >
-                            <div
-                              className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer"
-                              style={{ height: `${height}%` }}
-                            >
-                              {/* Tooltip on hover */}
-                              <div className="hidden group-hover:block absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
-                                <div>
-                                  {new Date(day.date).toLocaleDateString('fr-FR', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                  })}
-                                </div>
-                                <div className="font-bold">{day.views} vues</div>
-                                <div>{day.phoneClicks} tél</div>
-                                <div>{day.websiteClicks} web</div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                  {/* X-axis labels */}
-                  <div className="flex space-x-1 mt-2">
-                    {dailyData
-                      .slice()
-                      .reverse()
-                      .map((day, idx) => (
-                        <div key={idx} className="flex-1 text-center">
-                          {idx % 5 === 0 && (
-                            <span className="text-xs text-gray-500">
-                              {new Date(day.date).toLocaleDateString('fr-FR', {
-                                day: 'numeric',
-                                month: 'short',
-                              })}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-                  <span>Vues</span>
-                </div>
-              </div>
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Time Series Chart */}
+        <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-medium text-gray-900">
+              Évolution sur 30 jours
+            </h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setChartType('line')}
+                className={`px-3 py-1 rounded ${
+                  chartType === 'line'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                Ligne
+              </button>
+              <button
+                onClick={() => setChartType('bar')}
+                className={`px-3 py-1 rounded ${
+                  chartType === 'bar'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                Barres
+              </button>
             </div>
+          </div>
+
+          {dailyData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              {chartType === 'line' ? (
+                <LineChart data={dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(value) =>
+                      new Date(value).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                      })
+                    }
+                  />
+                  <YAxis />
+                  <Tooltip
+                    labelFormatter={(value) =>
+                      new Date(value).toLocaleDateString('fr-FR')
+                    }
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="views"
+                    stroke="#3B82F6"
+                    name="Vues"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="phoneClicks"
+                    stroke="#10B981"
+                    name="Téléphone"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="websiteClicks"
+                    stroke="#8B5CF6"
+                    name="Site web"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              ) : (
+                <BarChart data={dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(value) =>
+                      new Date(value).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                      })
+                    }
+                  />
+                  <YAxis />
+                  <Tooltip
+                    labelFormatter={(value) =>
+                      new Date(value).toLocaleDateString('fr-FR')
+                    }
+                  />
+                  <Legend />
+                  <Bar dataKey="views" fill="#3B82F6" name="Vues" />
+                  <Bar dataKey="phoneClicks" fill="#10B981" name="Téléphone" />
+                  <Bar dataKey="websiteClicks" fill="#8B5CF6" name="Site web" />
+                </BarChart>
+              )}
+            </ResponsiveContainer>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              Aucune donnée disponible pour le graphique
+              Aucune donnée disponible
+            </div>
+          )}
+        </div>
+
+        {/* Pie Chart - Interactions */}
+        <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-6">
+            Répartition des interactions
+          </h3>
+
+          {pieData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(entry: any) =>
+                    `${entry.name}: ${(entry.percent * 100).toFixed(0)}%`
+                  }
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              Aucune interaction enregistrée
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Insights */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          💡 Insights & Recommandations
+        </h3>
+        <div className="space-y-3 text-sm text-gray-700">
+          {summary.viewsTrend > 0 && (
+            <div className="flex items-start gap-2">
+              <ArrowTrendingUpIcon className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <p>
+                Excellente nouvelle ! Vos vues ont augmenté de{' '}
+                <strong>{summary.viewsTrend}%</strong> ce mois-ci.
+              </p>
+            </div>
+          )}
+          {summary.totalReviews < 10 && (
+            <div className="flex items-start gap-2">
+              <StarIcon className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <p>
+                Encouragez vos clients à laisser des avis pour améliorer votre
+                visibilité.
+              </p>
+            </div>
+          )}
+          {summary.totalPhoneClicks > summary.totalWebsiteClicks && (
+            <div className="flex items-start gap-2">
+              <PhoneIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <p>
+                Vos clients préfèrent vous contacter par téléphone. Assurez-vous
+                que votre numéro est toujours à jour.
+              </p>
             </div>
           )}
         </div>
@@ -306,3 +429,4 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+
