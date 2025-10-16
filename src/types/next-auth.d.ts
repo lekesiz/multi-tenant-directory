@@ -8,6 +8,11 @@ declare module 'next-auth' {
       email: string;
       name: string;
     };
+    businessOwner?: {
+      id: string;
+      email: string;
+      name: string;
+    };
   }
 
   interface User {

@@ -66,6 +66,12 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email as string;
         session.user.name = token.name as string;
       }
+      // Also set businessOwner for backwards compatibility with API routes
+      session.businessOwner = {
+        id: token.id as string,
+        email: token.email as string,
+        name: token.name as string,
+      };
       return session;
     },
   },
