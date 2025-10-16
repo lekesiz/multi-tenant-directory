@@ -18,14 +18,14 @@ export async function GET(request: NextRequest) {
 
     // Decode token
     let businessOwnerId: string;
-    let timestamp: string;
-
+    let timestampStr: string;
+    
     try {
       const decoded = Buffer.from(token, 'base64').toString('utf-8');
-      [businessOwnerId, timestamp] = decoded.split(':');
-
+      [businessOwnerId, timestampStr] = decoded.split(':');
+      
       // Check if token is expired (24 hours)
-      if (Date.now() - parseInt(timestamp) > 24 * 60 * 60 * 1000) {
+      if (Date.now() - parseInt(timestampStr) > 24 * 60 * 60 * 1000) {
         return NextResponse.json(
           { error: 'Le lien de vérification a expiré' },
           { status: 400 }
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         await sendVerificationEmail({
           to: businessOwner.email,
           verificationUrl,
-          firstName: businessOwner.firstName || undefined,
+          firstName: businessOwner.firstName ?? undefined,
         });
         console.log('✅ Verification email resent to:', businessOwner.email);
       } catch (error) {
