@@ -30,7 +30,11 @@ export async function POST(
 
     if (!company.googlePlaceId) {
       return NextResponse.json(
-        { error: 'Company does not have a Google Place ID' },
+        {
+          error: 'Google Place ID manquant',
+          message: 'Cette entreprise n\'est pas encore liée à Google Maps. Veuillez d\'abord ajouter un Google Place ID dans les paramètres de l\'entreprise.',
+          needsPlaceId: true
+        },
         { status: 400 }
       );
     }
