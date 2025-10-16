@@ -72,25 +72,35 @@ export default async function AnnuairePage({
   };
 
   if (params.category) {
-    whereClause.category = params.category;
+    whereClause.categories = {
+      has: params.category,
+    };
   }
 
   if (params.search) {
     whereClause.OR = [
       { name: { contains: params.search, mode: 'insensitive' } },
-      { description: { contains: params.search, mode: 'insensitive' } },
     ];
   }
 
   // Fetch companies and total count in parallel
-  const [companies, totalCount, categories] = await Promise.all([
+  const [companies, totalCount, allCompanies] = await Promise.all([
     prisma.company.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        address: true,
+        phone: true,
+        categories: true,
         content: {
           where: {
             domainId: currentDomain.id,
             isVisible: true,
+          },
+          select: {
+            customDescription: true,
           },
         },
         reviews: {
@@ -104,8 +114,8 @@ export default async function AnnuairePage({
       skip,
     }),
     prisma.company.count({ where: whereClause }),
-    prisma.company.groupBy({
-      by: ['category'],
+    // Get all companies to extract unique categories
+    prisma.company.findMany({
       where: {
         content: {
           some: {
@@ -114,16 +124,27 @@ export default async function AnnuairePage({
           },
         },
       },
-      _count: {
-        category: true,
-      },
-      orderBy: {
-        _count: {
-          category: 'desc',
-        },
+      select: {
+        categories: true,
       },
     }),
   ]);
+
+  // Extract unique categories from all companies
+  const categoryMap = new Map<string, number>();
+  allCompanies.forEach((company) => {
+    company.categories.forEach((cat) => {
+      categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
+    });
+  });
+
+  // Convert to array and sort by count
+  const categories = Array.from(categoryMap.entries())
+    .map(([category, count]) => ({
+      category,
+      _count: { category: count },
+    }))
+    .sort((a, b) => b._count.category - a._count.category);
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
@@ -263,10 +284,12 @@ export default async function AnnuairePage({
                           {company.name}
                         </h3>
 
-                        {/* Category */}
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-1">
-                          {company.category}
-                        </p>
+                        {/* Categories */}
+                        {company.categories && company.categories.length > 0 && (
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-1">
+                            {company.categories.join(', ')}
+                          </p>
+                        )}
 
                         {/* Rating */}
                         {company.reviewCount > 0 && (
@@ -290,9 +313,9 @@ export default async function AnnuairePage({
                         )}
 
                         {/* Description */}
-                        {company.description && (
+                        {company.content[0]?.customDescription && (
                           <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                            {company.description}
+                            {company.content[0].customDescription}
                           </p>
                         )}
 
