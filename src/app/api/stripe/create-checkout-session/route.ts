@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stripe, SUBSCRIPTION_PLANS } from '@/lib/stripe';
+import { stripeService, SUBSCRIPTION_PLANS } from '@/lib/stripe-config';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { planId, successUrl, cancelUrl } = await request.json();
+    const { planId, interval = 'month', successUrl, cancelUrl, referralCode } = await request.json();
 
     if (!planId || !successUrl || !cancelUrl) {
       return NextResponse.json(
@@ -37,65 +37,45 @@ export async function POST(request: Request) {
     }
 
     // Get plan details
-    const plan = SUBSCRIPTION_PLANS[planId.toUpperCase() as keyof typeof SUBSCRIPTION_PLANS];
+    const plan = SUBSCRIPTION_PLANS[planId];
     
-    if (!plan || !plan.stripePriceId) {
+    if (!plan) {
       return NextResponse.json(
         { error: 'Plan non valide' },
         { status: 400 }
       );
     }
 
-    // Create or get Stripe customer
-    let customerId = businessOwner.stripeCustomerId;
-    
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: businessOwner.email,
-        name: `${businessOwner.firstName || ''} ${businessOwner.lastName || ''}`.trim(),
-        metadata: {
-          businessOwnerId: businessOwner.id,
-        },
-      });
-      
-      customerId = customer.id;
-      
-      // Update business owner with Stripe customer ID
-      await prisma.businessOwner.update({
-        where: { id: businessOwner.id },
-        data: { stripeCustomerId: customerId },
-      });
+    // Get price ID based on interval
+    const priceId = interval === 'year' && plan.annual 
+      ? plan.annual.stripePriceId 
+      : plan.stripePriceId;
+
+    if (!priceId) {
+      return NextResponse.json(
+        { error: 'Prix non disponible pour ce plan' },
+        { status: 400 }
+      );
     }
 
-    // Create checkout session
-    const checkoutSession = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: plan.stripePriceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      allow_promotion_codes: true,
-      billing_address_collection: 'required',
-      subscription_data: {
-        trial_period_days: 14, // 14 days free trial
-        metadata: {
-          businessOwnerId: businessOwner.id,
-          planId: plan.id,
-        },
-      },
+    // Create checkout session using stripe service
+    const checkoutSession = await stripeService.createCheckoutSession({
+      priceId,
+      customerId: businessOwner.stripeCustomerId,
+      businessOwnerId: businessOwner.id,
+      successUrl,
+      cancelUrl,
+      trial: true, // 14 day trial
+      referralCode,
       metadata: {
-        businessOwnerId: businessOwner.id,
         planId: plan.id,
-      },
+        interval,
+        businessOwnerId: businessOwner.id,
+      }
     });
 
     return NextResponse.json({
+      success: true,
       sessionId: checkoutSession.id,
       url: checkoutSession.url,
     });

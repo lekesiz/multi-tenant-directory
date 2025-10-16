@@ -1,64 +1,87 @@
 /**
- * Mobile Authentication Helper
- * Handles authentication for mobile API requests
+ * Mobile Authentication Middleware
+ * Handles JWT token authentication for React Native app
  */
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import jwt from 'jsonwebtoken';
+import { prisma } from './prisma';
 
-export interface AuthResult {
+const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret';
+
+export interface MobileAuthResult {
   success: boolean;
   user?: {
     userId: string;
     email: string;
-    name?: string;
-    role?: string;
+    type: string;
   };
   error?: string;
 }
 
 /**
- * Authenticate mobile user from request
- * Supports both session-based and token-based auth
+ * Authenticate mobile user from JWT token in Authorization header
  */
-export async function authenticateMobileUser(request: Request): Promise<AuthResult> {
+export async function authenticateMobileUser(request: Request): Promise<MobileAuthResult> {
   try {
-    // Try session-based authentication first
-    const session = await getServerSession(authOptions);
+    const authHeader = request.headers.get('Authorization');
     
-    if (session?.user?.email) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return {
-        success: true,
-        user: {
-          userId: session.user.id,
-          email: session.user.email,
-          name: session.user.name || undefined,
-          role: session.user.role || undefined,
-        },
+        success: false,
+        error: 'Token d\'authentification manquant ou invalide',
       };
     }
 
-    // Try token-based authentication (for mobile apps)
-    const authHeader = request.headers.get('authorization');
+    const token = authHeader.substring(7); // Remove "Bearer " prefix
     
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      
-      // TODO: Implement JWT token verification
-      // For now, return unauthorized
+    // Verify JWT token
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    
+    // Verify user still exists and is active
+    const businessOwner = await prisma.businessOwner.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        subscriptionStatus: true,
+        isEmailVerified: true,
+      },
+    });
+
+    if (!businessOwner) {
       return {
         success: false,
-        error: 'Token authentication not yet implemented',
+        error: 'Utilisateur non trouvé',
+      };
+    }
+
+    // Check if subscription is active (optional, based on business rules)
+    if (businessOwner.subscriptionStatus === 'suspended') {
+      return {
+        success: false,
+        error: 'Abonnement suspendu',
       };
     }
 
     return {
-      success: false,
-      error: 'Non autorisé - Authentification requise',
+      success: true,
+      user: {
+        userId: decoded.userId,
+        email: decoded.email,
+        type: decoded.type,
+      },
     };
 
   } catch (error) {
-    console.error('Mobile authentication error:', error);
+    console.error('Mobile auth error:', error);
+    
+    if (error instanceof jwt.JsonWebTokenError) {
+      return {
+        success: false,
+        error: 'Token invalide ou expiré',
+      };
+    }
+    
     return {
       success: false,
       error: 'Erreur d\'authentification',
@@ -67,51 +90,32 @@ export async function authenticateMobileUser(request: Request): Promise<AuthResu
 }
 
 /**
- * Verify API key for server-to-server requests
+ * Middleware wrapper for protected mobile routes
  */
-export async function verifyApiKey(request: Request): Promise<AuthResult> {
-  const apiKey = request.headers.get('x-api-key');
-  
-  if (!apiKey) {
-    return {
-      success: false,
-      error: 'API key manquante',
-    };
-  }
-
-  // TODO: Implement API key verification against database
-  // For now, check against environment variable
-  if (apiKey === process.env.API_SECRET_KEY) {
-    return {
-      success: true,
-      user: {
-        userId: 'system',
-        email: 'system@internal',
-        role: 'SYSTEM',
-      },
-    };
-  }
-
-  return {
-    success: false,
-    error: 'API key invalide',
+export function withMobileAuth(handler: Function) {
+  return async (request: Request, context?: any) => {
+    const authResult = await authenticateMobileUser(request);
+    
+    if (!authResult.success) {
+      return new Response(
+        JSON.stringify({ error: authResult.error }),
+        {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
+    // Add user info to request context
+    (request as any).user = authResult.user;
+    
+    return handler(request, context);
   };
 }
 
 /**
- * Check if user has required role
+ * Extract user ID from authenticated request
  */
-export function hasRole(authResult: AuthResult, requiredRole: string): boolean {
-  if (!authResult.success || !authResult.user) {
-    return false;
-  }
-
-  const userRole = authResult.user.role || 'USER';
-  const roleHierarchy = ['USER', 'BUSINESS_OWNER', 'ADMIN', 'SYSTEM'];
-  
-  const userRoleIndex = roleHierarchy.indexOf(userRole);
-  const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
-  
-  return userRoleIndex >= requiredRoleIndex;
+export function getUserFromRequest(request: Request): string | null {
+  return (request as any).user?.userId || null;
 }
-

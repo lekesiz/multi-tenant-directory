@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { stripe } from '@/lib/stripe';
+import { stripeService } from '@/lib/stripe-config';
 import { prisma } from '@/lib/prisma';
 import { trackReferralConversion } from '@/lib/referral';
-import { STRIPE_WEBHOOK_EVENTS } from '@/lib/stripe-config';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -23,7 +22,7 @@ export async function POST(request: Request) {
     let event: any;
 
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = stripeService.stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
       return NextResponse.json(

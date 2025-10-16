@@ -69,6 +69,8 @@ model Company {
   notifications  Notification[]
   leadScores     LeadScore[]
   customerJourney CustomerJourney[]
+  products       Product[]
+  orders         Order[]
 
   @@index([slug])
   @@index([city])
@@ -257,6 +259,13 @@ model BusinessOwner {
   stripeEvents StripeEvent[]
   subscriptionHistory SubscriptionHistory[]
   invoices Invoice[]
+  
+  // API & Integration Relations
+  apiKeys ApiKey[]
+  apiUsage ApiUsage[]
+  webhooks Webhook[]
+  integrations Integration[]
+  developerAccount DeveloperAccount?
 
   @@index([email])
   @@index([unsubscribeToken])
@@ -796,4 +805,429 @@ model Invoice {
   @@index([status, dueDate])
   @@index([stripeInvoiceId])
   @@map("invoices")
+}
+
+// E-commerce & Booking System Models
+
+// Products - Physical, Digital, Services, Bookings
+model Product {
+  id                  String   @id @default(cuid())
+  companyId           Int
+  name                String
+  description         String?  @db.Text
+  price               Int      // Price in cents
+  compareAtPrice      Int?     // Original price for discounts
+  type                String   // "physical", "digital", "service", "booking"
+  sku                 String?  @unique
+  status              String   @default("active") // "active", "inactive", "out_of_stock", "discontinued"
+  
+  // Product media
+  images              String[] // Array of image URLs
+  specifications      Json     @default("{}")
+  
+  // Booking-specific fields
+  isBookingEnabled    Boolean  @default(false)
+  bookingDuration     Int?     // Duration in minutes
+  maxAdvanceBooking   Int?     // Days in advance booking is allowed
+  allowOnlineBooking  Boolean  @default(true)
+  
+  // Inventory management
+  inventoryTracked    Boolean  @default(false)
+  stockQuantity       Int?
+  lowStockThreshold   Int?
+  
+  // Categories and tags
+  categories          String[] // ["restaurant", "electronics", "clothing"]
+  tags                String[] // ["new", "sale", "featured"]
+  
+  // SEO
+  seoTitle            String?
+  seoDescription      String?
+  
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  variants            ProductVariant[]
+  bookings            Booking[]
+  orderItems          OrderItem[]
+  cartItems           CartItem[]
+  
+  @@index([companyId, status])
+  @@index([type, status])
+  @@index([companyId, type])
+  @@index([categories])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("products")
+}
+
+// Product Variants (size, color, etc.)
+model ProductVariant {
+  id                  String   @id @default(cuid())
+  productId           String
+  name                String   // "Large", "Red", "Size M"
+  sku                 String?  @unique
+  price               Int?     // Override price if different from product
+  compareAtPrice      Int?
+  stockQuantity       Int?
+  isActive            Boolean  @default(true)
+  
+  // Variant attributes
+  attributes          Json     @default("{}") // {"size": "L", "color": "red"}
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems          OrderItem[]
+  cartItems           CartItem[]
+  
+  @@index([productId, isActive])
+  @@map("product_variants")
+}
+
+// Bookings for services and appointments
+model Booking {
+  id                  String   @id @default(cuid())
+  productId           String
+  customerName        String
+  customerEmail       String
+  customerPhone       String?
+  
+  // Booking details
+  startTime           DateTime
+  endTime             DateTime
+  status              String   @default("pending") // "pending", "confirmed", "completed", "cancelled", "no_show"
+  confirmationCode    String   @unique
+  
+  // Payment
+  price               Int?     // Price in cents
+  paymentStatus       String   @default("pending") // "pending", "paid", "failed"
+  
+  notes               String?  @db.Text
+  internalNotes       String?  @db.Text // Private notes for business
+  
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([productId, status])
+  @@index([startTime, endTime])
+  @@index([customerEmail])
+  @@index([confirmationCode])
+  @@index([status, startTime])
+  @@map("bookings")
+}
+
+// Shopping Cart for e-commerce
+model CartItem {
+  id                  String   @id @default(cuid())
+  sessionId           String   // Anonymous session or user ID
+  productId           String
+  variantId           String?
+  quantity            Int      @default(1)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant             ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  
+  @@unique([sessionId, productId, variantId])
+  @@index([sessionId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+// Orders for e-commerce
+model Order {
+  id                  String   @id @default(cuid())
+  orderNumber         String   @unique
+  companyId           Int
+  
+  // Customer information
+  customerEmail       String
+  customerName        String
+  customerPhone       String?
+  
+  // Addresses
+  shippingAddress     Json?    // Address object
+  billingAddress      Json?    // Address object
+  
+  // Order totals (in cents)
+  subtotal            Int
+  shippingCost        Int      @default(0)
+  taxAmount           Int      @default(0)
+  discountAmount      Int      @default(0)
+  total               Int
+  
+  // Order details
+  status              String   @default("pending") // "pending", "processing", "shipped", "delivered", "cancelled", "refunded"
+  paymentStatus       String   @default("pending") // "pending", "paid", "failed", "refunded"
+  
+  // Shipping
+  trackingNumber      String?
+  shippedAt           DateTime?
+  deliveredAt         DateTime?
+  
+  // Discount/coupon
+  couponCode          String?
+  
+  notes               String?  @db.Text
+  
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items               OrderItem[]
+  
+  @@index([companyId, status])
+  @@index([customerEmail])
+  @@index([orderNumber])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("orders")
+}
+
+// Order Items
+model OrderItem {
+  id                  String   @id @default(cuid())
+  orderId             String
+  productId           String
+  variantId           String?
+  
+  quantity            Int
+  price               Int      // Price per unit in cents
+  total               Int      // Total for this line item
+  
+  createdAt           DateTime @default(now())
+  
+  // Relations
+  order               Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant             ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// API Ecosystem & Third-Party Integration Models
+
+// API Keys for developer access
+model ApiKey {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  name            String   // Descriptive name for the key
+  hashedKey       String   @unique // SHA256 hash of the actual key
+  permissions     String[] // Array of permissions ["read", "write", "webhooks"]
+  
+  // Usage tracking
+  lastUsed        DateTime?
+  usageCount      Int      @default(0)
+  
+  // Status
+  isActive        Boolean  @default(true)
+  revokedAt       DateTime?
+  
+  // Rate limiting
+  rateLimit       Int      @default(1000) // Requests per hour
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  usageLogs       ApiUsage[]
+  
+  @@index([businessOwnerId])
+  @@index([hashedKey])
+  @@index([isActive])
+  @@map("api_keys")
+}
+
+// API Usage Tracking
+model ApiUsage {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  apiKeyId        String?
+  
+  // Request details
+  endpoint        String   // "/api/companies"
+  method          String   // "GET", "POST", etc.
+  statusCode      Int      // HTTP status code
+  responseTime    Int      // Response time in milliseconds
+  
+  // Client information
+  userAgent       String?
+  ipAddress       String?
+  
+  timestamp       DateTime @default(now())
+  
+  // Relations
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  apiKey          ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  
+  @@index([businessOwnerId, timestamp(sort: Desc)])
+  @@index([endpoint, timestamp(sort: Desc)])
+  @@index([statusCode])
+  @@map("api_usage")
+}
+
+// Webhook Management
+model Webhook {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  
+  // Webhook configuration
+  url             String   // Endpoint URL to send events to
+  events          String[] // Array of event types to subscribe to
+  secret          String   // Secret for signature verification
+  description     String?
+  
+  // Status and metrics
+  isActive        Boolean  @default(true)
+  lastTriggered   DateTime?
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  logs            WebhookLog[]
+  
+  @@index([businessOwnerId])
+  @@index([isActive])
+  @@map("webhooks")
+}
+
+// Webhook Delivery Logs
+model WebhookLog {
+  id              String   @id @default(cuid())
+  webhookId       String
+  
+  // Event details
+  eventType       String   // "company.created", "review.added", etc.
+  payload         Json     // Event payload
+  
+  // Delivery details
+  success         Boolean
+  statusCode      Int?     // HTTP status code from webhook endpoint
+  response        String?  // Response body from webhook endpoint
+  
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  webhook         Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  
+  @@index([webhookId, createdAt(sort: Desc)])
+  @@index([eventType])
+  @@index([success])
+  @@map("webhook_logs")
+}
+
+// Third-Party Integrations
+model Integration {
+  id              String   @id @default(cuid())
+  businessOwnerId String
+  
+  // Integration details
+  type            String   // "google_mybusiness", "mailchimp", "zapier", "slack", "whatsapp"
+  name            String   // User-friendly name
+  
+  // Configuration
+  accessToken     String?  // OAuth access token
+  refreshToken    String?  // OAuth refresh token
+  webhookUrl      String?  // For services like Zapier
+  phoneNumberId   String?  // For WhatsApp Business
+  
+  // Settings
+  settings        Json     @default("{}") // Integration-specific settings
+  
+  // Status
+  isActive        Boolean  @default(true)
+  lastSync        DateTime?
+  syncCount       Int      @default(0)
+  
+  // OAuth token expiry
+  expiresAt       DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  syncLogs        IntegrationSyncLog[]
+  
+  @@index([businessOwnerId, type])
+  @@index([type, isActive])
+  @@map("integrations")
+}
+
+// Integration Sync Logs
+model IntegrationSyncLog {
+  id              String   @id @default(cuid())
+  integrationId   String
+  
+  // Sync details
+  syncType        String   // "reviews", "contacts", "products", etc.
+  success         Boolean
+  itemsProcessed  Int      @default(0)
+  itemsSuccess    Int      @default(0)
+  itemsError      Int      @default(0)
+  
+  // Error details
+  error           String?  @db.Text
+  
+  // Timing
+  startedAt       DateTime
+  completedAt     DateTime @default(now())
+  duration        Int      // Duration in milliseconds
+  
+  // Relations
+  integration     Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  
+  @@index([integrationId, completedAt(sort: Desc)])
+  @@index([syncType])
+  @@map("integration_sync_logs")
+}
+
+// Developer Console Users (for API access management)
+model DeveloperAccount {
+  id              String   @id @default(cuid())
+  businessOwnerId String   @unique
+  
+  // Developer profile
+  organizationName String?
+  website         String?
+  description     String?  @db.Text
+  
+  // API access
+  isApproved      Boolean  @default(false)
+  approvedAt      DateTime?
+  approvedBy      String?  // Admin user ID
+  
+  // Usage quotas
+  monthlyQuota    Int      @default(10000) // API calls per month
+  currentUsage    Int      @default(0)
+  quotaResetDate  DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  
+  @@index([isApproved])
+  @@map("developer_accounts")
 }
