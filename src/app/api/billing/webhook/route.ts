@@ -185,12 +185,13 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   if (businessOwner.email && process.env.RESEND_API_KEY) {
     try {
       await sendPaymentSuccessEmail({
-        email: businessOwner.email,
-        firstName: businessOwner.firstName,
-        planName: businessOwner.subscriptionTier,
-        amount: invoice.amount_paid / 100,
-        currency: invoice.currency,
-        unsubscribeToken: businessOwner.unsubscribeToken,
+        to: businessOwner.email,
+        businessOwnerName: businessOwner.firstName,
+        plan: businessOwner.subscriptionTier || 'Basic',
+        amount: inv.amount_paid / 100,
+        nextBillingDate: new Date(inv.period_end * 1000),
+        invoiceUrl: inv.hosted_invoice_url || '',
+        unsubscribeToken: businessOwner.unsubscribeToken || '',
       });
       logger.info('Payment success email sent', { businessOwnerId: businessOwner.id });
     } catch (error) {
