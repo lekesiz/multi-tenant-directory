@@ -31,11 +31,6 @@ export default async function EditCompanyPage({
         },
         take: 10,
       },
-      photos: {
-        orderBy: {
-          order: 'asc',
-        },
-      },
     },
   });
 

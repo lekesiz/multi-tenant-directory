@@ -154,8 +154,7 @@ export async function getCompaniesByDomain(
  * @param limit - Maximum number of companies to return
  */
 export async function getFeaturedCompanies(domainId: number, limit = 6) {
-  // Get companies with featured content
-  const companies = await prisma.company.findMany({
+  return prisma.company.findMany({
     where: {
       content: {
         some: {
@@ -181,19 +180,11 @@ export async function getFeaturedCompanies(domainId: number, limit = 6) {
         take: 5,
       },
     },
+    orderBy: {
+      rating: 'desc',
+    },
+    take: limit,
   });
-
-  // Sort by priority from content table, then by rating
-  return companies
-    .sort((a, b) => {
-      const aPriority = a.content[0]?.priority || 0;
-      const bPriority = b.content[0]?.priority || 0;
-      if (aPriority !== bPriority) {
-        return bPriority - aPriority; // Higher priority first
-      }
-      return (b.rating || 0) - (a.rating || 0); // Then by rating
-    })
-    .slice(0, limit);
 }
 
 /**
