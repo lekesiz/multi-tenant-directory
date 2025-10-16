@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { verifyWebhookSignature } from '@/lib/stripe';
+import { sendPaymentSuccessEmail, sendPaymentFailedEmail } from '@/lib/emails/send';
+import { logger } from '@/lib/logger';
 import type Stripe from 'stripe';
 
 /**
@@ -174,8 +176,22 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     return;
   }
 
-  // TODO: Send payment success email notification
-  console.log(`[Webhook] Payment succeeded for business owner: ${businessOwner.id}`);
+  // Send payment success email
+  if (businessOwner.email && process.env.RESEND_API_KEY) {
+    try {
+      await sendPaymentSuccessEmail({
+        email: businessOwner.email,
+        firstName: businessOwner.firstName,
+        planName: businessOwner.subscriptionTier,
+        amount: invoice.amount_paid / 100,
+        currency: invoice.currency,
+        unsubscribeToken: businessOwner.unsubscribeToken,
+      });
+      logger.info('Payment success email sent', { businessOwnerId: businessOwner.id });
+    } catch (error) {
+      logger.error('Failed to send payment success email', error, { businessOwnerId: businessOwner.id });
+    }
+  }
 }
 
 /**
@@ -203,6 +219,20 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     },
   });
 
-  // TODO: Send payment failed email notification
-  console.log(`[Webhook] Payment failed for business owner: ${businessOwner.id}`);
+  // Send payment failed email
+  if (businessOwner.email && process.env.RESEND_API_KEY) {
+    try {
+      await sendPaymentFailedEmail({
+        email: businessOwner.email,
+        firstName: businessOwner.firstName,
+        planName: businessOwner.subscriptionTier,
+        amount: invoice.amount_due / 100,
+        currency: invoice.currency,
+        unsubscribeToken: businessOwner.unsubscribeToken,
+      });
+      logger.warn('Payment failed email sent', { businessOwnerId: businessOwner.id });
+    } catch (error) {
+      logger.error('Failed to send payment failed email', error, { businessOwnerId: businessOwner.id });
+    }
+  }
 }
