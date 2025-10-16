@@ -1,0 +1,51 @@
+# robots.txt for Multi-Tenant Directory Platform
+# Generated: 2025-10-16
+
+# Allow all crawlers to access public content
+User-agent: *
+Allow: /
+Allow: /annuaire
+Allow: /categories
+Allow: /companies/
+
+# Disallow private areas
+Disallow: /admin/
+Disallow: /business/
+Disallow: /api/
+
+# Disallow search and filter pages (to avoid duplicate content)
+Disallow: /search
+Disallow: /*?*
+
+# Disallow auth pages
+Disallow: /auth/
+
+# Allow specific API endpoints for crawlers
+Allow: /api/og
+
+# Crawl-delay (optional, for polite crawling)
+Crawl-delay: 1
+
+# Sitemaps for all domains
+Sitemap: https://hoerdt.pro/sitemap.xml
+Sitemap: https://haguenau.pro/sitemap.xml
+Sitemap: https://mutzig.pro/sitemap.xml
+Sitemap: https://brumath.pro/sitemap.xml
+Sitemap: https://bischwiller.pro/sitemap.xml
+Sitemap: https://schiltigheim.pro/sitemap.xml
+Sitemap: https://illkirch-graffenstaden.pro/sitemap.xml
+Sitemap: https://lingolsheim.pro/sitemap.xml
+Sitemap: https://ostwald.pro/sitemap.xml
+Sitemap: https://geispolsheim.pro/sitemap.xml
+Sitemap: https://obernai.pro/sitemap.xml
+Sitemap: https://selestat.pro/sitemap.xml
+Sitemap: https://molsheim.pro/sitemap.xml
+Sitemap: https://erstein.pro/sitemap.xml
+Sitemap: https://saverne.pro/sitemap.xml
+Sitemap: https://wissembourg.pro/sitemap.xml
+Sitemap: https://barr.pro/sitemap.xml
+Sitemap: https://rosheim.pro/sitemap.xml
+Sitemap: https://mundolsheim.pro/sitemap.xml
+Sitemap: https://souffelweyersheim.pro/sitemap.xml
+Sitemap: https://bas-rhin.pro/sitemap.xml
+
