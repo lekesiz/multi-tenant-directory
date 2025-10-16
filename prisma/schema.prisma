@@ -121,8 +121,10 @@ model Review {
   companyId    Int
   authorName   String
   authorPhoto  String?
+  authorEmail  String?  // For contact if needed
   rating       Int      // 1-5 arası
   comment      String?  @db.Text
+  photos       String[] // Array of photo URLs (max 5)
   source       String   @default("manual") // "google" veya "manual"
   reviewDate   DateTime @default(now())
   isApproved   Boolean  @default(true)
