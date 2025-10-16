@@ -31,6 +31,8 @@ export default function NewCompanyPage() {
     phone: '',
     email: '',
     website: '',
+    logoUrl: '',
+    coverImageUrl: '',
     categories: [] as string[],
   });
 
@@ -76,6 +78,8 @@ export default function NewCompanyPage() {
         phone: data.phone || '',
         email: '',
         website: data.website || '',
+        logoUrl: '',
+        coverImageUrl: '',
         categories: data.categories?.slice(0, 3) || [],
       });
       setStep('details');
@@ -382,6 +386,46 @@ export default function NewCompanyPage() {
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Logo URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.logoUrl}
+                    onChange={(e) =>
+                      setFormData({ ...formData, logoUrl: e.target.value })
+                    }
+                    placeholder="https://example.com/logo.png"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                  {formData.logoUrl && (
+                    <div className="mt-2">
+                      <img src={formData.logoUrl} alt="Logo preview" className="h-16 w-16 object-contain border rounded" />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Image de couverture URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.coverImageUrl}
+                    onChange={(e) =>
+                      setFormData({ ...formData, coverImageUrl: e.target.value })
+                    }
+                    placeholder="https://example.com/cover.jpg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                  {formData.coverImageUrl && (
+                    <div className="mt-2">
+                      <img src={formData.coverImageUrl} alt="Cover preview" className="h-24 w-full object-cover border rounded" />
+                    </div>
+                  )}
                 </div>
               </div>
 
