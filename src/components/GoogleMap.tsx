@@ -108,10 +108,17 @@ export default function GoogleMap({ latitude, longitude, companyName, address }:
 
   if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     return (
-      <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500 mb-2">🗺️ Carte non disponible</p>
-          <p className="text-sm text-gray-400">API Key manquante</p>
+      <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+        <div className="text-center p-4">
+          <div className="text-4xl mb-3">🗺️</div>
+          <p className="text-gray-700 font-medium mb-2">Carte non disponible</p>
+          <p className="text-sm text-gray-500">La clé API Google Maps n'est pas configurée</p>
+          {address && (
+            <div className="mt-4 pt-4 border-t border-gray-300">
+              <p className="text-xs text-gray-600 mb-2">Adresse:</p>
+              <p className="text-sm text-gray-700">{address}</p>
+            </div>
+          )}
         </div>
       </div>
     );

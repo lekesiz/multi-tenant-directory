@@ -1,39 +1,32 @@
 import { NextResponse } from 'next/server';
-import { stripeService, getPlanById, TRIAL_CONFIG } from '@/lib/stripe-config';
+import { stripe, SUBSCRIPTION_PLANS } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
-import { authenticateMobileUser } from '@/lib/mobile-auth';
-import { validateReferralCode } from '@/lib/referral';
-import { z } from 'zod';
-
-const createCheckoutSchema = z.object({
-  planId: z.string(),
-  interval: z.enum(['month', 'year']).default('month'),
-  successUrl: z.string().url(),
-  cancelUrl: z.string().url(),
-  couponCode: z.string().optional(),
-  referralCode: z.string().optional(),
-  trial: z.boolean().default(true),
-  metadata: z.record(z.string()).optional(),
-});
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
-    // Authenticate user
-    const authResult = await authenticateMobileUser(request);
-    if (!authResult.success) {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
       return NextResponse.json(
-        { error: authResult.error },
+        { error: 'Non autorisé' },
         { status: 401 }
       );
     }
 
-    // Validate request body
-    const body = await request.json();
-    const validatedData = createCheckoutSchema.parse(body);
+    const { planId, successUrl, cancelUrl } = await request.json();
+
+    if (!planId || !successUrl || !cancelUrl) {
+      return NextResponse.json(
+        { error: 'Paramètres manquants' },
+        { status: 400 }
+      );
+    }
 
     // Get business owner
     const businessOwner = await prisma.businessOwner.findUnique({
-      where: { id: authResult.user.userId },
+      where: { email: session.user.email },
     });
 
     if (!businessOwner) {
@@ -44,7 +37,8 @@ export async function POST(request: Request) {
     }
 
     // Get plan details
-    const plan = getPlanById(validatedData.planId);
+    const plan = SUBSCRIPTION_PLANS[planId.toUpperCase() as keyof typeof SUBSCRIPTION_PLANS];
+    
     if (!plan || !plan.stripePriceId) {
       return NextResponse.json(
         { error: 'Plan non valide' },
@@ -52,27 +46,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get price ID based on interval
-    let priceId = plan.stripePriceId;
-    if (validatedData.interval === 'year') {
-      // Use annual price ID if available
-      const annualPriceId = process.env[`STRIPE_${plan.id.toUpperCase()}_ANNUAL_PRICE_ID`];
-      if (annualPriceId) {
-        priceId = annualPriceId;
-      }
-    }
-
     // Create or get Stripe customer
     let customerId = businessOwner.stripeCustomerId;
     
     if (!customerId) {
-      const customer = await stripeService.createCustomer({
+      const customer = await stripe.customers.create({
         email: businessOwner.email,
         name: `${businessOwner.firstName || ''} ${businessOwner.lastName || ''}`.trim(),
-        businessOwnerId: businessOwner.id,
         metadata: {
-          plan: validatedData.planId,
-          interval: validatedData.interval,
+          businessOwnerId: businessOwner.id,
         },
       });
       
@@ -85,90 +67,41 @@ export async function POST(request: Request) {
       });
     }
 
-    // Handle referral code validation and coupon creation
-    let couponId: string | undefined;
-    
-    if (validatedData.referralCode) {
-      const referralValidation = await validateReferralCode(validatedData.referralCode);
-      if (referralValidation.valid) {
-        // Create a referral discount coupon
-        const coupon = await stripeService.createCoupon({
-          name: `Parrainage - ${validatedData.referralCode}`,
-          percentOff: 50, // 50% off first month
-          duration: 'once',
-          maxRedemptions: 1,
-        });
-        couponId = coupon.id;
-      }
-    }
-
-    // Override with manual coupon if provided
-    if (validatedData.couponCode) {
-      couponId = validatedData.couponCode;
-    }
-
-    // Determine if trial should be applied
-    const shouldHaveTrial = validatedData.trial && 
-      TRIAL_CONFIG.plans_with_trial.includes(validatedData.planId) &&
-      !businessOwner.trialEnd; // Only if user hasn't had a trial before
-
     // Create checkout session
-    const checkoutSession = await stripeService.createCheckoutSession({
-      priceId,
-      customerId,
-      businessOwnerId: businessOwner.id,
-      successUrl: validatedData.successUrl,
-      cancelUrl: validatedData.cancelUrl,
-      trial: shouldHaveTrial,
-      couponId,
-      metadata: {
-        planId: validatedData.planId,
-        interval: validatedData.interval,
-        referralCode: validatedData.referralCode || '',
-        ...validatedData.metadata,
-      },
-    });
-
-    // Track checkout session creation
-    await prisma.stripeEvent.create({
-      data: {
-        eventType: 'checkout.session.created',
-        stripeId: checkoutSession.id,
-        businessOwnerId: businessOwner.id,
-        data: {
-          planId: validatedData.planId,
-          interval: validatedData.interval,
-          amount: plan.price,
-          currency: plan.currency,
-          trial: shouldHaveTrial,
-          couponApplied: !!couponId,
+    const checkoutSession = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: plan.stripePriceId,
+          quantity: 1,
         },
-        processed: false,
+      ],
+      mode: 'subscription',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      allow_promotion_codes: true,
+      billing_address_collection: 'required',
+      subscription_data: {
+        trial_period_days: 14, // 14 days free trial
+        metadata: {
+          businessOwnerId: businessOwner.id,
+          planId: plan.id,
+        },
+      },
+      metadata: {
+        businessOwnerId: businessOwner.id,
+        planId: plan.id,
       },
     });
 
     return NextResponse.json({
-      success: true,
       sessionId: checkoutSession.id,
       url: checkoutSession.url,
-      planDetails: {
-        name: plan.name,
-        price: plan.price,
-        interval: validatedData.interval,
-        trial: shouldHaveTrial ? TRIAL_CONFIG.duration_days : 0,
-        features: plan.features,
-      },
     });
 
   } catch (error) {
     console.error('Stripe checkout session creation failed:', error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Données invalides', details: error.issues },
-        { status: 400 }
-      );
-    }
     
     return NextResponse.json(
       { error: 'Erreur lors de la création de la session de paiement' },

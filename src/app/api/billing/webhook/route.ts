@@ -11,7 +11,7 @@ import type Stripe from 'stripe';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
-    const headersList = headers();
+    const headersList = await headers();
     const signature = headersList.get('stripe-signature');
 
     if (!signature) {

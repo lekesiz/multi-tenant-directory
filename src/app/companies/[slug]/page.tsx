@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import StructuredData from '@/components/StructuredData';
 import CompanyReviews from '@/components/CompanyReviews';
 import GoogleMap from '@/components/GoogleMap';
+import CompanyQRCode from '@/components/CompanyQRCode';
 import BusinessHours from '@/components/BusinessHours';
 import PhotoGallery from '@/components/PhotoGallery';
 import SocialLinks from '@/components/SocialLinks';
@@ -520,6 +521,13 @@ export default async function CompanyDetailPage({
                 />
               </div>
             )}
+
+            {/* QR Code */}
+            <CompanyQRCode
+              url={`https://${currentDomain.name}/companies/${company.slug}`}
+              companyName={company.name}
+              size={200}
+            />
 
             {/* Related Companies */}
             {relatedCompanies.length > 0 && (
