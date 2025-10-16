@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { put } from '@vercel/blob';
 import { z } from 'zod';
-import { sendNewReviewEmail } from '@/lib/email';
+import { sendReviewAlertEmail } from '@/lib/emails/send';
 
 // Validation schema
 const reviewSchema = z.object({
@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
               select: {
                 id: true,
                 email: true,
+                firstName: true,
+                lastName: true,
                 emailNewReview: true,
                 unsubscribeToken: true,
               },
@@ -121,15 +123,15 @@ export async function POST(request: NextRequest) {
     const emailPromises = company.ownerships
       .filter((ownership) => ownership.owner.emailNewReview) // Only send to those who opted in
       .map((ownership) => {
-        const reviewUrl = `${process.env.NEXTAUTH_URL}/business/dashboard/reviews`;
-        
-        return sendNewReviewEmail({
-          to: ownership.owner.email,
-          businessName: company.name,
-          reviewerName: validatedData.authorName,
-          rating: validatedData.rating,
-          comment: validatedData.comment,
-          reviewUrl,
+        return sendReviewAlertEmail({
+          businessOwnerName: `${ownership.owner.firstName || ''} ${ownership.owner.lastName || ''}`.trim() || undefined,
+          companyName: company.name,
+          companySlug: company.slug,
+          reviewAuthor: validatedData.authorName,
+          reviewRating: validatedData.rating,
+          reviewComment: validatedData.comment,
+          reviewDate: new Date(),
+          reviewId: review.id,
           unsubscribeToken: ownership.owner.unsubscribeToken,
         }).catch((error) => {
           console.error('Failed to send review notification email:', error);

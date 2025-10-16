@@ -45,6 +45,7 @@
     "clsx": "^2.1.1",
     "critters": "^0.0.23",
     "date-fns": "^4.1.0",
+    "nanoid": "^5.1.6",
     "next": "15.5.4",
     "next-auth": "^4.24.11",
     "next-cloudinary": "^6.16.0",

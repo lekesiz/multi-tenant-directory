@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { sendVerificationEmail } from '@/lib/email';
+import { trackReferralSignup, validateReferralCode } from '@/lib/referral';
 
 // Validation schema
 const registerSchema = z.object({
@@ -11,6 +12,7 @@ const registerSchema = z.object({
   firstName: z.string().min(2),
   lastName: z.string().min(2),
   phone: z.string().optional(),
+  referralCode: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -19,6 +21,18 @@ export async function POST(request: Request) {
     
     // Validate input
     const validatedData = registerSchema.parse(body);
+    
+    // Validate referral code if provided
+    let referralValid = null;
+    if (validatedData.referralCode) {
+      referralValid = await validateReferralCode(validatedData.referralCode);
+      if (!referralValid.valid) {
+        return NextResponse.json(
+          { error: `Code de parrainage invalide: ${referralValid.error}` },
+          { status: 400 }
+        );
+      }
+    }
     
     // Check if email already exists
     const existingUser = await prisma.businessOwner.findUnique({
@@ -51,6 +65,17 @@ export async function POST(request: Request) {
         lastName: true,
       },
     });
+    
+    // Track referral signup if referral code was used
+    if (validatedData.referralCode && referralValid?.valid) {
+      try {
+        await trackReferralSignup(validatedData.referralCode, businessOwner.id);
+        console.log('✅ Referral signup tracked for code:', validatedData.referralCode);
+      } catch (error) {
+        console.error('⚠️ Error tracking referral signup:', error);
+        // Don't fail the registration if referral tracking fails
+      }
+    }
     
     // Send verification email
     if (process.env.RESEND_API_KEY) {

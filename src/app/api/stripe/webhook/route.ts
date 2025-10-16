@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
+import { trackReferralConversion } from '@/lib/referral';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -94,6 +95,15 @@ async function handleCheckoutSessionCompleted(session: any) {
         trialEnd: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
       },
     });
+
+    // Track referral conversion if user was referred
+    try {
+      await trackReferralConversion(businessOwnerId);
+      console.log('✅ Referral conversion tracked for business owner:', businessOwnerId);
+    } catch (error) {
+      console.error('⚠️ Error tracking referral conversion:', error);
+      // Don't fail the webhook if referral tracking fails
+    }
 
     console.log(`Checkout completed for business owner: ${businessOwnerId}`);
   } catch (error) {
