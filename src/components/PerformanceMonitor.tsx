@@ -43,7 +43,7 @@ export function PerformanceMonitor() {
           const entries = list.getEntries();
           entries.forEach((entry) => {
             if (entry.name === 'first-input') {
-              const inputDelay = entry.processingStart - entry.startTime;
+              const inputDelay = (entry as any).processingStart - entry.startTime;
               
               fetch('/api/analytics/vitals', {
                 method: 'POST',
@@ -66,8 +66,8 @@ export function PerformanceMonitor() {
         let clsValue = 0;
         const clsObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if (!entry.hadRecentInput) {
-              clsValue += entry.value;
+            if (!(entry as any).hadRecentInput) {
+              clsValue += (entry as any).value;
             }
           }
         });
