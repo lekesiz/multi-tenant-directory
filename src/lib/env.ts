@@ -29,6 +29,9 @@ const serverSchema = z.object({
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
   
+  // Grok AI (optional)
+  XAI_API_KEY: z.string().optional(),
+  
   // Node Environment
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
@@ -65,6 +68,7 @@ const processEnv = {
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || undefined,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || undefined,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || undefined,
+  XAI_API_KEY: process.env.XAI_API_KEY || undefined,
   NODE_ENV: process.env.NODE_ENV,
 
   // Client
