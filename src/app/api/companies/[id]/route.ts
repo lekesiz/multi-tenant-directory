@@ -107,6 +107,46 @@ export async function PUT(
   }
 }
 
+// PATCH /api/companies/[id] - Partially update company (Admin only)
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  // Require admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
+  try {
+    const { id } = await context.params;
+    const companyId = parseInt(id);
+    const body = await request.json();
+
+    // Convert latitude/longitude strings to floats
+    const updateData: any = { ...body };
+    if (body.latitude !== undefined) {
+      updateData.latitude = body.latitude === '' ? null : parseFloat(body.latitude);
+    }
+    if (body.longitude !== undefined) {
+      updateData.longitude = body.longitude === '' ? null : parseFloat(body.longitude);
+    }
+
+    const company = await prisma.company.update({
+      where: { id: companyId },
+      data: updateData,
+    });
+
+    return NextResponse.json(company);
+  } catch (error) {
+    console.error('Error updating company:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE /api/companies/[id] - Şirketi sil (Admin only)
 export async function DELETE(
   request: NextRequest,

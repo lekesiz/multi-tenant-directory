@@ -21,6 +21,14 @@ interface Company {
   categories: string[];
   logoUrl: string | null;
   coverImageUrl: string | null;
+  youtubeVideos: string[];
+  photos: Array<{
+    id: string;
+    url: string;
+    caption: string | null;
+    type: string;
+    isPrimary: boolean;
+  }>;
   content: Array<{
     id: number;
     domainId: number;
@@ -61,12 +69,21 @@ export default function CompanyEditForm({
   domains: Domain[];
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'info' | 'hours' | 'domains' | 'reviews'>(
+  const [activeTab, setActiveTab] = useState<'info' | 'hours' | 'media' | 'domains' | 'reviews'>(
     'info'
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Media state
+  const [logoUrl, setLogoUrl] = useState(company.logoUrl || '');
+  const [coverImageUrl, setCoverImageUrl] = useState(company.coverImageUrl || '');
+  const [youtubeVideos, setYoutubeVideos] = useState<string[]>(company.youtubeVideos || []);
+  const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const [formData, setFormData] = useState({
     name: company.name,
@@ -233,6 +250,16 @@ export default function CompanyEditForm({
             }`}
           >
             Horaires d'ouverture
+          </button>
+          <button
+            onClick={() => setActiveTab('media')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'media'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Médias ({company.photos.length + company.youtubeVideos.length})
           </button>
           <button
             onClick={() => setActiveTab('domains')}
@@ -462,6 +489,238 @@ export default function CompanyEditForm({
 
       {activeTab === 'hours' && (
         <BusinessHoursForm companyId={company.id} />
+      )}
+
+      {activeTab === 'media' && (
+        <div className="space-y-6">
+          {/* Logo Upload */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Logo de l'entreprise</h3>
+            <div className="flex items-start gap-6">
+              {logoUrl && (
+                <div className="relative w-32 h-32 border border-gray-200 rounded-lg overflow-hidden">
+                  <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                </div>
+              )}
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="URL du logo (ex: https://example.com/logo.png)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none mb-2"
+                />
+                <button
+                  onClick={async () => {
+                    setUploadingLogo(true);
+                    try {
+                      await fetch(`/api/companies/${company.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ logoUrl }),
+                      });
+                      setSuccess('Logo mis à jour avec succès');
+                      setTimeout(() => setSuccess(''), 3000);
+                      router.refresh();
+                    } catch (err) {
+                      setError('Erreur lors de la mise à jour du logo');
+                    } finally {
+                      setUploadingLogo(false);
+                    }
+                  }}
+                  disabled={uploadingLogo}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {uploadingLogo ? 'Enregistrement...' : 'Enregistrer le logo'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Cover Image Upload */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Image de couverture</h3>
+            <div className="space-y-4">
+              {coverImageUrl && (
+                <div className="relative w-full h-48 border border-gray-200 rounded-lg overflow-hidden">
+                  <img src={coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <input
+                type="text"
+                value={coverImageUrl}
+                onChange={(e) => setCoverImageUrl(e.target.value)}
+                placeholder="URL de l'image de couverture"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              />
+              <button
+                onClick={async () => {
+                  setUploadingCover(true);
+                  try {
+                    await fetch(`/api/companies/${company.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ coverImageUrl }),
+                    });
+                    setSuccess('Image de couverture mise à jour');
+                    setTimeout(() => setSuccess(''), 3000);
+                    router.refresh();
+                  } catch (err) {
+                    setError('Erreur lors de la mise à jour');
+                  } finally {
+                    setUploadingCover(false);
+                  }
+                }}
+                disabled={uploadingCover}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {uploadingCover ? 'Enregistrement...' : 'Enregistrer l\'image'}
+              </button>
+            </div>
+          </div>
+
+          {/* Photo Gallery */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Galerie de photos ({company.photos.length})</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
+              {company.photos.map((photo) => (
+                <div key={photo.id} className="relative group">
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || ''}
+                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                  />
+                  {photo.isPrimary && (
+                    <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                      Principale
+                    </span>
+                  )}
+                  <button
+                    onClick={async () => {
+                      if (confirm('Supprimer cette photo ?')) {
+                        try {
+                          await fetch(`/api/companies/${company.id}/photos/${photo.id}`, {
+                            method: 'DELETE',
+                          });
+                          router.refresh();
+                        } catch (err) {
+                          setError('Erreur lors de la suppression');
+                        }
+                      }
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <p className="text-sm text-gray-600 mb-2">
+                Pour ajouter des photos, utilisez l'API endpoint: <code className="bg-gray-100 px-2 py-1 rounded">/api/companies/{company.id}/photos</code>
+              </p>
+              <p className="text-xs text-gray-500">
+                Upload via Cloudinary ou autre service, puis envoyez l'URL
+              </p>
+            </div>
+          </div>
+
+          {/* YouTube Videos */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Vidéos YouTube ({youtubeVideos.length})</h3>
+
+            <div className="space-y-3 mb-4">
+              {youtubeVideos.map((videoUrl, index) => {
+                const videoId = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')
+                  ? videoUrl.split('v=')[1]?.split('&')[0] || videoUrl.split('/').pop()
+                  : videoUrl;
+
+                return (
+                  <div key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                    <div className="flex-shrink-0 w-32 h-20 bg-gray-100 rounded overflow-hidden">
+                      {videoId && (
+                        <img
+                          src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                          alt="Video thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-600 truncate">{videoUrl}</p>
+                      <a
+                        href={videoUrl.startsWith('http') ? videoUrl : `https://www.youtube.com/watch?v=${videoUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Voir sur YouTube
+                      </a>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setYoutubeVideos(youtubeVideos.filter((_, i) => i !== index));
+                      }}
+                      className="flex-shrink-0 text-red-600 hover:text-red-700 p-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newVideoUrl}
+                  onChange={(e) => setNewVideoUrl(e.target.value)}
+                  placeholder="URL YouTube ou ID de la vidéo (ex: dQw4w9WgXcQ)"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+                <button
+                  onClick={() => {
+                    if (newVideoUrl.trim()) {
+                      setYoutubeVideos([...youtubeVideos, newVideoUrl.trim()]);
+                      setNewVideoUrl('');
+                    }
+                  }}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Ajouter
+                </button>
+              </div>
+              <button
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    await fetch(`/api/companies/${company.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ youtubeVideos }),
+                    });
+                    setSuccess('Vidéos YouTube mises à jour');
+                    setTimeout(() => setSuccess(''), 3000);
+                    router.refresh();
+                  } catch (err) {
+                    setError('Erreur lors de la mise à jour');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Enregistrement...' : 'Enregistrer les vidéos'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {activeTab === 'domains' && (
