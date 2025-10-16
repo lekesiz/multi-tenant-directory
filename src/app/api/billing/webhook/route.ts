@@ -119,13 +119,13 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     where: { id: businessOwner.id },
     data: {
       subscriptionStatus: statusMap[subscription.status] || 'active',
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      trialStart: subscription.trial_start
-        ? new Date(subscription.trial_start * 1000)
+      currentPeriodStart: new Date((subscription.currentPeriodStart || subscription.current_period_start) * 1000),
+      currentPeriodEnd: new Date((subscription.currentPeriodEnd || subscription.current_period_end) * 1000),
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd ?? subscription.cancel_at_period_end,
+      trialStart: (subscription.trialStart || subscription.trial_start)
+        ? new Date((subscription.trialStart || subscription.trial_start) * 1000)
         : null,
-      trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+      trialEnd: (subscription.trialEnd || subscription.trial_end) ? new Date((subscription.trialEnd || subscription.trial_end) * 1000) : null,
     },
   });
 
