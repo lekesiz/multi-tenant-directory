@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid';
 export interface MarketingCampaign {
   id: string;
   name: string;
+  description?: string;
   type: 'email' | 'sms' | 'push' | 'automation';
   status: 'draft' | 'active' | 'paused' | 'completed';
   triggers: CampaignTrigger[];
