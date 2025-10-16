@@ -259,7 +259,7 @@ export default function CompanyEditForm({
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            Médias ({company.photos.length + company.youtubeVideos.length})
+            Médias ({(company.photos?.length || 0) + (company.youtubeVideos?.length || 0)})
           </button>
           <button
             onClick={() => setActiveTab('domains')}
@@ -581,9 +581,9 @@ export default function CompanyEditForm({
 
           {/* Photo Gallery */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Galerie de photos ({company.photos.length})</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Galerie de photos ({company.photos?.length || 0})</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
-              {company.photos.map((photo) => (
+              {company.photos?.map((photo) => (
                 <div key={photo.id} className="relative group">
                   <img
                     src={photo.url}
