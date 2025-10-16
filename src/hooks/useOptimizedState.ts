@@ -14,7 +14,7 @@ export function useDebouncedState<T>(
 ): [T, T, (value: T) => void] {
   const [value, setValue] = useState<T>(initialValue);
   const [debouncedValue, setDebouncedValue] = useState<T>(initialValue);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const updateValue = useCallback((newValue: T) => {
     setValue(newValue);
@@ -55,9 +55,9 @@ export function useStableCallback<T extends (...args: any[]) => any>(
 
 // Memoized value with deep comparison
 export function useDeepMemo<T>(factory: () => T, deps: DependencyList): T {
-  const ref = useRef<{ deps: DependencyList; value: T }>();
+  const ref = useRef<{ deps: DependencyList; value: T } | undefined>(undefined);
   
-  if (!ref.current || !areDeepsEqual(ref.current.deps, deps)) {
+  if (!ref.current || !areDeepsEqual(ref.current.deps as any[], deps as any[])) {
     ref.current = { deps: [...deps], value: factory() };
   }
   
@@ -108,7 +108,7 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
   delay: number = 100
 ): T {
   const lastCall = useRef<number>(0);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   return useCallback((...args: any[]) => {
     const now = Date.now();
@@ -131,7 +131,7 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
 
 // Previous value hook
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
+  const ref = useRef<T | undefined>(undefined);
   
   useEffect(() => {
     ref.current = value;
