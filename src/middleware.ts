@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { addSecurityHeaders } from './middleware/security';
 import { getToken } from 'next-auth/jwt';
+import { TenantResolver, TenantSecurity } from '@/lib/multi-tenant-core';
 
 // Desteklenen domain'ler - 20 domain
 const SUPPORTED_DOMAINS = [
@@ -127,12 +128,82 @@ export async function middleware(request: NextRequest) {
     return addSecurityHeaders(request, response);
   }
 
-  // Domain'i header'a ekle
-  const response = NextResponse.next();
-  response.headers.set('x-tenant-domain', hostname);
+  // ============================================
+  // MULTI-TENANT RESOLUTION & SECURITY
+  // ============================================
+  
+  try {
+    // Resolve tenant context
+    const tenant = await TenantResolver.resolveTenant(request);
+    const clientIP = getClientIP(request);
+    
+    // Enhanced multi-tenant processing
+    const response = NextResponse.next();
+    response.headers.set('x-tenant-domain', hostname);
+    
+    if (tenant) {
+      // Add tenant context headers
+      response.headers.set('X-Tenant-ID', tenant.id);
+      response.headers.set('X-Tenant-Config', JSON.stringify(tenant.config));
+      
+      // IP Whitelist validation for enterprise tenants
+      if (tenant.security.ipWhitelist.length > 0) {
+        const hasIPAccess = await TenantSecurity.validateIPAccess(tenant.id, clientIP);
+        if (!hasIPAccess) {
+          return new NextResponse('Access denied - IP not whitelisted', { status: 403 });
+        }
+      }
+      
+      // Rate limiting per tenant
+      const hasRateLimit = await TenantSecurity.checkTenantRateLimit(
+        tenant.id, 
+        'page_view', 
+        tenant.limits.maxAPIRequests
+      );
+      if (!hasRateLimit) {
+        return new NextResponse('Rate limit exceeded', { status: 429 });
+      }
+      
+      // Feature access control
+      if (pathname.startsWith('/analytics') && !tenant.features.analytics) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+      
+      // Custom domain redirect if configured
+      if (tenant.features.customDomain && tenant.domain !== hostname) {
+        const customDomainUrl = new URL(request.url);
+        customDomainUrl.host = tenant.domain;
+        return NextResponse.redirect(customDomainUrl);
+      }
+    }
 
-  // Add security headers
-  return addSecurityHeaders(request, response);
+    // Add security headers
+    return addSecurityHeaders(request, response);
+    
+  } catch (error) {
+    console.error('Multi-tenant middleware error:', error);
+    
+    // Fallback to basic functionality
+    const response = NextResponse.next();
+    response.headers.set('x-tenant-domain', hostname);
+    response.headers.set('X-Middleware-Error', 'true');
+    return addSecurityHeaders(request, response);
+  }
+}
+
+/**
+ * Get client IP address
+ */
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  const cloudflareIP = request.headers.get('cf-connecting-ip');
+  
+  if (cloudflareIP) return cloudflareIP;
+  if (forwarded) return forwarded.split(',')[0].trim();
+  if (realIP) return realIP;
+  
+  return request.ip || '127.0.0.1';
 }
 
 export const config = {
