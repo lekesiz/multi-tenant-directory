@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/auth';
+import { authOptions } from '@/lib/auth';
+import { getServerSession } from 'next-auth';
+
+const auth = () => getServerSession(authOptions);
 
 // Verify or unverify a review
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     // Check auth

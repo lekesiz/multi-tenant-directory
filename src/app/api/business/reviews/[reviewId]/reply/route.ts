@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/auth';
+import { authOptions } from '@/lib/auth';
+import { getServerSession } from 'next-auth';
+
+const auth = () => getServerSession(authOptions);
 import { z } from 'zod';
 
 // Validation schema
@@ -11,7 +14,7 @@ const replySchema = z.object({
 // Create or update review reply
 export async function POST(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     // Check auth
@@ -113,7 +116,7 @@ export async function POST(
 // Delete review reply
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     // Check auth

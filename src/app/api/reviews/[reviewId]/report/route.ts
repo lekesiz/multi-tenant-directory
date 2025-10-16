@@ -11,7 +11,7 @@ const reportSchema = z.object({
 // Report a review
 export async function POST(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     const reviewId = parseInt(params.reviewId);

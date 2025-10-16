@@ -10,7 +10,7 @@ const voteSchema = z.object({
 // Vote on a review
 export async function POST(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     const reviewId = parseInt(params.reviewId);
@@ -136,7 +136,7 @@ export async function POST(
 // Get vote status for current user
 export async function GET(
   request: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
   try {
     const reviewId = parseInt(params.reviewId);
