@@ -21,10 +21,11 @@ export async function POST(request: Request) {
 
     // Generate AI recommendations
     const suggestions = await suggestBusinessImprovements({
+      companyName: businessData.name || 'Entreprise',
       category: businessData.category,
-      city: businessData.city,
-      currentFeatures: businessData.currentFeatures || [],
-      analytics: businessData.analytics || {},
+      currentRating: businessData.analytics?.averageRating || 0,
+      commonIssues: businessData.analytics?.commonIssues || [],
+      strengths: businessData.analytics?.strengths || [],
     });
 
     // Add unique IDs and format for frontend
