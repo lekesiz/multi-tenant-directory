@@ -128,11 +128,6 @@ export default async function CompanyDetailPage({
 
   const { slug } = await params;
 
-  // Special case: redirect 'annuaire' to the directory page
-  if (slug === 'annuaire') {
-    redirect('/annuaire');
-  }
-
   const company = await prisma.company.findFirst({
     where: {
       slug: slug,

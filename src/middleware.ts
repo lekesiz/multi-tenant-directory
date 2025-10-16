@@ -47,6 +47,7 @@ const EXCLUDED_PATHS = [
   'mentions-legales',
   'politique-de-confidentialite',
   'unsubscribe',
+  'annuaire',
   '_next',
   'static',
   'favicon.ico',
