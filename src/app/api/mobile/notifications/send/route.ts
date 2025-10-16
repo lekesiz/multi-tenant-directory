@@ -161,7 +161,8 @@ async function sendPushNotifications(
 ): Promise<{ successCount: number; failureCount: number }> {
   // This would use Firebase Admin SDK
   // For now, return mock results
-  console.log(`Sending push notifications to ${tokens.length} devices:`, notification);
+  // TODO: Implement Firebase Cloud Messaging when ready
+  // logger.info('Push notifications would be sent', { deviceCount: tokens.length, notification });
   
   // Mock implementation
   return {

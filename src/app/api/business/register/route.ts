@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { sendVerificationEmail } from '@/lib/email';
 import { trackReferralSignup, validateReferralCode } from '@/lib/referral';
+import { logger } from '@/lib/logger';
 
 // Validation schema
 const registerSchema = z.object({
@@ -70,9 +71,9 @@ export async function POST(request: Request) {
     if (validatedData.referralCode && referralValid?.valid) {
       try {
         await trackReferralSignup(validatedData.referralCode, businessOwner.id);
-        console.log('✅ Referral signup tracked for code:', validatedData.referralCode);
+        logger.info('Referral signup tracked', { code: validatedData.referralCode, newUserId: businessOwner.id });
       } catch (error) {
-        console.error('⚠️ Error tracking referral signup:', error);
+        logger.error('Error tracking referral signup', error, { code: validatedData.referralCode });
         // Don't fail the registration if referral tracking fails
       }
     }
@@ -88,9 +89,9 @@ export async function POST(request: Request) {
           verificationUrl,
           firstName: businessOwner.firstName || undefined,
         });
-        console.log('✅ Verification email sent to:', businessOwner.email);
+        logger.info('Verification email sent', { email: businessOwner.email });
       } catch (error) {
-        console.error('⚠️ Error sending verification email:', error);
+        logger.error('Error sending verification email', error, { email: businessOwner.email });
         // Don't fail the registration if email fails
       }
     }

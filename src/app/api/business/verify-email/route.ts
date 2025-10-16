@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendVerificationEmail } from '@/lib/email';
+import { logger } from '@/lib/logger';
 
 
 // Verify email with token
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
       new URL('/business/login?message=email-verified', request.url)
     );
   } catch (error) {
-    console.error('Email verification error:', error);
+    logger.error('Email verification error', error);
     return NextResponse.json(
       { error: 'Erreur lors de la vérification' },
       { status: 500 }
@@ -119,9 +120,9 @@ export async function POST(request: NextRequest) {
           verificationUrl,
           firstName: businessOwner.firstName ?? undefined,
         });
-        console.log('✅ Verification email resent to:', businessOwner.email);
+        logger.info('Verification email resent', { email: businessOwner.email });
       } catch (error) {
-        console.error('Error sending verification email:', error);
+        logger.error('Error sending verification email', error);
       }
     }
 
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
       message: 'Si cet email existe, un lien de vérification a été envoyé.',
     });
   } catch (error) {
-    console.error('Resend verification error:', error);
+    logger.error('Resend verification error', error);
     return NextResponse.json(
       { error: 'Erreur lors de l\'envoi' },
       { status: 500 }

