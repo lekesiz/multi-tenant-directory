@@ -67,10 +67,10 @@ select:-webkit-autofill:focus {
 input:disabled,
 textarea:disabled,
 select:disabled {
-  color: #9ca3af !important; /* gray-400 */
-  background-color: #f3f4f6 !important; /* gray-100 */
+  color: #9ca3af !important; /* gray-400 - lighter text for disabled state */
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.7; /* Slight opacity to show disabled state */
+  /* Background color controlled by Tailwind classes - preserves design consistency */
 }
 
 /* Focus state for better visibility */
@@ -81,7 +81,7 @@ select:focus {
   outline-offset: 2px;
 }
 
-/* Dark mode input colors */
+/* Dark mode input colors - only change text color, keep original backgrounds */
 @media (prefers-color-scheme: dark) {
   input[type="text"],
   input[type="email"],
@@ -96,7 +96,7 @@ select:focus {
   textarea,
   select {
     color: #f3f4f6 !important; /* gray-100 - Light text on dark background */
-    background-color: #1f2937 !important; /* gray-800 */
+    /* Background color NOT forced - let Tailwind classes control it */
   }
 
   input::placeholder,
@@ -114,14 +114,14 @@ select:focus {
   select:-webkit-autofill:hover,
   select:-webkit-autofill:focus {
     -webkit-text-fill-color: #f3f4f6 !important;
-    -webkit-box-shadow: 0 0 0 1000px #1f2937 inset !important;
+    /* Let browser/Tailwind handle background */
   }
 
   input:disabled,
   textarea:disabled,
   select:disabled {
     color: #6b7280 !important; /* gray-500 */
-    background-color: #374151 !important; /* gray-700 */
+    /* Background controlled by Tailwind classes */
   }
 }
 
