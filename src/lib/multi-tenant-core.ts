@@ -6,10 +6,10 @@
 import { prisma } from './prisma';
 import { NextRequest } from 'next/server';
 import { cache } from 'react';
-import Redis from 'ioredis';
-
 // Redis client for caching (if available)
-const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
+// Note: ioredis is not compatible with Edge Runtime
+// Use Upstash Redis or Vercel KV for Edge-compatible caching
+const redis = null; // Disabled for Edge Runtime compatibility
 
 // Tenant Context Types
 export interface TenantContext {
