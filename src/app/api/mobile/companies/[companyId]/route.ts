@@ -45,7 +45,7 @@ export async function GET(
         coupons: {
           where: {
             isActive: true,
-            expiresAt: {
+            validUntil: {
               gt: new Date(),
             },
           },
@@ -147,7 +147,7 @@ export async function GET(
         description: coupon.description,
         discount: coupon.discount,
         code: coupon.code,
-        expiresAt: coupon.expiresAt,
+        expiresAt: coupon.validUntil,
       })),
     };
 
