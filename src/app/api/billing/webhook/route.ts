@@ -117,17 +117,20 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     unpaid: 'past_due',
   };
 
+  // Type assertion for Stripe subscription properties
+  const sub = subscription as any;
+  
   await prisma.businessOwner.update({
     where: { id: businessOwner.id },
     data: {
       subscriptionStatus: statusMap[subscription.status] || 'active',
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-      trialStart: subscription.trial_start
-        ? new Date(subscription.trial_start * 1000)
+      currentPeriodStart: new Date((sub.current_period_start || sub.currentPeriodStart) * 1000),
+      currentPeriodEnd: new Date((sub.current_period_end || sub.currentPeriodEnd) * 1000),
+      cancelAtPeriodEnd: sub.cancel_at_period_end ?? sub.cancelAtPeriodEnd ?? false,
+      trialStart: (sub.trial_start || sub.trialStart)
+        ? new Date((sub.trial_start || sub.trialStart) * 1000)
         : null,
-      trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+      trialEnd: (sub.trial_end || sub.trialEnd) ? new Date((sub.trial_end || sub.trialEnd) * 1000) : null,
     },
   });
 
