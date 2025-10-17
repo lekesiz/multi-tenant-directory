@@ -8,10 +8,14 @@ import { toast } from 'sonner';
 interface Review {
   id: number;
   text: string;
+  comment?: string;
+  commentFr?: string;
   rating: number;
   isApproved: boolean;
+  isActive: boolean;
   source: string;
   createdAt: string;
+  originalLanguage?: string;
   company: {
     id: number;
     name: string;
@@ -103,6 +107,24 @@ export default function AdminReviewsPage() {
     } catch (error) {
       toast.error('Erreur lors du rejet');
       console.error('Error rejecting review:', error);
+    }
+  };
+
+  const handleToggleActive = async (reviewId: number, currentStatus: boolean) => {
+    try {
+      const response = await fetch('/api/admin/reviews', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, isActive: !currentStatus }),
+      });
+
+      if (!response.ok) throw new Error('Failed to toggle review visibility');
+
+      toast.success(currentStatus ? 'Avis masqué' : 'Avis affiché');
+      fetchReviews();
+    } catch (error) {
+      toast.error('Erreur lors du changement de visibilité');
+      console.error('Error toggling review visibility:', error);
     }
   };
 
@@ -235,6 +257,9 @@ export default function AdminReviewsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Statut
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Visibilité
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -285,6 +310,17 @@ export default function AdminReviewsPage() {
                       {review.isApproved ? '✓ Approuvé' : '⏳ En attente'}
                     </span>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        review.isActive
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {review.isActive ? '👁️ Visible' : '🚫 Masqué'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
                     {!review.isApproved && (
                       <button
@@ -302,6 +338,16 @@ export default function AdminReviewsPage() {
                         Rejeter
                       </button>
                     )}
+                    <button
+                      onClick={() => handleToggleActive(review.id, review.isActive)}
+                      className={`font-medium ${
+                        review.isActive
+                          ? 'text-blue-600 hover:text-blue-900'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {review.isActive ? '👁️ Masquer' : '🚫 Afficher'}
+                    </button>
                     <button
                       onClick={() => handleDelete(review.id)}
                       className="text-red-600 hover:text-red-900 font-medium"

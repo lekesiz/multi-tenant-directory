@@ -105,11 +105,27 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { reviewId, isApproved } = body;
+    const { reviewId, isApproved, isActive } = body;
 
-    if (!reviewId || typeof isApproved !== 'boolean') {
+    if (!reviewId) {
       return NextResponse.json(
-        { error: 'Missing reviewId or isApproved' },
+        { error: 'Missing reviewId' },
+        { status: 400 }
+      );
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+    if (typeof isApproved === 'boolean') {
+      updateData.isApproved = isApproved;
+    }
+    if (typeof isActive === 'boolean') {
+      updateData.isActive = isActive;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'No fields to update' },
         { status: 400 }
       );
     }
@@ -117,28 +133,29 @@ export async function PATCH(request: NextRequest) {
     // Update review
     const review = await prisma.review.update({
       where: { id: reviewId },
-      data: { isApproved },
+      data: updateData,
       include: {
         company: true,
       },
     });
 
-    // Update company review count and rating
-    const reviews = await prisma.review.findMany({
+    // Update company review count and rating (only for active, approved reviews)
+    const activeReviews = await prisma.review.findMany({
       where: {
         companyId: review.companyId,
         isApproved: true,
+        isActive: true,
       },
     });
 
-    const avgRating = reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    const avgRating = activeReviews.length > 0
+      ? activeReviews.reduce((sum, r) => sum + r.rating, 0) / activeReviews.length
       : null;
 
     await prisma.company.update({
       where: { id: review.companyId },
       data: {
-        reviewCount: reviews.length,
+        reviewCount: activeReviews.length,
         rating: avgRating,
       },
     });
