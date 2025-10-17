@@ -1292,6 +1292,26 @@ model HealthCheckLog {
 }
 
 
+// Business Category Management
+model BusinessCategory {
+  id              Int     @id @default(autoincrement())
+  googleCategory  String  @unique // Google Maps category (e.g., "restaurant", "plumber")
+  frenchName      String  // French localization (e.g., "Restaurant")
+  germanName      String? // German localization (optional)
+  englishName     String? // English localization (optional)
+  description     String? @db.Text // Category description in French
+  icon            String? // Icon name or SVG identifier
+  order           Int     @default(0) // Display order
+  isActive        Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([googleCategory])
+  @@index([order])
+  @@index([isActive])
+  @@map("business_categories")
+}
+
 // Dashboard Layout Management
 model DashboardLayout {
   id        String   @id @default(cuid())
