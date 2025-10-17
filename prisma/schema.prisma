@@ -49,7 +49,6 @@ model Company {
   rating               Float?
   reviewCount          Int                  @default(0)
   isActive             Boolean              @default(true)
-  youtubeVideos        String[]
   cancelAtPeriodEnd    Boolean              @default(false)
   currentPeriodEnd     DateTime?
   currentPeriodStart   DateTime?
