@@ -61,7 +61,12 @@ export async function generateMetadata({
             domainId: currentDomain.id,
           },
         },
-        reviews: true,
+        reviews: {
+          where: {
+            isActive: true,
+            isApproved: true,
+          },
+        },
         hours: true,
       },
     });
@@ -146,6 +151,10 @@ export default async function CompanyDetailPage({
         },
       },
       reviews: {
+        where: {
+          isActive: true,
+          isApproved: true,
+        },
         orderBy: {
           reviewDate: 'desc',
         },
