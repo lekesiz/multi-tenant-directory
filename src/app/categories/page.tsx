@@ -50,9 +50,39 @@ async function getCategories(domain: string) {
     });
   });
 
-  // Convert to array and sort by count
+  // Get French names and icons from business_categories table
+  const allCategories = Object.keys(categoryCount);
+  const categoryMappings = await prisma.businessCategory.findMany({
+    where: {
+      googleCategory: { in: allCategories },
+      isActive: true,
+    },
+    select: {
+      googleCategory: true,
+      frenchName: true,
+      icon: true,
+      order: true,
+    },
+  });
+
+  const mappingDict: Record<string, { frenchName: string; icon: string; order: number }> = {};
+  categoryMappings.forEach((mapping) => {
+    mappingDict[mapping.googleCategory] = {
+      frenchName: mapping.frenchName,
+      icon: mapping.icon || '',
+      order: mapping.order,
+    };
+  });
+
+  // Convert to array with French names and sort by count
   return Object.entries(categoryCount)
-    .map(([category, count]) => ({ category, count }))
+    .map(([category, count]) => ({
+      googleCategory: category,
+      frenchName: mappingDict[category]?.frenchName || category,
+      icon: mappingDict[category]?.icon || getCategoryIcon(category),
+      count,
+      order: mappingDict[category]?.order || 999,
+    }))
     .sort((a, b) => b.count - a.count);
 }
 
@@ -141,15 +171,15 @@ export default async function CategoriesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {categories.map((item) => (
               <Link
-                key={item.category}
-                href={`/categories/${encodeURIComponent(item.category)}`}
+                key={item.googleCategory}
+                href={`/categories/${encodeURIComponent(item.googleCategory)}`}
                 className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 flex items-center justify-between group"
               >
                 <div className="flex items-center flex-1">
-                  <div className="text-4xl mr-4">{getCategoryIcon(item.category)}</div>
+                  <div className="text-4xl mr-4">{item.icon}</div>
                   <div>
                   <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {item.category}
+                    {item.frenchName}
                   </h3>
                     <p className="text-sm text-gray-600 mt-1">
                       {item.count} professionnel{item.count > 1 ? 's' : ''}
