@@ -1,4 +1,19 @@
 export const categoryIcons: Record<string, string> = {
+  // Google Places (English)
+  establishment: '🏢',
+  point_of_interest: '📍',
+  general_contractor: '🏗️',
+  food: '🍽️',
+  home_goods_store: '🏠',
+  electronics_store: '📱',
+  furniture_store: '🛋️',
+  car_repair: '🔧',
+  painter: '🎨',
+  health: '🏥',
+  store: '🏪',
+  bakery: '🥖',
+  electrician: '⚡',
+  
   // Alimentation
   Restaurant: '🍽️',
   Boulangerie: '🥖',
