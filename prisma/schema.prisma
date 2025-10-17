@@ -61,6 +61,24 @@ model Company {
   rating         Float?    // Google'dan gelen ortalama puan
   reviewCount    Int       @default(0) // Toplam yorum sayısı
 
+  // Subscription & Billing
+  subscriptionTier      String   @default("free") // "free", "basic", "pro", "premium"
+  subscriptionStatus    String   @default("active") // "active", "canceled", "past_due", "trialing"
+  subscriptionStart     DateTime?
+  subscriptionEnd       DateTime?
+  stripeCustomerId      String?  @unique
+  stripeSubscriptionId  String?  @unique
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean  @default(false)
+  trialStart            DateTime?
+  trialEnd              DateTime?
+
+  // Featured listing
+  isFeatured            Boolean  @default(false)
+  featuredUntil         DateTime? // Featured listing expiration date
+  featuredTier          String?  // "bronze", "silver", "gold", "platinum"
+
   content        CompanyContent[]
   reviews        Review[]
   ownerships     CompanyOwnership[]
@@ -73,6 +91,7 @@ model Company {
   customerJourney CustomerJourney[]
   products       Product[]
   orders         Order[]
+  subscriptions  CompanySubscription[]
 
   @@index([slug])
   @@index([city])
@@ -81,6 +100,8 @@ model Company {
   @@index([rating(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@index([googlePlaceId])
+  @@index([subscriptionStatus, subscriptionEnd])
+  @@index([isFeatured])
   @@map("companies")
 }
 
@@ -1326,5 +1347,139 @@ model DashboardLayout {
   @@index([tenantId])
   @@index([userId])
   @@map("dashboard_layouts")
+}
+
+// Subscription Plans & Pricing
+model SubscriptionPlan {
+  id              String   @id @default(cuid())
+  name            String   // "Basic", "Pro", "Premium"
+  slug            String   @unique // "basic", "pro", "premium"
+  description     String   @db.Text
+
+  // Pricing (in cents)
+  monthlyPrice     Int      // Monthly price in cents
+  yearlyPrice      Int?     // Yearly price in cents (optional)
+
+  // Trial
+  trialDays        Int      @default(14) // Number of free trial days
+
+  // Features
+  features         String[] // Array of feature names
+  maxListings      Int      @default(1) // Max number of listings
+  maxFeaturedDays  Int      @default(30) // Days featured listing is included
+
+  // Status
+  isActive         Boolean  @default(true)
+  displayOrder     Int      @default(0)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  subscriptions    CompanySubscription[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("subscription_plans")
+}
+
+// Company Subscriptions (Per-company tracking)
+model CompanySubscription {
+  id                String   @id @default(cuid())
+  companyId         Int      @unique
+  planId            String
+
+  // Subscription status
+  status            String   @default("active") // "active", "canceled", "expired", "past_due", "trialing"
+
+  // Dates
+  startDate         DateTime @default(now())
+  renewalDate       DateTime // Next renewal date
+  cancelDate        DateTime? // Date subscription was canceled
+  trialEndDate      DateTime? // Date trial ends
+
+  // Stripe integration
+  stripeCustomerId  String?
+  stripeSubscriptionId String?
+  stripeInvoiceId   String?
+
+  // Pricing snapshot at time of subscription
+  pricePaid         Int? // Price paid in cents (at time of subscription)
+
+  // Auto-renewal settings
+  autoRenew         Boolean  @default(true)
+
+  // Billing cycle
+  billingCycleStart DateTime
+  billingCycleEnd   DateTime
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  company           Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan              SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@index([status, renewalDate])
+  @@index([companyId, status])
+  @@index([planId])
+  @@map("company_subscriptions")
+}
+
+// Domain-Specific Pricing (multi-domain support)
+model DomainPricing {
+  id              String   @id @default(cuid())
+  domainId        Int      @unique
+
+  // Pricing multipliers or overrides
+  basicMonthly     Int      // Basic plan monthly price in cents
+  basicYearly      Int?     // Basic plan yearly price in cents
+  proMonthly       Int      // Pro plan monthly price in cents
+  proYearly        Int?     // Pro plan yearly price in cents
+  premiumMonthly   Int      // Premium plan monthly price in cents
+  premiumYearly    Int?     // Premium plan yearly price in cents
+
+  // Special offers
+  discountPercent  Int      @default(0) // Discount percentage for new customers
+  discountCode     String?  // Special promo code
+
+  // Featured listing upgrade pricing
+  featuredBronze   Int?     // Bronze featured - price in cents
+  featuredSilver   Int?     // Silver featured - price in cents
+  featuredGold     Int?     // Gold featured - price in cents
+  featuredPlatinum Int?     // Platinum featured - price in cents
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("domain_pricing")
+}
+
+// Payment Method Tracking
+model PaymentMethod {
+  id              String   @id @default(cuid())
+  companyId       Int
+
+  type            String   // "card", "sepa_debit", "bank_transfer"
+  stripePaymentMethodId String? @unique
+
+  // Card details (if card)
+  cardBrand       String?  // "visa", "mastercard", etc.
+  cardLast4       String?  // Last 4 digits
+  cardExpMonth    Int?
+  cardExpYear     Int?
+
+  // Bank details (if sepa)
+  bankAccountLast4 String?
+  bankBic         String?
+
+  // Status
+  isDefault       Boolean  @default(false)
+  isExpired       Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([stripePaymentMethodId])
+  @@map("payment_methods")
 }
 
