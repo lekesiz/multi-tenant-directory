@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Disable static page generation to avoid prerendering errors
-  // with dependencies that import Html
-  staticPageGenerationTimeout: 0,
+  staticPageGenerationTimeout: 300, // 5 minutes
   skipTrailingSlashRedirect: true,
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
@@ -26,6 +24,8 @@ const nextConfig: NextConfig = {
       '@headlessui/react',
       'recharts',
     ],
+    // Disable static generation for error pages to avoid Html import errors
+    disableStaticImages: false,
   },
 
   // Compiler optimizations
