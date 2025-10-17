@@ -181,11 +181,22 @@ export async function syncCompanyReviews(companyId: number): Promise<{
       });
 
       if (!existingReview) {
-        // Detect language and translate if needed
-        const detectedLanguage = await detectLanguage(googleReview.text);
-        const commentFrench = detectedLanguage === 'fr'
-          ? googleReview.text
-          : await translateToFrench(googleReview.text, detectedLanguage);
+        // Skip empty reviews
+        if (!googleReview.text || googleReview.text.trim().length === 0) {
+          console.warn(`Skipping empty review from ${googleReview.author_name}`);
+          continue;
+        }
+
+        // Use original text as-is (most reviews in Haguenau region are already in French)
+        // Only translate if explicitly needed in future
+        const detectedLanguage = googleReview.language || 'fr';
+        const shouldTranslate = detectedLanguage !== 'fr' && detectedLanguage !== 'de';
+
+        let commentFrench = googleReview.text;
+        if (shouldTranslate) {
+          // Only translate for non-French/German reviews
+          commentFrench = await translateToFrench(googleReview.text, detectedLanguage);
+        }
 
         await prisma.review.create({
           data: {
@@ -193,8 +204,8 @@ export async function syncCompanyReviews(companyId: number): Promise<{
             authorName: googleReview.author_name,
             authorPhoto: googleReview.profile_photo_url,
             rating: googleReview.rating,
-            comment: googleReview.text, // Store original
-            commentFr: commentFrench, // Store French translation
+            comment: googleReview.text, // Store original as-is
+            commentFr: commentFrench, // Store French version (same or translated)
             originalLanguage: detectedLanguage,
             source: 'google',
             reviewDate: new Date(googleReview.time * 1000),

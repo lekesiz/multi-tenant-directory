@@ -50,7 +50,17 @@ export async function GET(request: NextRequest) {
     // Get reviews with pagination
     const reviews = await prisma.review.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        authorName: true,
+        rating: true,
+        comment: true, // Original comment
+        commentFr: true, // French translation
+        source: true,
+        isApproved: true,
+        isActive: true,
+        createdAt: true,
+        originalLanguage: true,
         company: {
           select: {
             id: true,

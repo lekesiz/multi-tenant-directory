@@ -20,6 +20,18 @@ export async function GET(
       where: {
         companyId,
         isApproved: true,
+        isActive: true, // Only show active reviews
+      },
+      select: {
+        id: true,
+        authorName: true,
+        authorPhoto: true,
+        rating: true,
+        comment: true, // Original comment
+        commentFr: true, // French version (use this for display)
+        source: true,
+        reviewDate: true,
+        originalLanguage: true,
       },
       orderBy: {
         reviewDate: 'desc',

@@ -345,9 +345,9 @@ export default function CompanyReviews({ companyId, companyName }: CompanyReview
                             </div>
                           </div>
                         </div>
-                        {review.comment && (
+                        {(review.commentFr || review.comment) && (
                           <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3">
-                            {review.comment}
+                            {review.commentFr || review.comment}
                           </p>
                         )}
                         {/* Helpful buttons (placeholder for future implementation) */}

@@ -7,9 +7,8 @@ import { toast } from 'sonner';
 
 interface Review {
   id: number;
-  text: string;
-  comment?: string;
-  commentFr?: string;
+  comment: string | null;
+  commentFr: string | null;
   rating: number;
   isApproved: boolean;
   isActive: boolean;
@@ -291,7 +290,7 @@ export default function AdminReviewsPage() {
                   </td>
                   <td className="px-6 py-4 max-w-xs">
                     <p className="text-sm text-gray-600 truncate">
-                      {review.text}
+                      {review.commentFr || review.comment}
                     </p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
