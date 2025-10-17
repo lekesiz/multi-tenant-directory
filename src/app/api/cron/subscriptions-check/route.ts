@@ -11,7 +11,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendEmailNotification } from '@/lib/email';
+// TODO: Add email notifications in Phase 3.2
+// import { sendEmailNotification } from '@/lib/email';
 
 // Verify cron secret
 function verifyCronSecret(request: NextRequest): boolean {
@@ -78,25 +79,10 @@ async function checkExpiredSubscriptions(): Promise<number> {
       },
     });
 
-    // Send expiration email
-    if (subscription.company.email) {
-      try {
-        await sendEmailNotification({
-          to: subscription.company.email,
-          subject: `Votre abonnement a expiré - ${subscription.company.name}`,
-          template: 'subscription-expired',
-          data: {
-            companyName: subscription.company.name,
-            renewalUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription/renew?companyId=${subscription.companyId}`,
-          },
-        });
-      } catch (error) {
-        console.error(
-          `❌ Failed to send expiration email for company ${subscription.companyId}:`,
-          error
-        );
-      }
-    }
+    // TODO: Send expiration email notification in Phase 3.2
+    // if (subscription.company.email) {
+    //   await sendEmailNotification({ ... });
+    // }
 
     deactivatedCount++;
     console.log(`✅ Deactivated company ${subscription.companyId}`);
@@ -153,29 +139,18 @@ async function sendRenewalReminders(): Promise<number> {
 
     if (!templateType || !company.email) continue;
 
-    try {
-      await sendEmailNotification({
-        to: company.email,
-        subject: `Rappel : Votre abonnement expire dans ${daysUntilExpiry} jour(s)`,
-        template: templateType,
-        data: {
-          companyName: company.name,
-          daysUntilExpiry,
-          renewalUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription?companyId=${company.id}`,
-          planName: 'Pro', // TODO: Get actual plan name
-        },
-      });
+    // TODO: Send reminder email in Phase 3.2
+    // try {
+    //   await sendEmailNotification({ ... });
+    //   remindersSent++;
+    // } catch (error) {
+    //   console.error(...);
+    // }
 
-      remindersSent++;
-      console.log(
-        `✅ Sent ${daysUntilExpiry}-day renewal reminder to ${company.email}`
-      );
-    } catch (error) {
-      console.error(
-        `❌ Failed to send reminder for company ${company.id}:`,
-        error
-      );
-    }
+    // For now, just log that a reminder would be sent
+    console.log(
+      `ℹ️ Reminder: Would send ${daysUntilExpiry}-day renewal reminder to ${company.email}`
+    );
   }
 
   return remindersSent;

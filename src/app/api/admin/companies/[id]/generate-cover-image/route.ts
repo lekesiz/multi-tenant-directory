@@ -66,8 +66,8 @@ export async function POST(
     const imageParams = {
       companyName: company.name,
       category: company.categories?.[0] || 'business',
-      description: company.content?.[0]?.customDescription,
-      city: company.city,
+      description: company.content?.[0]?.customDescription || undefined,
+      city: company.city || undefined,
     };
 
     console.log('🎨 Generating cover image for:', company.name);
