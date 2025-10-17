@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { translateToFrench, detectLanguage } from './translation';
 
 const prisma = new PrismaClient();
 
@@ -165,7 +166,7 @@ export async function syncCompanyReviews(companyId: number): Promise<{
       };
     }
 
-    // Sync reviews
+    // Sync reviews with translation
     let reviewsAdded = 0;
 
     for (const googleReview of placeDetails.reviews) {
@@ -180,16 +181,25 @@ export async function syncCompanyReviews(companyId: number): Promise<{
       });
 
       if (!existingReview) {
+        // Detect language and translate if needed
+        const detectedLanguage = await detectLanguage(googleReview.text);
+        const commentFrench = detectedLanguage === 'fr'
+          ? googleReview.text
+          : await translateToFrench(googleReview.text, detectedLanguage);
+
         await prisma.review.create({
           data: {
             companyId,
             authorName: googleReview.author_name,
             authorPhoto: googleReview.profile_photo_url,
             rating: googleReview.rating,
-            comment: googleReview.text,
+            comment: googleReview.text, // Store original
+            commentFr: commentFrench, // Store French translation
+            originalLanguage: detectedLanguage,
             source: 'google',
             reviewDate: new Date(googleReview.time * 1000),
             isApproved: true,
+            isActive: true,
           },
         });
         reviewsAdded++;

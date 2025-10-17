@@ -5,8 +5,10 @@ interface ReviewCardProps {
   authorPhoto?: string | null;
   rating: number;
   comment?: string | null;
+  commentFr?: string | null; // French translation
   reviewDate: Date;
   source: string;
+  originalLanguage?: string; // e.g., "en", "de", etc.
 }
 
 export default function ReviewCard({
@@ -14,9 +16,13 @@ export default function ReviewCard({
   authorPhoto,
   rating,
   comment,
+  commentFr,
   reviewDate,
   source,
+  originalLanguage,
 }: ReviewCardProps) {
+  // Display French translation if available, otherwise original comment
+  const displayComment = commentFr || comment;
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4">
@@ -84,8 +90,15 @@ export default function ReviewCard({
           </div>
 
           {/* Comment */}
-          {comment && (
-            <p className="text-gray-700 leading-relaxed mt-3">{comment}</p>
+          {displayComment && (
+            <div className="mt-3">
+              <p className="text-gray-700 leading-relaxed">{displayComment}</p>
+              {originalLanguage && originalLanguage !== 'fr' && (
+                <p className="text-xs text-gray-500 mt-2 italic">
+                  Traduit de {originalLanguage.toUpperCase()}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -123,33 +123,37 @@ model CompanyContent {
 
 // Yorumlar (Google + Manuel)
 model Review {
-  id           Int      @id @default(autoincrement())
-  companyId    Int
-  authorName   String
-  authorPhoto  String?
-  authorEmail  String?  // For contact if needed
-  rating       Int      // 1-5 arası
-  comment      String?  @db.Text
-  photos       String[] // Array of photo URLs (max 5)
-  source       String   @default("manual") // "google" veya "manual"
-  reviewDate   DateTime @default(now())
-  isApproved   Boolean  @default(true)
-  isVerified   Boolean  @default(false) // Verified purchase badge
-  verifiedAt   DateTime?
-  verifiedBy   String?  // BusinessOwner ID who verified
-  helpfulCount Int      @default(0) // Count of helpful votes
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+  companyId          Int
+  authorName         String
+  authorPhoto        String?
+  authorEmail        String?  // For contact if needed
+  rating             Int      // 1-5 arası
+  comment            String?  @db.Text
+  commentFr          String?  @db.Text // French translation of comment
+  originalLanguage   String   @default("en") // Original review language (e.g., "en", "de", "es")
+  photos             String[] // Array of photo URLs (max 5)
+  source             String   @default("manual") // "google" veya "manual"
+  reviewDate         DateTime @default(now())
+  isApproved         Boolean  @default(true)
+  isVerified         Boolean  @default(false) // Verified purchase badge
+  verifiedAt         DateTime?
+  verifiedBy         String?  // BusinessOwner ID who verified
+  helpfulCount       Int      @default(0) // Count of helpful votes
+  isActive           Boolean  @default(true) // Can toggle review visibility without deletion
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  reply        ReviewReply?
-  votes        ReviewVote[]
-  reports      ReviewReport[]
+  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  reply              ReviewReply?
+  votes              ReviewVote[]
+  reports            ReviewReport[]
 
   @@index([companyId, isApproved, reviewDate(sort: Desc)])
   @@index([isApproved, createdAt(sort: Desc)])
   @@index([source])
   @@index([companyId, rating(sort: Desc), reviewDate(sort: Desc)])
+  @@index([isActive])
   @@map("reviews")
 }
 
