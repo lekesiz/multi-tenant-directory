@@ -3,6 +3,10 @@ import { Metadata } from 'next';
 import { generateMetaTags } from '@/lib/seo';
 import StructuredData from '@/components/StructuredData';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import HeroSection from '@/components/HeroSection';
+import BenefitsSection from '@/components/BenefitsSection';
+import HowItWorksSection from '@/components/HowItWorksSection';
+import TestimonialsSection from '@/components/TestimonialsSection';
 
 // Query utilities
 import { getCurrentDomainInfo } from '@/lib/queries/domain';
@@ -152,105 +156,18 @@ export default async function Home() {
           { name: 'Accueil', url: `https://${domain}` }
         ]}
       />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div 
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl"
-                style={{ background: domainData.primaryColor || '#2563EB' }}
-              >
-                {displayName.charAt(0)}
-              </div>
-              <div className="ml-3">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {domainData.siteTitle || `${displayName}.PRO`}
-                </h1>
-                <p className="text-sm text-gray-500">
-                  {domainData.siteDescription || `Les Professionnels de ${displayName}`}
-                </p>
-              </div>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link
-                href="/"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-              >
-                Accueil
-              </Link>
-              <Link
-                href="/annuaire"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-              >
-                Annuaire
-              </Link>
-              <Link
-                href="/categories"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-              >
-                Catégories
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
+      <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            Trouvez les Meilleurs Professionnels
-            <br />
-            <span 
-              className="text-transparent bg-clip-text"
-              style={{ 
-                backgroundImage: `linear-gradient(to right, ${domainData.primaryColor || '#2563EB'}, #4F46E5)` 
-              }}
-            >
-              à {displayName}
-            </span>
-          </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Découvrez et contactez facilement les entreprises locales.
-            Consultez les avis, comparez les services et trouvez le
-            professionnel qu&apos;il vous faut.
-          </p>
+      <HeroSection domain={displayName} />
 
-          {/* Search Bar */}
-          <div className="max-w-3xl mx-auto">
-            <form action="/annuaire" method="GET" className="bg-white rounded-2xl shadow-xl p-4 flex items-center">
-              <svg
-                className="w-6 h-6 text-gray-400 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                type="text"
-                name="search"
-                placeholder="Rechercher un professionnel, un service..."
-                className="flex-1 px-4 py-3 outline-none text-gray-900 text-lg"
-              />
-              <button 
-                type="submit"
-                className="text-white px-8 py-3 rounded-xl hover:opacity-90 transition-all font-semibold"
-                style={{ background: domainData.primaryColor || '#2563EB' }}
-              >
-                Rechercher
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
+      {/* Benefits Section */}
+      <BenefitsSection />
+
+      {/* How it Works Section */}
+      <HowItWorksSection userType="both" />
+
+      {/* Testimonials Section */}
+      <TestimonialsSection />
 
       {/* Stats Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
