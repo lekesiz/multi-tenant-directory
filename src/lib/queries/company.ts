@@ -7,10 +7,22 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 
 /**
- * Default include options for company queries
- * Includes content and reviews with common filters
+ * Default select options for company queries
+ * Only selects fields that exist in the database
  */
-export const defaultCompanyInclude = {
+export const defaultCompanySelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  address: true,
+  city: true,
+  categories: true,
+  logoUrl: true,
+  rating: true,
+  businessHours: true,
+  createdAt: true,
+  updatedAt: true,
   content: true,
   reviews: {
     where: {
@@ -26,7 +38,7 @@ export const defaultCompanyInclude = {
       reviews: true,
     },
   },
-} satisfies Prisma.CompanyInclude;
+};
 
 /**
  * Get company by slug with domain filtering
@@ -44,7 +56,7 @@ export async function getCompanyBySlug(slug: string, domainId: number) {
         },
       },
     },
-    include: defaultCompanyInclude,
+    select: defaultCompanySelect,
   });
 }
 
@@ -66,7 +78,7 @@ export async function getCompanyById(id: number, domainId?: number) {
 
   return prisma.company.findUnique({
     where: { id },
-    include: defaultCompanyInclude,
+    select: defaultCompanySelect,
   });
 }
 
@@ -140,7 +152,7 @@ export async function getCompaniesByDomain(
 
   return prisma.company.findMany({
     where,
-    include: defaultCompanyInclude,
+    select: defaultCompanySelect,
     orderBy: prismaOrderBy,
     take: limit,
     skip: offset,
@@ -173,7 +185,16 @@ export async function getFeaturedCompanies(domainId: number, limit = 6) {
         },
       },
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      address: true,
+      city: true,
+      categories: true,
+      logoUrl: true,
+      rating: true,
       content: {
         where: {
           domainId,
@@ -184,6 +205,11 @@ export async function getFeaturedCompanies(domainId: number, limit = 6) {
           isApproved: true,
         },
         take: 5,
+      },
+      _count: {
+        select: {
+          reviews: true,
+        },
       },
     },
     orderBy: {
@@ -199,7 +225,17 @@ export async function getFeaturedCompanies(domainId: number, limit = 6) {
  */
 export async function getRecentCompanies(limit = 10) {
   return prisma.company.findMany({
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      address: true,
+      city: true,
+      categories: true,
+      logoUrl: true,
+      rating: true,
+      createdAt: true,
       content: true,
       _count: {
         select: {
