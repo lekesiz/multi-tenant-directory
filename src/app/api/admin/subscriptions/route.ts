@@ -59,10 +59,9 @@ export async function GET(request: NextRequest) {
         featuredUntil: true,
         subscriptions: {
           select: { plan: true },
-          take: 1,
         },
       },
-      orderBy: { subscriptionEnd: 'asc' },
+      orderBy: { updatedAt: 'desc' },
     });
 
     return NextResponse.json({ subscriptions });

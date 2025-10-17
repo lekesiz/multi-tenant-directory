@@ -48,7 +48,7 @@ export async function GET(
     }
 
     // Extract subscription info
-    const subscription = company.subscriptions[0];
+    const subscription = company.subscriptions;
     const isTrialing = company.subscriptionStatus === 'trialing';
     const daysUntilRenewal = subscription?.renewalDate
       ? Math.ceil(

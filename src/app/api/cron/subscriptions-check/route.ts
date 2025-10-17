@@ -173,7 +173,7 @@ async function checkForReactivation(): Promise<number> {
   let reactivatedCount = 0;
 
   for (const company of pastDue) {
-    const subscription = company.subscriptions[0];
+    const subscription = company.subscriptions;
     if (!subscription) continue;
 
     // Check if renewal date has passed and company should be reactivated
