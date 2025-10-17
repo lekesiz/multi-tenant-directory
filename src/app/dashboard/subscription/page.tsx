@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import SubscriptionDashboard from '@/components/SubscriptionDashboard';
 import PricingPlans from '@/components/PricingPlans';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
@@ -13,7 +13,7 @@ interface Company {
   slug: string;
 }
 
-export default function SubscriptionPage() {
+function SubscriptionContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -184,5 +184,26 @@ export default function SubscriptionPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function SubscriptionFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SubscriptionPage() {
+  return (
+    <Suspense fallback={<SubscriptionFallback />}>
+      <SubscriptionContent />
+    </Suspense>
   );
 }
