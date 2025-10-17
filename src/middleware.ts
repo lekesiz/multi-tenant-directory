@@ -4,6 +4,8 @@ import { addSecurityHeaders } from './middleware/security';
 import { getToken } from 'next-auth/jwt';
 import { TenantResolver, TenantSecurity } from '@/lib/multi-tenant-core';
 
+export const runtime = 'nodejs';
+
 // Desteklenen domain'ler - 20 domain
 const SUPPORTED_DOMAINS = [
   'bas-rhin.pro',

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "prisma generate && next build",
+  "buildCommand": "prisma generate && SKIP_BUILD_STATIC_GENERATION=true next build",
   "framework": "nextjs",
   "regions": ["cdg1"],
   "installCommand": "npm install",
