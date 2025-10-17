@@ -156,16 +156,22 @@ export async function getCompaniesByDomain(
 export async function getFeaturedCompanies(domainId: number, limit = 6) {
   return prisma.company.findMany({
     where: {
-      content: {
-        some: {
-          domainId,
-          isVisible: true,
+      AND: [
+        {
+          content: {
+            some: {
+              domainId,
+              isVisible: true,
+            },
+          },
+        },
+        {
           OR: [
             { priority: { gt: 0 } },
             { featuredUntil: { gte: new Date() } },
           ],
         },
-      },
+      ],
     },
     include: {
       content: {
