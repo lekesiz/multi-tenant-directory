@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -30,7 +30,7 @@ interface PaginationData {
   pages: number;
 }
 
-export default function AdminReviewsPage() {
+function AdminReviewsContent() {
   const searchParams = useSearchParams();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -396,5 +396,28 @@ export default function AdminReviewsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function AdminReviewsFallback() {
+  return (
+    <div className="p-8">
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-20 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminReviewsPage() {
+  return (
+    <Suspense fallback={<AdminReviewsFallback />}>
+      <AdminReviewsContent />
+    </Suspense>
   );
 }
