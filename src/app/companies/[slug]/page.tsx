@@ -16,8 +16,8 @@ import RelatedCompanies from '@/components/RelatedCompanies';
 import MobileActions from '@/components/MobileActions';
 import { Metadata } from 'next';
 
-// ISR: Revalidate every 300 seconds (5 minutes)
-export const revalidate = 300;
+// ISR disabled - dynamic rendering only (avoids prerender issues)
+export const revalidate = 0;
 
 async function getDomainFromHost(host: string) {
   let domain = host.split(':')[0];
@@ -55,13 +55,37 @@ export async function generateMetadata({
           },
         },
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        address: true,
+        city: true,
+        postalCode: true,
+        phone: true,
+        email: true,
+        website: true,
+        latitude: true,
+        longitude: true,
+        businessHours: true,
+        categories: true,
+        logoUrl: true,
+        coverImageUrl: true,
+        rating: true,
+        reviewCount: true,
+        createdAt: true,
+        updatedAt: true,
+        isActive: true,
         content: {
           where: {
             domainId: currentDomain.id,
           },
         },
-        reviews: true,
+        reviews: {
+          orderBy: {
+            reviewDate: 'desc' as const,
+          },
+        },
         hours: true,
       },
     });
@@ -139,7 +163,27 @@ export default async function CompanyDetailPage({
         },
       },
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      address: true,
+      city: true,
+      postalCode: true,
+      phone: true,
+      email: true,
+      website: true,
+      latitude: true,
+      longitude: true,
+      businessHours: true,
+      categories: true,
+      logoUrl: true,
+      coverImageUrl: true,
+      rating: true,
+      reviewCount: true,
+      createdAt: true,
+      updatedAt: true,
+      isActive: true,
       content: {
         where: {
           domainId: currentDomain.id,
@@ -147,7 +191,7 @@ export default async function CompanyDetailPage({
       },
       reviews: {
         orderBy: {
-          reviewDate: 'desc',
+          reviewDate: 'desc' as const,
         },
       },
       hours: true,
@@ -213,7 +257,7 @@ export default async function CompanyDetailPage({
         company={{
           ...company,
           _count: { reviews: company.reviews.length }
-        }}
+        } as any}
         breadcrumbs={[
           { name: 'Accueil', url: `https://${currentDomain.name}` },
           { name: 'Annuaire', url: `https://${currentDomain.name}/annuaire` },

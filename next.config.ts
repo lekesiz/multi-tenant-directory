@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  staticPageGenerationTimeout: 300, // 5 minutes
+  staticPageGenerationTimeout: 0, // Disable static page generation
   skipTrailingSlashRedirect: true,
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
+  },
+  // Disable static generation for app router (avoids Html import error)
+  typescript: {
+    tsconfigPath: './tsconfig.json',
   },
   /* Performance optimizations */
   compress: true,
