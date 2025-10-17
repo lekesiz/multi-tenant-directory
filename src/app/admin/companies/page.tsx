@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import SyncReviewsButton from './sync-reviews-button';
+import CompanyStatusToggle from './company-status-toggle';
 
 export default async function AdminCompaniesPage() {
   const session = await getServerSession();
@@ -78,6 +79,9 @@ export default async function AdminCompaniesPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Google
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Statut
+              </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
@@ -121,6 +125,13 @@ export default async function AdminCompaniesPage() {
                       Non lié
                     </span>
                   )}
+                </td>
+                <td className="px-6 py-4">
+                  <CompanyStatusToggle
+                    companyId={company.id}
+                    isActive={company.isActive}
+                    companyName={company.name}
+                  />
                 </td>
                 <td className="px-6 py-4 text-right text-sm font-medium">
                   <Link

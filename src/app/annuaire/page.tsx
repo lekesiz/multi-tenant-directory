@@ -63,6 +63,7 @@ export default async function AnnuairePage({
 
   // Build where clause
   const whereClause: any = {
+    isActive: true, // Only show active companies
     content: {
       some: {
         domainId: currentDomain.id,

@@ -53,6 +53,7 @@ model Company {
   categories     String[]  // İş kategorileri
   logoUrl        String?
   coverImageUrl  String?
+  isActive       Boolean   @default(true) // Business status - active/inactive for subscriptions
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -74,6 +75,7 @@ model Company {
 
   @@index([slug])
   @@index([city])
+  @@index([isActive])
   @@index([latitude, longitude])
   @@index([rating(sort: Desc)])
   @@index([createdAt(sort: Desc)])

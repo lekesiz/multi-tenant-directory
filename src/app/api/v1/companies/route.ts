@@ -89,16 +89,18 @@ export async function GET(request: Request) {
     }
 
     // Build where clause
-    const where: any = {};
-    
+    const where: any = {
+      isActive: true, // Only show active companies by default
+    };
+
     if (city) {
       where.city = { contains: city, mode: 'insensitive' };
     }
-    
+
     if (category) {
       where.categories = { has: category };
     }
-    
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
