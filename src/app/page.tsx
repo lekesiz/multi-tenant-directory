@@ -136,18 +136,19 @@ function getCategoryIcon(categoryName: string): string {
 }
 
 export default async function Home() {
-  const { domain, displayName, domainData } = await getCurrentDomainInfo();
+  try {
+    const { domain, displayName, domainData } = await getCurrentDomainInfo();
 
-  if (!domainData) {
-    return <div>Domain not found</div>;
-  }
+    if (!domainData) {
+      return <div>Domain not found</div>;
+    }
 
-  // Fetch all data in parallel for better performance
-  const [stats, popularCategories, featuredCompanies] = await Promise.all([
-    getStats(domainData.id),
-    getPopularCategories(domainData.id),
-    getFeaturedCompanies(domainData.id),
-  ]);
+    // Fetch all data in parallel for better performance
+    const [stats, popularCategories, featuredCompanies] = await Promise.all([
+      getStats(domainData.id),
+      getPopularCategories(domainData.id),
+      getFeaturedCompanies(domainData.id),
+    ]);
 
   return (
     <>
@@ -565,6 +566,18 @@ export default async function Home() {
       <PWAInstallPrompt />
       </div>
     </>
-  );
+    );
+  } catch (error) {
+    console.error('Homepage error:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Error</h1>
+          <p className="text-gray-600 mt-2">An error occurred loading the homepage</p>
+          {error instanceof Error && <p className="text-sm text-gray-500 mt-2">{error.message}</p>}
+        </div>
+      </div>
+    );
+  }
 }
 
