@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,21 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Domain (Alan Adı) Yönetimi
 model Domain {
-  id              Int      @id @default(autoincrement())
-  name            String   @unique // örn: 'haguenau.pro'
-  isActive        Boolean  @default(true)
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  isActive        Boolean          @default(true)
   siteTitle       String?
-  siteDescription String?  @db.Text
+  siteDescription String?
   logoUrl         String?
-  primaryColor    String?  @default("#3B82F6")
-  settings        Json?    // Ek site ayarları
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  content CompanyContent[] @relation("DomainContent")
-  legalPages LegalPage[]
+  primaryColor    String?          @default("#3B82F6")
+  settings        Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  content         CompanyContent[] @relation("DomainContent")
+  legalPages      LegalPage[]
 
   @@index([name, isActive])
   @@index([isActive])
@@ -35,63 +27,56 @@ model Domain {
   @@map("domains")
 }
 
-// Şirket Ana Bilgileri
 model Company {
-  id             Int       @id @default(autoincrement())
-  name           String
-  slug           String    @unique
-  googlePlaceId  String?   @unique
-  address        String?
-  city           String?
-  postalCode     String?
-  phone          String?
-  email          String?
-  website        String?
-  latitude       Float?
-  longitude      Float?
-  businessHours  Json?     // Çalışma saatleri (deprecated - use BusinessHours model)
-  categories     String[]  // İş kategorileri
-  logoUrl        String?
-  coverImageUrl  String?
-  youtubeVideos  String[]  // Array of YouTube video URLs
-  isActive       Boolean   @default(true) // Business status - active/inactive for subscriptions
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  rating         Float?    // Google'dan gelen ortalama puan
-  reviewCount    Int       @default(0) // Toplam yorum sayısı
-
-  // Subscription & Billing
-  subscriptionTier      String   @default("free") // "free", "basic", "pro", "premium"
-  subscriptionStatus    String   @default("active") // "active", "canceled", "past_due", "trialing"
-  subscriptionStart     DateTime?
-  subscriptionEnd       DateTime?
-  stripeCustomerId      String?  @unique
-  stripeSubscriptionId  String?  @unique
-  currentPeriodStart    DateTime?
-  currentPeriodEnd      DateTime?
-  cancelAtPeriodEnd     Boolean  @default(false)
-  trialStart            DateTime?
-  trialEnd              DateTime?
-
-  // Featured listing
-  isFeatured            Boolean  @default(false)
-  featuredUntil         DateTime? // Featured listing expiration date
-  featuredTier          String?  // "bronze", "silver", "gold", "platinum"
-
-  content        CompanyContent[]
-  reviews        Review[]
-  ownerships     CompanyOwnership[]
-  photos         Photo[]
-  hours          BusinessHours?
-  analytics      CompanyAnalytics[]
-  coupons        Coupon[]
-  notifications  Notification[]
-  leadScores     LeadScore[]
-  customerJourney CustomerJourney[]
-  products       Product[]
-  orders         Order[]
-  subscriptions  CompanySubscription[]
+  id                   Int                  @id @default(autoincrement())
+  name                 String
+  slug                 String               @unique
+  googlePlaceId        String?              @unique
+  address              String?
+  city                 String?
+  postalCode           String?
+  phone                String?
+  email                String?
+  website              String?
+  latitude             Float?
+  longitude            Float?
+  businessHours        Json?
+  categories           String[]
+  logoUrl              String?
+  coverImageUrl        String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  rating               Float?
+  reviewCount          Int                  @default(0)
+  isActive             Boolean              @default(true)
+  youtubeVideos        String[]
+  cancelAtPeriodEnd    Boolean              @default(false)
+  currentPeriodEnd     DateTime?
+  currentPeriodStart   DateTime?
+  featuredTier         String?
+  featuredUntil        DateTime?
+  isFeatured           Boolean              @default(false)
+  stripeCustomerId     String?              @unique
+  stripeSubscriptionId String?              @unique
+  subscriptionEnd      DateTime?
+  subscriptionStart    DateTime?
+  subscriptionStatus   String               @default("active")
+  subscriptionTier     String               @default("free")
+  trialEnd             DateTime?
+  trialStart           DateTime?
+  hours                BusinessHours?
+  analytics            CompanyAnalytics[]
+  content              CompanyContent[]
+  ownerships           CompanyOwnership[]
+  subscriptions        CompanySubscription?
+  coupons              Coupon[]
+  customerJourney      CustomerJourney[]
+  leadScores           LeadScore[]
+  notifications        Notification[]
+  orders               Order[]
+  photos               Photo[]
+  products             Product[]
+  reviews              Review[]
 
   @@index([slug])
   @@index([city])
@@ -105,37 +90,26 @@ model Company {
   @@map("companies")
 }
 
-// Şirketlerin Domain'lerdeki Özel İçerikleri
 model CompanyContent {
-  id                 Int      @id @default(autoincrement())
-  companyId          Int
-  domainId           Int
-  isVisible          Boolean  @default(false)
-  
-  // Özelleştirilebilir İçerik
-  customDescription  String?  @db.Text // Domain'e özel açıklama
-  customImages       Json?    // Özel görseller array
-  promotions         String?  @db.Text // Özel promosyonlar
-  specialOffers      String?  @db.Text // Özel teklifler
-  highlightedServices String[] // Öne çıkan hizmetler
-  customTags         String[] // Özel etiketler
-  
-  // SEO
-  metaTitle          String?
-  metaDescription    String?
-  
-  // Özel Alanlar
-  customFields       Json?    // Ek özel alanlar (JSON)
-  
-  // Zamanlama
-  featuredUntil      DateTime? // Öne çıkarma bitiş tarihi
-  priority           Int       @default(0) // Sıralama önceliği (0-100)
-  
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  domain             Domain   @relation("DomainContent", fields: [domainId], references: [id], onDelete: Cascade)
+  id                  Int       @id @default(autoincrement())
+  companyId           Int
+  domainId            Int
+  isVisible           Boolean   @default(false)
+  customDescription   String?
+  customImages        Json?
+  promotions          String?
+  metaTitle           String?
+  metaDescription     String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  customFields        Json?
+  customTags          String[]
+  featuredUntil       DateTime?
+  highlightedServices String[]
+  priority            Int       @default(0)
+  specialOffers       String?
+  company             Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  domain              Domain    @relation("DomainContent", fields: [domainId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, domainId])
   @@index([domainId, isVisible])
@@ -145,33 +119,31 @@ model CompanyContent {
   @@map("company_content")
 }
 
-// Yorumlar (Google + Manuel)
 model Review {
-  id                 Int      @id @default(autoincrement())
-  companyId          Int
-  authorName         String
-  authorPhoto        String?
-  authorEmail        String?  // For contact if needed
-  rating             Int      // 1-5 arası
-  comment            String?  @db.Text
-  commentFr          String?  @db.Text // French translation of comment
-  originalLanguage   String   @default("en") // Original review language (e.g., "en", "de", "es")
-  photos             String[] // Array of photo URLs (max 5)
-  source             String   @default("manual") // "google" veya "manual"
-  reviewDate         DateTime @default(now())
-  isApproved         Boolean  @default(true)
-  isVerified         Boolean  @default(false) // Verified purchase badge
-  verifiedAt         DateTime?
-  verifiedBy         String?  // BusinessOwner ID who verified
-  helpfulCount       Int      @default(0) // Count of helpful votes
-  isActive           Boolean  @default(true) // Can toggle review visibility without deletion
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  reply              ReviewReply?
-  votes              ReviewVote[]
-  reports            ReviewReport[]
+  id               Int            @id @default(autoincrement())
+  companyId        Int
+  authorName       String
+  authorPhoto      String?
+  rating           Int
+  comment          String?
+  source           String         @default("manual")
+  reviewDate       DateTime       @default(now())
+  isApproved       Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  authorEmail      String?
+  helpfulCount     Int            @default(0)
+  isVerified       Boolean        @default(false)
+  photos           String[]
+  verifiedAt       DateTime?
+  verifiedBy       String?
+  commentFr        String?
+  isActive         Boolean        @default(true)
+  originalLanguage String         @default("en")
+  reply            ReviewReply?
+  reports          ReviewReport[]
+  votes            ReviewVote[]
+  company          Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([companyId, isApproved, reviewDate(sort: Desc)])
   @@index([isApproved, createdAt(sort: Desc)])
@@ -181,119 +153,97 @@ model Review {
   @@map("reviews")
 }
 
-// Yönetim Paneli Kullanıcıları
 model User {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  passwordHash  String
-  name          String?
-  role          String   @default("admin") // admin, editor vb.
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([email])
   @@index([role])
   @@map("users")
 }
 
-// Yasal Sayfalar (Footer Pages)
 model LegalPage {
-  id          Int      @id @default(autoincrement())
-  slug        String   @unique // mentions-legales, politique-confidentialite, cgu, tarifs
-  title       String
-  content     String   @db.Text
-  domainId    Int?     // Null ise tüm domain'ler için geçerli
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  domain      Domain?  @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
+  title     String
+  content   String
+  domainId  Int?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  domain    Domain?  @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
   @@index([slug, isActive])
   @@index([domainId, isActive])
   @@map("legal_pages")
 }
 
-// İşletme Sahipleri (Business Owners Dashboard)
 model BusinessOwner {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  password      String   // Hashed with bcrypt
-  firstName     String?
-  lastName      String?
-  phone         String?
-  emailVerified DateTime?
-  phoneVerified DateTime?
-  
-  // Email preferences
-  emailNewReview       Boolean  @default(true)  // Receive email on new review
-  emailReviewReply     Boolean  @default(true)  // Receive email when someone replies to their review
-  emailWeeklyDigest    Boolean  @default(false) // Weekly summary email
-  emailMarketing       Boolean  @default(false) // Marketing and promotional emails
-  unsubscribeToken     String   @unique @default(cuid())
-  
-  // Subscription & Billing
-  subscriptionTier     String   @default("free") // "free", "basic", "pro", "enterprise"
-  subscriptionStatus   String   @default("active") // "active", "canceled", "past_due", "trialing"
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  password             String
+  firstName            String?
+  lastName             String?
+  phone                String?
+  emailVerified        DateTime?
+  phoneVerified        DateTime?
+  emailNewReview       Boolean               @default(true)
+  emailReviewReply     Boolean               @default(true)
+  emailWeeklyDigest    Boolean               @default(false)
+  emailMarketing       Boolean               @default(false)
+  unsubscribeToken     String                @unique @default(cuid())
+  subscriptionTier     String                @default("free")
+  subscriptionStatus   String                @default("active")
   subscriptionStart    DateTime?
   subscriptionEnd      DateTime?
-  stripeCustomerId     String?  @unique
-  stripeSubscriptionId String?  @unique
+  stripeCustomerId     String?               @unique
+  stripeSubscriptionId String?               @unique
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean  @default(false)
+  cancelAtPeriodEnd    Boolean               @default(false)
   trialStart           DateTime?
   trialEnd             DateTime?
-
-  // Mobile App Support
   deviceId             String?
-  deviceType           String?  // "ios" or "android"
-  fcmToken             String?  // Firebase Cloud Messaging token
+  deviceType           String?
+  fcmToken             String?
   lastLoginAt          DateTime?
   profileImageUrl      String?
-  isEmailVerified      Boolean  @default(false)
-  
-  // Notification Preferences
-  pushNotifications    Boolean  @default(true)
-  emailNotifications   Boolean  @default(true)
-  marketingEmails      Boolean  @default(false)
-  reviewNotifications  Boolean  @default(true)
-
-  // AI Usage Tracking
-  aiUsageCount         Int      @default(0) // Daily AI request count
-  aiUsageResetDate     DateTime? // Date when usage count resets (24h)
-  aiTotalRequests      Int      @default(0) // Lifetime AI requests
-  aiTotalCost          Float    @default(0) // Total cost in cents
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  companies     CompanyOwnership[]
-  reviewReplies ReviewReply[]
-  referralsGiven Referral[] @relation("Referrer")
-  referralsReceived Referral[] @relation("Referred")
-  notifications Notification[]
-  
-  // Marketing Automation Relations
-  marketingCampaigns MarketingCampaign[]
-  customerSegments CustomerSegment[]
-  segmentMemberships SegmentMember[]
-  leadScores LeadScore[]
-  campaignEvents CampaignEvent[]
-  customerJourney CustomerJourney[]
-  emailTemplates EmailTemplate[]
-  
-  // Stripe Relations
-  stripeEvents StripeEvent[]
-  subscriptionHistory SubscriptionHistory[]
-  invoices Invoice[]
-  
-  // API & Integration Relations
-  apiKeys ApiKey[]
-  apiUsage ApiUsage[]
-  webhooks Webhook[]
-  integrations Integration[]
-  developerAccount DeveloperAccount?
+  isEmailVerified      Boolean               @default(false)
+  pushNotifications    Boolean               @default(true)
+  emailNotifications   Boolean               @default(true)
+  marketingEmails      Boolean               @default(false)
+  reviewNotifications  Boolean               @default(true)
+  aiUsageCount         Int                   @default(0)
+  aiUsageResetDate     DateTime?
+  aiTotalRequests      Int                   @default(0)
+  aiTotalCost          Float                 @default(0)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  apiKeys              ApiKey[]
+  apiUsage             ApiUsage[]
+  campaignEvents       CampaignEvent[]
+  companies            CompanyOwnership[]
+  customerJourney      CustomerJourney[]
+  customerSegments     CustomerSegment[]
+  developerAccount     DeveloperAccount?
+  emailTemplates       EmailTemplate[]
+  integrations         Integration[]
+  invoices             Invoice[]
+  leadScores           LeadScore[]
+  marketingCampaigns   MarketingCampaign[]
+  notifications        Notification[]
+  referralsReceived    Referral[]            @relation("Referred")
+  referralsGiven       Referral[]            @relation("Referrer")
+  reviewReplies        ReviewReply[]
+  segmentMemberships   SegmentMember[]
+  stripeEvents         StripeEvent[]
+  subscriptionHistory  SubscriptionHistory[]
+  webhooks             Webhook[]
 
   @@index([email])
   @@index([unsubscribeToken])
@@ -301,17 +251,15 @@ model BusinessOwner {
   @@map("business_owners")
 }
 
-// Şirket Sahipliği (Çoktan Çoğa İlişki)
 model CompanyOwnership {
-  id          String   @id @default(cuid())
-  companyId   Int
-  ownerId     String
-  role        String   @default("owner") // owner, manager, editor
-  verified    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  owner       BusinessOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id        String        @id @default(cuid())
+  companyId Int
+  ownerId   String
+  role      String        @default("owner")
+  verified  Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  company   Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  owner     BusinessOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, ownerId])
   @@index([ownerId])
@@ -319,107 +267,86 @@ model CompanyOwnership {
   @@map("company_ownerships")
 }
 
-// Fotoğraf Galerisi
 model Photo {
-  id          String   @id @default(cuid())
-  companyId   Int
-  url         String   // Vercel Blob URL
-  thumbnail   String?  // Thumbnail URL
-  caption     String?
-  order       Int      @default(0)
-  type        String   @default("gallery") // logo, cover, gallery, interior, product
-  isPrimary   Boolean  @default(false)
-  uploadedBy  String?  // BusinessOwner ID
-  createdAt   DateTime @default(now())
-
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  companyId  Int
+  url        String
+  thumbnail  String?
+  caption    String?
+  order      Int      @default(0)
+  type       String   @default("gallery")
+  isPrimary  Boolean  @default(false)
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([companyId, order])
   @@index([companyId, type])
   @@map("photos")
 }
 
-// Çalışma Saatleri
 model BusinessHours {
-  id          String   @id @default(cuid())
-  companyId   Int      @unique
-
-  // Weekly hours (JSON format)
-  monday      Json?    // { open: "09:00", close: "18:00", closed: false }
-  tuesday     Json?
-  wednesday   Json?
-  thursday    Json?
-  friday      Json?
-  saturday    Json?
-  sunday      Json?
-
-  // Special hours (holidays, etc.)
-  specialHours Json?   // [{ date: "2025-12-25", closed: true, note: "Noël" }]
-
-  timezone    String   @default("Europe/Paris")
-  updatedAt   DateTime @updatedAt
-
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  companyId    Int      @unique
+  monday       Json?
+  tuesday      Json?
+  wednesday    Json?
+  thursday     Json?
+  friday       Json?
+  saturday     Json?
+  sunday       Json?
+  specialHours Json?
+  timezone     String   @default("Europe/Paris")
+  updatedAt    DateTime @updatedAt
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@map("business_hours")
 }
 
-// Şirket İstatistikleri (Analytics)
 model CompanyAnalytics {
-  id              String   @id @default(cuid())
-  companyId       Int
-  date            DateTime @default(now()) @db.Date
-
-  // View metrics
-  profileViews    Int      @default(0)
-  uniqueVisitors  Int      @default(0)
-
-  // Click metrics
-  phoneClicks     Int      @default(0)
-  websiteClicks   Int      @default(0)
-  emailClicks     Int      @default(0)
-  directionsClicks Int     @default(0)
-
-  // Source metrics
-  sourceOrganic   Int      @default(0)
-  sourceSearch    Int      @default(0)
-  sourceDirect    Int      @default(0)
-  sourceReferral  Int      @default(0)
-
-  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  companyId        Int
+  date             DateTime @default(now()) @db.Date
+  profileViews     Int      @default(0)
+  uniqueVisitors   Int      @default(0)
+  phoneClicks      Int      @default(0)
+  websiteClicks    Int      @default(0)
+  emailClicks      Int      @default(0)
+  directionsClicks Int      @default(0)
+  sourceOrganic    Int      @default(0)
+  sourceSearch     Int      @default(0)
+  sourceDirect     Int      @default(0)
+  sourceReferral   Int      @default(0)
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, date])
   @@index([companyId, date(sort: Desc)])
   @@map("company_analytics")
 }
 
-// Review Reply model - Business owners can reply to reviews
 model ReviewReply {
-  id          Int      @id @default(autoincrement())
-  reviewId    Int      @unique
-  ownerId     String   // BusinessOwner ID
-  content     String   @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  owner       BusinessOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id        Int           @id @default(autoincrement())
+  reviewId  Int           @unique
+  ownerId   String
+  content   String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  owner     BusinessOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  review    Review        @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@index([reviewId])
   @@index([ownerId])
   @@map("review_replies")
 }
 
-// Review Vote model - Users can vote reviews as helpful
 model ReviewVote {
-  id          Int      @id @default(autoincrement())
-  reviewId    Int
-  voterIp     String   // IP address to prevent duplicates
-  voterSession String? // Session ID for additional tracking
-  isHelpful   Boolean  // true = helpful, false = not helpful
-  createdAt   DateTime @default(now())
-
-  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  id           Int      @id @default(autoincrement())
+  reviewId     Int
+  voterIp      String
+  voterSession String?
+  isHelpful    Boolean
+  createdAt    DateTime @default(now())
+  review       Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@unique([reviewId, voterIp])
   @@index([reviewId])
@@ -427,19 +354,17 @@ model ReviewVote {
   @@map("review_votes")
 }
 
-// Review Report model - Users can report inappropriate reviews
 model ReviewReport {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   reviewId    Int
-  reporterIp  String   // IP address
-  reason      String   // spam, offensive, fake, other
-  description String?  @db.Text
-  status      String   @default("pending") // pending, reviewed, resolved, dismissed
+  reporterIp  String
+  reason      String
+  description String?
+  status      String    @default("pending")
   reviewedAt  DateTime?
-  reviewedBy  String?  // Admin user ID
-  createdAt   DateTime @default(now())
-
-  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewedBy  String?
+  createdAt   DateTime  @default(now())
+  review      Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@index([reviewId])
   @@index([status])
@@ -447,30 +372,22 @@ model ReviewReport {
   @@map("review_reports")
 }
 
-// Referral Program - Viral Growth
 model Referral {
-  id              String   @id @default(cuid())
-  referrerId      String   // Business owner who refers
-  referredId      String?  // Business owner who was referred
-  code            String   @unique // Unique referral code (e.g., "CAFE123")
-
-  // Tracking
-  clicks          Int      @default(0)
-  signups         Int      @default(0)
-  conversions     Int      @default(0) // Paid subscriptions
-
-  // Rewards
-  referrerReward  String?  // "1_month_free", "50_euro_credit", "lifetime_pro"
-  referredReward  String?  // "50_percent_discount", "14_day_trial"
-  rewardedAt      DateTime?
-
-  status          String   @default("active") // "active", "completed", "expired"
-
-  createdAt       DateTime @default(now())
-  expiresAt       DateTime?
-
-  referrer        BusinessOwner  @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
-  referred        BusinessOwner? @relation("Referred", fields: [referredId], references: [id], onDelete: SetNull)
+  id             String         @id @default(cuid())
+  referrerId     String
+  referredId     String?
+  code           String         @unique
+  clicks         Int            @default(0)
+  signups        Int            @default(0)
+  conversions    Int            @default(0)
+  referrerReward String?
+  referredReward String?
+  rewardedAt     DateTime?
+  status         String         @default("active")
+  createdAt      DateTime       @default(now())
+  expiresAt      DateTime?
+  referred       BusinessOwner? @relation("Referred", fields: [referredId], references: [id])
+  referrer       BusinessOwner  @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
 
   @@index([code])
   @@index([referrerId])
@@ -478,40 +395,29 @@ model Referral {
   @@map("referrals")
 }
 
-// Coupons & Promotions
 model Coupon {
-  id              String   @id @default(cuid())
-  companyId       Int
-  code            String   @unique // "SUMMER2025", "WELCOME20"
-
-  title           String   // "20% de réduction"
-  description     String   @db.Text
-  terms           String?  @db.Text // Terms and conditions
-
-  type            String   // "percentage", "fixed_amount", "free_item"
-  value           Float    // 20 (for 20%) or 10 (for €10 off)
-
-  minPurchase     Float?   // Minimum purchase amount
-  maxDiscount     Float?   // Maximum discount amount (for percentage)
-  maxUses         Int?     // Total redemption limit
-  maxUsesPerUser  Int?     @default(1)
-
-  usedCount       Int      @default(0)
-
-  validFrom       DateTime
-  validUntil      DateTime
-
-  isActive        Boolean  @default(true)
-
-  // Tracking
-  views           Int      @default(0)
-  claims          Int      @default(0)
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  redemptions     CouponRedemption[]
+  id             String             @id @default(cuid())
+  companyId      Int
+  code           String             @unique
+  title          String
+  description    String
+  terms          String?
+  type           String
+  value          Float
+  minPurchase    Float?
+  maxDiscount    Float?
+  maxUses        Int?
+  maxUsesPerUser Int?               @default(1)
+  usedCount      Int                @default(0)
+  validFrom      DateTime
+  validUntil     DateTime
+  isActive       Boolean            @default(true)
+  views          Int                @default(0)
+  claims         Int                @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  redemptions    CouponRedemption[]
+  company        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([code])
   @@index([companyId, isActive])
@@ -519,25 +425,20 @@ model Coupon {
   @@map("coupons")
 }
 
-// Coupon Redemption Tracking
 model CouponRedemption {
-  id              String   @id @default(cuid())
-  couponId        String
-  userId          String?  // User who redeemed (if logged in)
-  userEmail       String?
-  userName        String?
-
-  redemptionCode  String   // Unique code shown to cashier
-  isVerified      Boolean  @default(false) // Verified by business owner
-  verifiedAt      DateTime?
-  verifiedBy      String?  // BusinessOwner ID
-
-  purchaseAmount  Float?
-  discountAmount  Float?
-
-  createdAt       DateTime @default(now())
-
-  coupon          Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  couponId       String
+  userId         String?
+  userEmail      String?
+  userName       String?
+  redemptionCode String
+  isVerified     Boolean   @default(false)
+  verifiedAt     DateTime?
+  verifiedBy     String?
+  purchaseAmount Float?
+  discountAmount Float?
+  createdAt      DateTime  @default(now())
+  coupon         Coupon    @relation(fields: [couponId], references: [id], onDelete: Cascade)
 
   @@index([couponId])
   @@index([redemptionCode])
@@ -545,344 +446,270 @@ model CouponRedemption {
   @@map("coupon_redemptions")
 }
 
-// Push Notifications
 model Notification {
-  id              String   @id @default(cuid())
-  recipientId     String   // BusinessOwner ID
-  type            String   // "new_review", "marketing_blast", "system_announcement"
-  title           String
-  message         String   @db.Text
-  companyId       Int?     // Related company (optional)
-  
-  // Status
-  isRead          Boolean  @default(false)
-  readAt          DateTime?
-  sentAt          DateTime @default(now())
-  
-  // Metadata
-  data            Json?    // Additional data for the notification
-  
-  createdAt       DateTime @default(now())
-  
-  recipient       BusinessOwner @relation(fields: [recipientId], references: [id], onDelete: Cascade)
-  company         Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  id          String        @id @default(cuid())
+  recipientId String
+  type        String
+  title       String
+  message     String
+  companyId   Int?
+  isRead      Boolean       @default(false)
+  readAt      DateTime?
+  sentAt      DateTime      @default(now())
+  data        Json?
+  createdAt   DateTime      @default(now())
+  company     Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recipient   BusinessOwner @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
   @@index([recipientId, isRead])
   @@index([recipientId, sentAt(sort: Desc)])
   @@index([type])
   @@map("notifications")
 }
 
-// Marketing Automation System
 model MarketingCampaign {
-  id              String   @id @default(cuid())
+  id              String           @id @default(cuid())
   businessOwnerId String
   name            String
-  description     String?  @db.Text
-  type            String   // "email", "sms", "push", "automation"
-  status          String   @default("draft") // "draft", "active", "paused", "completed"
-  
-  // Campaign Configuration
-  triggers        Json     // Array of trigger conditions
-  actions         Json     // Array of actions to execute
-  segmentId       String?  // Target segment (optional)
-  
-  // Scheduling
+  description     String?
+  type            String
+  status          String           @default("draft")
+  triggers        Json
+  actions         Json
+  segmentId       String?
   startDate       DateTime?
   endDate         DateTime?
   nextRunAt       DateTime?
-  
-  // Analytics
-  analytics       Json     @default("{}")
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
-  segment         CustomerSegment? @relation(fields: [segmentId], references: [id], onDelete: SetNull)
-  events          CampaignEvent[]
+  analytics       Json             @default("{}")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   abTests         ABTest[]
-  
+  events          CampaignEvent[]
+  businessOwner   BusinessOwner    @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  segment         CustomerSegment? @relation(fields: [segmentId], references: [id])
+
   @@index([businessOwnerId, status])
   @@index([status, nextRunAt])
   @@index([type, status])
   @@map("marketing_campaigns")
 }
 
-// Customer Segmentation
 model CustomerSegment {
-  id              String   @id @default(cuid())
+  id              String              @id @default(cuid())
   businessOwnerId String
   name            String
-  description     String?  @db.Text
-  rules           Json     // Segmentation rules
-  dynamicRefresh  Boolean  @default(true)
-  
-  memberCount     Int      @default(0)
+  description     String?
+  rules           Json
+  dynamicRefresh  Boolean             @default(true)
+  memberCount     Int                 @default(0)
   lastRefreshed   DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
-  members         SegmentMember[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  businessOwner   BusinessOwner       @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
   campaigns       MarketingCampaign[]
-  
+  members         SegmentMember[]
+
   @@index([businessOwnerId])
   @@index([dynamicRefresh, lastRefreshed])
   @@map("customer_segments")
 }
 
-// Segment Membership
 model SegmentMember {
-  id              String   @id @default(cuid())
-  segmentId       String
-  userId          String   // BusinessOwner ID
-  addedAt         DateTime @default(now())
-  
-  segment         CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
-  user            BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String          @id @default(cuid())
+  segmentId String
+  userId    String
+  addedAt   DateTime        @default(now())
+  segment   CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  user      BusinessOwner   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([segmentId, userId])
   @@index([segmentId])
   @@index([userId])
   @@map("segment_members")
 }
 
-// Lead Scoring
 model LeadScore {
-  id              String   @id @default(cuid())
-  userId          String   // BusinessOwner ID
-  companyId       Int
-  score           Int      @default(0)
-  factors         Json     @default("[]") // Array of scoring factors
-  lastUpdated     DateTime @default(now())
-  
-  user            BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company         Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  id          String        @id @default(cuid())
+  userId      String
+  companyId   Int
+  score       Int           @default(0)
+  factors     Json          @default("[]")
+  lastUpdated DateTime      @default(now())
+  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user        BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, companyId])
   @@index([companyId, score(sort: Desc)])
   @@index([userId])
   @@map("lead_scores")
 }
 
-// Campaign Event Tracking
 model CampaignEvent {
-  id              String   @id @default(cuid())
-  campaignId      String
-  userId          String   // BusinessOwner ID
-  event           String   // "sent", "delivered", "opened", "clicked", "converted"
-  timestamp       DateTime @default(now())
-  metadata        Json?
-  
-  campaign        MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  user            BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id         String            @id @default(cuid())
+  campaignId String
+  userId     String
+  event      String
+  timestamp  DateTime          @default(now())
+  metadata   Json?
+  campaign   MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user       BusinessOwner     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([campaignId, event])
   @@index([userId, timestamp(sort: Desc)])
   @@index([event, timestamp(sort: Desc)])
   @@map("campaign_events")
 }
 
-// A/B Testing
 model ABTest {
-  id              String   @id @default(cuid())
-  campaignId      String
-  name            String
-  variants        Json     // Array of test variants
-  status          String   @default("active") // "active", "paused", "completed"
-  results         Json     @default("{}")
-  
-  startDate       DateTime @default(now())
-  endDate         DateTime?
-  
-  campaign        MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  
+  id         String            @id @default(cuid())
+  campaignId String
+  name       String
+  variants   Json
+  status     String            @default("active")
+  results    Json              @default("{}")
+  startDate  DateTime          @default(now())
+  endDate    DateTime?
+  campaign   MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
   @@index([campaignId])
   @@index([status])
   @@map("ab_tests")
 }
 
-// Customer Journey Tracking
 model CustomerJourney {
-  id              String   @id @default(cuid())
-  userId          String   // BusinessOwner ID
-  companyId       Int
-  touchpoint      String   // "website_visit", "email_open", "form_submit", etc.
-  timestamp       DateTime @default(now())
-  metadata        Json     @default("{}")
-  
-  user            BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company         Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  id         String        @id @default(cuid())
+  userId     String
+  companyId  Int
+  touchpoint String
+  timestamp  DateTime      @default(now())
+  metadata   Json          @default("{}")
+  company    Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user       BusinessOwner @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, timestamp(sort: Desc)])
   @@index([companyId, touchpoint])
   @@index([touchpoint, timestamp(sort: Desc)])
   @@map("customer_journey")
 }
 
-// Email Templates
 model EmailTemplate {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   businessOwnerId String
   name            String
   subject         String
-  htmlContent     String   @db.Text
-  textContent     String?  @db.Text
-  category        String   @default("marketing") // "marketing", "transactional", "automation"
-  isActive        Boolean  @default(true)
-  
-  // Template variables
-  variables       Json     @default("[]")
-  
-  // Analytics
-  usageCount      Int      @default(0)
+  htmlContent     String
+  textContent     String?
+  category        String        @default("marketing")
+  isActive        Boolean       @default(true)
+  variables       Json          @default("[]")
+  usageCount      Int           @default(0)
   lastUsed        DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
-  
+
   @@index([businessOwnerId, category])
   @@index([category, isActive])
   @@map("email_templates")
 }
 
-// Stripe Events Tracking
 model StripeEvent {
-  id              String   @id @default(cuid())
-  eventType       String   // "checkout.session.completed", "invoice.paid", etc.
-  stripeId        String   @unique // Stripe event ID or object ID
-  businessOwnerId String?  // Related business owner (optional)
-  data            Json     // Event data
-  processed       Boolean  @default(false)
+  id              String         @id @default(cuid())
+  eventType       String
+  stripeId        String         @unique
+  businessOwnerId String?
+  data            Json
+  processed       Boolean        @default(false)
   processedAt     DateTime?
-  createdAt       DateTime @default(now())
-  
-  businessOwner   BusinessOwner? @relation(fields: [businessOwnerId], references: [id], onDelete: SetNull)
-  
+  createdAt       DateTime       @default(now())
+  businessOwner   BusinessOwner? @relation(fields: [businessOwnerId], references: [id])
+
   @@index([eventType, processed])
   @@index([businessOwnerId])
   @@index([createdAt(sort: Desc)])
   @@map("stripe_events")
 }
 
-// Subscription History
 model SubscriptionHistory {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   businessOwnerId String
-  action          String   // "created", "updated", "canceled", "reactivated"
-  fromPlan        String?  // Previous plan
-  toPlan          String?  // New plan
+  action          String
+  fromPlan        String?
+  toPlan          String?
   fromPrice       Float?
   toPrice         Float?
-  reason          String?  // Reason for change
-  stripeEventId   String?  // Related Stripe event
-  
+  reason          String?
+  stripeEventId   String?
   effectiveDate   DateTime
-  createdAt       DateTime @default(now())
-  
+  createdAt       DateTime      @default(now())
   businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
-  
+
   @@index([businessOwnerId, effectiveDate(sort: Desc)])
   @@index([action, effectiveDate(sort: Desc)])
   @@map("subscription_history")
 }
 
-// Invoices and Billing
 model Invoice {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   businessOwnerId String
-  stripeInvoiceId String   @unique
-  
-  // Invoice details
+  stripeInvoiceId String        @unique
   number          String?
-  status          String   // "draft", "open", "paid", "void", "uncollectible"
+  status          String
   description     String?
-  
-  // Amounts (in cents)
   subtotal        Int
-  tax             Int      @default(0)
+  tax             Int           @default(0)
   total           Int
-  amountPaid      Int      @default(0)
-  amountDue       Int      @default(0)
-  
-  currency        String   @default("eur")
-  
-  // Dates
+  amountPaid      Int           @default(0)
+  amountDue       Int           @default(0)
+  currency        String        @default("eur")
   invoiceDate     DateTime
   dueDate         DateTime?
   paidAt          DateTime?
   voidedAt        DateTime?
-  
-  // Payment
-  paymentMethod   String?  // "card", "sepa_debit", etc.
-  paymentStatus   String?  // "succeeded", "failed", "pending"
-  
-  // Metadata
-  metadata        Json     @default("{}")
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  paymentMethod   String?
+  paymentStatus   String?
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
-  
+
   @@index([businessOwnerId, invoiceDate(sort: Desc)])
   @@index([status, dueDate])
   @@index([stripeInvoiceId])
   @@map("invoices")
 }
 
-// E-commerce & Booking System Models
-
-// Products - Physical, Digital, Services, Bookings
 model Product {
-  id                  String   @id @default(cuid())
-  companyId           Int
-  name                String
-  description         String?  @db.Text
-  price               Int      // Price in cents
-  compareAtPrice      Int?     // Original price for discounts
-  type                String   // "physical", "digital", "service", "booking"
-  sku                 String?  @unique
-  status              String   @default("active") // "active", "inactive", "out_of_stock", "discontinued"
-  
-  // Product media
-  images              String[] // Array of image URLs
-  specifications      Json     @default("{}")
-  
-  // Booking-specific fields
-  isBookingEnabled    Boolean  @default(false)
-  bookingDuration     Int?     // Duration in minutes
-  maxAdvanceBooking   Int?     // Days in advance booking is allowed
-  allowOnlineBooking  Boolean  @default(true)
-  
-  // Inventory management
-  inventoryTracked    Boolean  @default(false)
-  stockQuantity       Int?
-  lowStockThreshold   Int?
-  
-  // Categories and tags
-  categories          String[] // ["restaurant", "electronics", "clothing"]
-  tags                String[] // ["new", "sale", "featured"]
-  
-  // SEO
-  seoTitle            String?
-  seoDescription      String?
-  
-  // Timestamps
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
-  // Relations
-  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  variants            ProductVariant[]
-  bookings            Booking[]
-  orderItems          OrderItem[]
-  cartItems           CartItem[]
-  
+  id                 String           @id @default(cuid())
+  companyId          Int
+  name               String
+  description        String?
+  price              Int
+  compareAtPrice     Int?
+  type               String
+  sku                String?          @unique
+  status             String           @default("active")
+  images             String[]
+  specifications     Json             @default("{}")
+  isBookingEnabled   Boolean          @default(false)
+  bookingDuration    Int?
+  maxAdvanceBooking  Int?
+  allowOnlineBooking Boolean          @default(true)
+  inventoryTracked   Boolean          @default(false)
+  stockQuantity      Int?
+  lowStockThreshold  Int?
+  categories         String[]
+  tags               String[]
+  seoTitle           String?
+  seoDescription     String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  bookings           Booking[]
+  cartItems          CartItem[]
+  orderItems         OrderItem[]
+  variants           ProductVariant[]
+  company            Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   @@index([companyId, status])
   @@index([type, status])
   @@index([companyId, type])
@@ -891,60 +718,44 @@ model Product {
   @@map("products")
 }
 
-// Product Variants (size, color, etc.)
 model ProductVariant {
-  id                  String   @id @default(cuid())
-  productId           String
-  name                String   // "Large", "Red", "Size M"
-  sku                 String?  @unique
-  price               Int?     // Override price if different from product
-  compareAtPrice      Int?
-  stockQuantity       Int?
-  isActive            Boolean  @default(true)
-  
-  // Variant attributes
-  attributes          Json     @default("{}") // {"size": "L", "color": "red"}
-  
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
-  // Relations
-  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  orderItems          OrderItem[]
-  cartItems           CartItem[]
-  
+  id             String      @id @default(cuid())
+  productId      String
+  name           String
+  sku            String?     @unique
+  price          Int?
+  compareAtPrice Int?
+  stockQuantity  Int?
+  isActive       Boolean     @default(true)
+  attributes     Json        @default("{}")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  product        Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@index([productId, isActive])
   @@map("product_variants")
 }
 
-// Bookings for services and appointments
 model Booking {
-  id                  String   @id @default(cuid())
-  productId           String
-  customerName        String
-  customerEmail       String
-  customerPhone       String?
-  
-  // Booking details
-  startTime           DateTime
-  endTime             DateTime
-  status              String   @default("pending") // "pending", "confirmed", "completed", "cancelled", "no_show"
-  confirmationCode    String   @unique
-  
-  // Payment
-  price               Int?     // Price in cents
-  paymentStatus       String   @default("pending") // "pending", "paid", "failed"
-  
-  notes               String?  @db.Text
-  internalNotes       String?  @db.Text // Private notes for business
-  
-  // Timestamps
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
-  // Relations
-  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  id               String   @id @default(cuid())
+  productId        String
+  customerName     String
+  customerEmail    String
+  customerPhone    String?
+  startTime        DateTime
+  endTime          DateTime
+  status           String   @default("pending")
+  confirmationCode String   @unique
+  price            Int?
+  paymentStatus    String   @default("pending")
+  notes            String?
+  internalNotes    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@index([productId, status])
   @@index([startTime, endTime])
   @@index([customerEmail])
@@ -953,71 +764,49 @@ model Booking {
   @@map("bookings")
 }
 
-// Shopping Cart for e-commerce
 model CartItem {
-  id                  String   @id @default(cuid())
-  sessionId           String   // Anonymous session or user ID
-  productId           String
-  variantId           String?
-  quantity            Int      @default(1)
-  
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
-  // Relations
-  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant             ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  
+  id        String          @id @default(cuid())
+  sessionId String
+  productId String
+  variantId String?
+  quantity  Int             @default(1)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
   @@unique([sessionId, productId, variantId])
   @@index([sessionId])
   @@index([productId])
   @@map("cart_items")
 }
 
-// Orders for e-commerce
 model Order {
-  id                  String   @id @default(cuid())
-  orderNumber         String   @unique
-  companyId           Int
-  
-  // Customer information
-  customerEmail       String
-  customerName        String
-  customerPhone       String?
-  
-  // Addresses
-  shippingAddress     Json?    // Address object
-  billingAddress      Json?    // Address object
-  
-  // Order totals (in cents)
-  subtotal            Int
-  shippingCost        Int      @default(0)
-  taxAmount           Int      @default(0)
-  discountAmount      Int      @default(0)
-  total               Int
-  
-  // Order details
-  status              String   @default("pending") // "pending", "processing", "shipped", "delivered", "cancelled", "refunded"
-  paymentStatus       String   @default("pending") // "pending", "paid", "failed", "refunded"
-  
-  // Shipping
-  trackingNumber      String?
-  shippedAt           DateTime?
-  deliveredAt         DateTime?
-  
-  // Discount/coupon
-  couponCode          String?
-  
-  notes               String?  @db.Text
-  
-  // Timestamps
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
-  // Relations
-  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  items               OrderItem[]
-  
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  companyId       Int
+  customerEmail   String
+  customerName    String
+  customerPhone   String?
+  shippingAddress Json?
+  billingAddress  Json?
+  subtotal        Int
+  shippingCost    Int         @default(0)
+  taxAmount       Int         @default(0)
+  discountAmount  Int         @default(0)
+  total           Int
+  status          String      @default("pending")
+  paymentStatus   String      @default("pending")
+  trackingNumber  String?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  couponCode      String?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   @@index([companyId, status])
   @@index([customerEmail])
   @@index([orderNumber])
@@ -1025,308 +814,227 @@ model Order {
   @@map("orders")
 }
 
-// Order Items
 model OrderItem {
-  id                  String   @id @default(cuid())
-  orderId             String
-  productId           String
-  variantId           String?
-  
-  quantity            Int
-  price               Int      // Price per unit in cents
-  total               Int      // Total for this line item
-  
-  createdAt           DateTime @default(now())
-  
-  // Relations
-  order               Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant             ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  
+  id        String          @id @default(cuid())
+  orderId   String
+  productId String
+  variantId String?
+  quantity  Int
+  price     Int
+  total     Int
+  createdAt DateTime        @default(now())
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
   @@index([orderId])
   @@index([productId])
   @@map("order_items")
 }
 
-// API Ecosystem & Third-Party Integration Models
-
-// API Keys for developer access
 model ApiKey {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   businessOwnerId String
-  name            String   // Descriptive name for the key
-  hashedKey       String   @unique // SHA256 hash of the actual key
-  permissions     String[] // Array of permissions ["read", "write", "webhooks"]
-  
-  // Usage tracking
+  name            String
+  hashedKey       String        @unique
+  permissions     String[]
   lastUsed        DateTime?
-  usageCount      Int      @default(0)
-  
-  // Status
-  isActive        Boolean  @default(true)
+  usageCount      Int           @default(0)
+  isActive        Boolean       @default(true)
   revokedAt       DateTime?
-  
-  // Rate limiting
-  rateLimit       Int      @default(1000) // Requests per hour
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
+  rateLimit       Int           @default(1000)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
   usageLogs       ApiUsage[]
-  
+
   @@index([businessOwnerId])
   @@index([hashedKey])
   @@index([isActive])
   @@map("api_keys")
 }
 
-// API Usage Tracking
 model ApiUsage {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   businessOwnerId String
   apiKeyId        String?
-  
-  // Request details
-  endpoint        String   // "/api/companies"
-  method          String   // "GET", "POST", etc.
-  statusCode      Int      // HTTP status code
-  responseTime    Int      // Response time in milliseconds
-  
-  // Client information
+  endpoint        String
+  method          String
+  statusCode      Int
+  responseTime    Int
   userAgent       String?
   ipAddress       String?
-  
-  timestamp       DateTime @default(now())
-  
-  // Relations
+  timestamp       DateTime      @default(now())
+  apiKey          ApiKey?       @relation(fields: [apiKeyId], references: [id])
   businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
-  apiKey          ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
-  
+
   @@index([businessOwnerId, timestamp(sort: Desc)])
   @@index([endpoint, timestamp(sort: Desc)])
   @@index([statusCode])
   @@map("api_usage")
 }
 
-// Webhook Management
 model Webhook {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   businessOwnerId String
-  
-  // Webhook configuration
-  url             String   // Endpoint URL to send events to
-  events          String[] // Array of event types to subscribe to
-  secret          String   // Secret for signature verification
+  url             String
+  events          String[]
+  secret          String
   description     String?
-  
-  // Status and metrics
-  isActive        Boolean  @default(true)
+  isActive        Boolean       @default(true)
   lastTriggered   DateTime?
-  successCount    Int      @default(0)
-  failureCount    Int      @default(0)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
-  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  successCount    Int           @default(0)
+  failureCount    Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   logs            WebhookLog[]
-  
+  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+
   @@index([businessOwnerId])
   @@index([isActive])
   @@map("webhooks")
 }
 
-// Webhook Delivery Logs
 model WebhookLog {
-  id              String   @id @default(cuid())
-  webhookId       String
-  
-  // Event details
-  eventType       String   // "company.created", "review.added", etc.
-  payload         Json     // Event payload
-  
-  // Delivery details
-  success         Boolean
-  statusCode      Int?     // HTTP status code from webhook endpoint
-  response        String?  // Response body from webhook endpoint
-  
-  createdAt       DateTime @default(now())
-  
-  // Relations
-  webhook         Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  webhookId  String
+  eventType  String
+  payload    Json
+  success    Boolean
+  statusCode Int?
+  response   String?
+  createdAt  DateTime @default(now())
+  webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
   @@index([webhookId, createdAt(sort: Desc)])
   @@index([eventType])
   @@index([success])
   @@map("webhook_logs")
 }
 
-// Third-Party Integrations
 model Integration {
-  id              String   @id @default(cuid())
+  id              String               @id @default(cuid())
   businessOwnerId String
-  
-  // Integration details
-  type            String   // "google_mybusiness", "mailchimp", "zapier", "slack", "whatsapp"
-  name            String   // User-friendly name
-  
-  // Configuration
-  accessToken     String?  // OAuth access token
-  refreshToken    String?  // OAuth refresh token
-  webhookUrl      String?  // For services like Zapier
-  phoneNumberId   String?  // For WhatsApp Business
-  
-  // Settings
-  settings        Json     @default("{}") // Integration-specific settings
-  
-  // Status
-  isActive        Boolean  @default(true)
+  type            String
+  name            String
+  accessToken     String?
+  refreshToken    String?
+  webhookUrl      String?
+  phoneNumberId   String?
+  settings        Json                 @default("{}")
+  isActive        Boolean              @default(true)
   lastSync        DateTime?
-  syncCount       Int      @default(0)
-  
-  // OAuth token expiry
+  syncCount       Int                  @default(0)
   expiresAt       DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
-  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
   syncLogs        IntegrationSyncLog[]
-  
+  businessOwner   BusinessOwner        @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+
   @@index([businessOwnerId, type])
   @@index([type, isActive])
   @@map("integrations")
 }
 
-// Integration Sync Logs
 model IntegrationSyncLog {
-  id              String   @id @default(cuid())
-  integrationId   String
-  
-  // Sync details
-  syncType        String   // "reviews", "contacts", "products", etc.
-  success         Boolean
-  itemsProcessed  Int      @default(0)
-  itemsSuccess    Int      @default(0)
-  itemsError      Int      @default(0)
-  
-  // Error details
-  error           String?  @db.Text
-  
-  // Timing
-  startedAt       DateTime
-  completedAt     DateTime @default(now())
-  duration        Int      // Duration in milliseconds
-  
-  // Relations
-  integration     Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
-  
+  id             String      @id @default(cuid())
+  integrationId  String
+  syncType       String
+  success        Boolean
+  itemsProcessed Int         @default(0)
+  itemsSuccess   Int         @default(0)
+  itemsError     Int         @default(0)
+  error          String?
+  startedAt      DateTime
+  completedAt    DateTime    @default(now())
+  duration       Int
+  integration    Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
   @@index([integrationId, completedAt(sort: Desc)])
   @@index([syncType])
   @@map("integration_sync_logs")
 }
 
-// Developer Console Users (for API access management)
 model DeveloperAccount {
-  id              String   @id @default(cuid())
-  businessOwnerId String   @unique
-  
-  // Developer profile
+  id               String        @id @default(cuid())
+  businessOwnerId  String        @unique
   organizationName String?
-  website         String?
-  description     String?  @db.Text
-  
-  // API access
-  isApproved      Boolean  @default(false)
-  approvedAt      DateTime?
-  approvedBy      String?  // Admin user ID
-  
-  // Usage quotas
-  monthlyQuota    Int      @default(10000) // API calls per month
-  currentUsage    Int      @default(0)
-  quotaResetDate  DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
-  businessOwner   BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
-  
+  website          String?
+  description      String?
+  isApproved       Boolean       @default(false)
+  approvedAt       DateTime?
+  approvedBy       String?
+  monthlyQuota     Int           @default(10000)
+  currentUsage     Int           @default(0)
+  quotaResetDate   DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  businessOwner    BusinessOwner @relation(fields: [businessOwnerId], references: [id], onDelete: Cascade)
+
   @@index([isApproved])
   @@map("developer_accounts")
 }
 
-// Monitoring & Error Tracking Models
-
-// Error Logs for monitoring
 model ErrorLog {
-  id              String   @id @default(cuid())
-  message         String   @db.Text
-  stack           String?  @db.Text
-  url             String?
-  userId          String?
-  severity        String   // "low", "medium", "high", "critical"
-  context         Json     @default("{}")
-  timestamp       DateTime @default(now())
-  resolved        Boolean  @default(false)
-  resolvedAt      DateTime?
-  resolvedBy      String?
-  
+  id         String    @id @default(cuid())
+  message    String
+  stack      String?
+  url        String?
+  userId     String?
+  severity   String
+  context    Json      @default("{}")
+  timestamp  DateTime  @default(now())
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime?
+  resolvedBy String?
+
   @@index([severity, timestamp(sort: Desc)])
   @@index([resolved, timestamp(sort: Desc)])
   @@index([userId, timestamp(sort: Desc)])
   @@map("error_logs")
 }
 
-// Performance Metrics
 model PerformanceMetric {
-  id              String   @id @default(cuid())
-  operation       String   // "api_call", "db_query", "stripe_operation"
-  duration        Int      // Duration in milliseconds
-  timestamp       DateTime @default(now())
-  userId          String?
-  success         Boolean
-  metadata        Json     @default("{}")
-  
+  id        String   @id @default(cuid())
+  operation String
+  duration  Int
+  timestamp DateTime @default(now())
+  userId    String?
+  success   Boolean
+  metadata  Json     @default("{}")
+
   @@index([operation, timestamp(sort: Desc)])
   @@index([success, duration(sort: Desc)])
   @@index([timestamp(sort: Desc)])
   @@map("performance_metrics")
 }
 
-// System Health Checks
 model HealthCheckLog {
-  id              String   @id @default(cuid())
-  service         String   // "database", "stripe", "storage", "external_apis"
-  status          String   // "healthy", "degraded", "unhealthy"
-  responseTime    Int      // Response time in milliseconds
-  error           String?  @db.Text
-  timestamp       DateTime @default(now())
-  metadata        Json     @default("{}")
-  
+  id           String   @id @default(cuid())
+  service      String
+  status       String
+  responseTime Int
+  error        String?
+  timestamp    DateTime @default(now())
+  metadata     Json     @default("{}")
+
   @@index([service, timestamp(sort: Desc)])
   @@index([status, timestamp(sort: Desc)])
   @@map("health_check_logs")
 }
 
-
-// Business Category Management
 model BusinessCategory {
-  id              Int     @id @default(autoincrement())
-  googleCategory  String  @unique // Google Maps category (e.g., "restaurant", "plumber")
-  frenchName      String  // French localization (e.g., "Restaurant")
-  germanName      String? // German localization (optional)
-  englishName     String? // English localization (optional)
-  description     String? @db.Text // Category description in French
-  icon            String? // Icon name or SVG identifier
-  order           Int     @default(0) // Display order
-  isActive        Boolean @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  googleCategory String   @unique
+  frenchName     String
+  germanName     String?
+  englishName    String?
+  description    String?
+  icon           String?
+  order          Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([googleCategory])
   @@index([order])
@@ -1334,12 +1042,11 @@ model BusinessCategory {
   @@map("business_categories")
 }
 
-// Dashboard Layout Management
 model DashboardLayout {
   id        String   @id @default(cuid())
   tenantId  String
   userId    String
-  widgets   String   @db.Text // JSON string of widget configurations
+  widgets   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1349,74 +1056,48 @@ model DashboardLayout {
   @@map("dashboard_layouts")
 }
 
-// Subscription Plans & Pricing
 model SubscriptionPlan {
-  id              String   @id @default(cuid())
-  name            String   // "Basic", "Pro", "Premium"
-  slug            String   @unique // "basic", "pro", "premium"
-  description     String   @db.Text
-
-  // Pricing (in cents)
-  monthlyPrice     Int      // Monthly price in cents
-  yearlyPrice      Int?     // Yearly price in cents (optional)
-
-  // Trial
-  trialDays        Int      @default(14) // Number of free trial days
-
-  // Features
-  features         String[] // Array of feature names
-  maxListings      Int      @default(1) // Max number of listings
-  maxFeaturedDays  Int      @default(30) // Days featured listing is included
-
-  // Status
-  isActive         Boolean  @default(true)
-  displayOrder     Int      @default(0)
-
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  subscriptions    CompanySubscription[]
+  id              String                @id @default(cuid())
+  name            String
+  slug            String                @unique
+  description     String
+  monthlyPrice    Int
+  yearlyPrice     Int?
+  trialDays       Int                   @default(14)
+  features        String[]
+  maxListings     Int                   @default(1)
+  maxFeaturedDays Int                   @default(30)
+  isActive        Boolean               @default(true)
+  displayOrder    Int                   @default(0)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  subscriptions   CompanySubscription[]
 
   @@index([slug])
   @@index([isActive])
   @@map("subscription_plans")
 }
 
-// Company Subscriptions (Per-company tracking)
 model CompanySubscription {
-  id                String   @id @default(cuid())
-  companyId         Int      @unique
-  planId            String
-
-  // Subscription status
-  status            String   @default("active") // "active", "canceled", "expired", "past_due", "trialing"
-
-  // Dates
-  startDate         DateTime @default(now())
-  renewalDate       DateTime // Next renewal date
-  cancelDate        DateTime? // Date subscription was canceled
-  trialEndDate      DateTime? // Date trial ends
-
-  // Stripe integration
-  stripeCustomerId  String?
+  id                   String           @id @default(cuid())
+  companyId            Int              @unique
+  planId               String
+  status               String           @default("active")
+  startDate            DateTime         @default(now())
+  renewalDate          DateTime
+  cancelDate           DateTime?
+  trialEndDate         DateTime?
+  stripeCustomerId     String?
   stripeSubscriptionId String?
-  stripeInvoiceId   String?
-
-  // Pricing snapshot at time of subscription
-  pricePaid         Int? // Price paid in cents (at time of subscription)
-
-  // Auto-renewal settings
-  autoRenew         Boolean  @default(true)
-
-  // Billing cycle
-  billingCycleStart DateTime
-  billingCycleEnd   DateTime
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  company           Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  plan              SubscriptionPlan @relation(fields: [planId], references: [id])
+  stripeInvoiceId      String?
+  pricePaid            Int?
+  autoRenew            Boolean          @default(true)
+  billingCycleStart    DateTime
+  billingCycleEnd      DateTime
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  company              Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan @relation(fields: [planId], references: [id])
 
   @@index([status, renewalDate])
   @@index([companyId, status])
@@ -1424,62 +1105,44 @@ model CompanySubscription {
   @@map("company_subscriptions")
 }
 
-// Domain-Specific Pricing (multi-domain support)
 model DomainPricing {
-  id              String   @id @default(cuid())
-  domainId        Int      @unique
-
-  // Pricing multipliers or overrides
-  basicMonthly     Int      // Basic plan monthly price in cents
-  basicYearly      Int?     // Basic plan yearly price in cents
-  proMonthly       Int      // Pro plan monthly price in cents
-  proYearly        Int?     // Pro plan yearly price in cents
-  premiumMonthly   Int      // Premium plan monthly price in cents
-  premiumYearly    Int?     // Premium plan yearly price in cents
-
-  // Special offers
-  discountPercent  Int      @default(0) // Discount percentage for new customers
-  discountCode     String?  // Special promo code
-
-  // Featured listing upgrade pricing
-  featuredBronze   Int?     // Bronze featured - price in cents
-  featuredSilver   Int?     // Silver featured - price in cents
-  featuredGold     Int?     // Gold featured - price in cents
-  featuredPlatinum Int?     // Platinum featured - price in cents
-
+  id               String   @id @default(cuid())
+  domainId         Int      @unique
+  basicMonthly     Int
+  basicYearly      Int?
+  proMonthly       Int
+  proYearly        Int?
+  premiumMonthly   Int
+  premiumYearly    Int?
+  discountPercent  Int      @default(0)
+  discountCode     String?
+  featuredBronze   Int?
+  featuredSilver   Int?
+  featuredGold     Int?
+  featuredPlatinum Int?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@map("domain_pricing")
 }
 
-// Payment Method Tracking
 model PaymentMethod {
-  id              String   @id @default(cuid())
-  companyId       Int
-
-  type            String   // "card", "sepa_debit", "bank_transfer"
-  stripePaymentMethodId String? @unique
-
-  // Card details (if card)
-  cardBrand       String?  // "visa", "mastercard", etc.
-  cardLast4       String?  // Last 4 digits
-  cardExpMonth    Int?
-  cardExpYear     Int?
-
-  // Bank details (if sepa)
-  bankAccountLast4 String?
-  bankBic         String?
-
-  // Status
-  isDefault       Boolean  @default(false)
-  isExpired       Boolean  @default(false)
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  companyId             Int
+  type                  String
+  stripePaymentMethodId String?  @unique
+  cardBrand             String?
+  cardLast4             String?
+  cardExpMonth          Int?
+  cardExpYear           Int?
+  bankAccountLast4      String?
+  bankBic               String?
+  isDefault             Boolean  @default(false)
+  isExpired             Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@index([companyId])
   @@index([stripePaymentMethodId])
   @@map("payment_methods")
 }
-
