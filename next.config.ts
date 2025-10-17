@@ -24,8 +24,6 @@ const nextConfig: NextConfig = {
       '@headlessui/react',
       'recharts',
     ],
-    // Disable static generation for error pages to avoid Html import errors
-    disableStaticImages: false,
   },
 
   // Compiler optimizations
@@ -51,6 +49,9 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+
+  // Output file tracing for better build performance
+  output: 'standalone',
 
   // Headers for caching and security
   async headers() {
