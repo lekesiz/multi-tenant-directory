@@ -53,6 +53,7 @@ model Company {
   categories     String[]  // İş kategorileri
   logoUrl        String?
   coverImageUrl  String?
+  youtubeVideos  String[]  // Array of YouTube video URLs
   isActive       Boolean   @default(true) // Business status - active/inactive for subscriptions
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
