@@ -182,7 +182,7 @@ export default async function Home() {
           city: c.city || '',
           categories: c.categories || [],
           rating: c.rating || 0,
-          reviewCount: c._count?.reviews || 0,
+          reviewCount: c.reviewCount || 0,
           logoUrl: c.logoUrl,
         }))} />
       )}

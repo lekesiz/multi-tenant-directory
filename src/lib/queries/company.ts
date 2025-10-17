@@ -19,6 +19,7 @@ export const defaultCompanySelect = {
   categories: true,
   logoUrl: true,
   rating: true,
+  reviewCount: true,
   businessHours: true,
   createdAt: true,
   updatedAt: true,
@@ -193,6 +194,7 @@ export async function getFeaturedCompanies(domainId: number, limit = 6) {
       categories: true,
       logoUrl: true,
       rating: true,
+      reviewCount: true,
       content: {
         where: {
           domainId,
@@ -232,6 +234,7 @@ export async function getRecentCompanies(limit = 10) {
       categories: true,
       logoUrl: true,
       rating: true,
+      reviewCount: true,
       createdAt: true,
       content: true,
       _count: {
