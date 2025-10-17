@@ -168,14 +168,14 @@ export default function SubscriptionPage() {
             )}
             {tab === 'plans' && (
               <PricingPlans
-                highlightPlan="pro"
-                showYearlyOption={true}
-                onSelectPlan={(plan, billingPeriod) => {
+                currentPlan="free"
+                showCurrentPlan={true}
+                onPlanSelect={(planId, interval) => {
                   router.push(
                     `/dashboard/subscription/checkout?` +
                     `companyId=${selectedCompanyId}&` +
-                    `plan=${plan.slug}&` +
-                    `period=${billingPeriod}`
+                    `plan=${planId}&` +
+                    `period=${interval}`
                   );
                 }}
               />

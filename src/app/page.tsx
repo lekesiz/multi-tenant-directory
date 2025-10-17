@@ -173,7 +173,17 @@ export default async function Home() {
 
       {/* Featured Businesses Carousel */}
       {featuredCompanies.length > 0 && (
-        <FeaturedBusinessesCarousel businesses={featuredCompanies} />
+        <FeaturedBusinessesCarousel businesses={featuredCompanies.map(c => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          address: c.address || '',
+          city: c.city || '',
+          categories: c.categories || [],
+          rating: c.rating || 0,
+          reviewCount: c.reviewCount || 0,
+          logoUrl: c.logoUrl,
+        }))} />
       )}
 
       {/* Pricing Section */}

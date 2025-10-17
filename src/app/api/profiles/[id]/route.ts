@@ -164,7 +164,7 @@ export async function GET(
       '@type': 'LocalBusiness',
       '@id': `${baseUrl}/companies/${company.slug}`,
       name: company.name,
-      description: content?.customDescription || company.description,
+      description: content?.customDescription || (company as any).description || undefined,
       image: company.coverImageUrl ? {
         '@type': 'ImageObject',
         url: company.coverImageUrl,
@@ -187,20 +187,28 @@ export async function GET(
         postalCode: company.postalCode || undefined,
         addressCountry: 'FR',
       },
-      foundingDate: company.establishedYear
-        ? new Date(company.establishedYear, 0, 1).toISOString().split('T')[0]
-        : undefined,
-      numberOfEmployees: company.numberOfEmployees || undefined,
+      foundingDate: company.createdAt.toISOString().split('T')[0],
       areaServed: company.city ? [company.city] : undefined,
       availableLanguage: ['fr', 'de', 'en'],
       aggregateRating,
-      openingHoursSpecification: company.hours.length > 0
-        ? company.hours.map((h: any) => ({
-            '@type': 'OpeningHoursSpecification',
-            dayOfWeek: [h.dayOfWeek],
-            opens: h.openTime,
-            closes: h.closeTime,
-          }))
+      priceRange: company.subscriptionTier ? `€${company.subscriptionTier}` : undefined,
+      openingHoursSpecification: company.hours
+        ? (() => {
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+            const specs: any[] = [];
+            days.forEach((day) => {
+              const dayHours = (company.hours as any)?.[day];
+              if (dayHours && !dayHours.closed) {
+                specs.push({
+                  '@type': 'OpeningHoursSpecification',
+                  dayOfWeek: [day.charAt(0).toUpperCase() + day.slice(1)],
+                  opens: dayHours.open,
+                  closes: dayHours.close,
+                });
+              }
+            });
+            return specs.length > 0 ? specs : undefined;
+          })()
         : undefined,
       keywords: [...company.categories, company.city].filter(Boolean),
       dateModified: company.updatedAt.toISOString(),

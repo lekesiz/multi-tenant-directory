@@ -120,16 +120,18 @@ export async function createCheckoutSession(params: CreateCheckoutSessionParams)
 
   if (!stripPrice) {
     stripPrice = await stripe.prices.create({
-      id: priceId,
       product: product.id,
-      unit_amount: price,
+      unit_amount: price || 0,
       currency: 'eur',
-      type: 'recurring',
       recurring: {
         interval: billingPeriod === 'month' ? 'month' : 'year',
-        trial_period_days: trialDays || plan.trialDays,
+        trial_period_days: (trialDays ?? plan.trialDays) || undefined,
       },
-    });
+      metadata: {
+        planSlug,
+        billingPeriod,
+      },
+    } as any);
   }
 
   // Create checkout session
@@ -281,7 +283,9 @@ export async function cancelSubscriptionAtPeriodEnd(subscriptionId: string) {
  * Cancel subscription immediately
  */
 export async function cancelSubscriptionImmediate(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.del(subscriptionId);
+  const subscription = await stripe.subscriptions.update(subscriptionId, {
+    cancel_at_period_end: true,
+  });
   return subscription;
 }
 

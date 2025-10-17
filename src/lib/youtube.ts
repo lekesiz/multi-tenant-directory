@@ -100,9 +100,9 @@ export function parseYouTubeUrls(urls: string[]): YouTubeVideoInfo[] {
         id,
         url: `https://www.youtube.com/watch?v=${id}`,
         thumbnail: getYouTubeThumbnail(url, 'high'),
-      };
+      } as YouTubeVideoInfo;
     })
-    .filter((video): video is YouTubeVideoInfo => video !== null);
+    .filter(Boolean) as YouTubeVideoInfo[];
 }
 
 /**

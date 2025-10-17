@@ -59,30 +59,23 @@ export async function GET(
       );
     }
 
-    // Format opening hours
-    const openingHours = company.hours.map((h: any) => ({
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: h.dayOfWeek,
-      opens: h.openTime,
-      closes: h.closeTime,
-      validFrom: new Date().toISOString().split('T')[0],
-      validThrough: undefined, // Ongoing until changed
-    }));
+    // Format opening hours from BusinessHours object
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+    const openingHoursSpec: any[] = [];
 
-    // Group by day for more efficient storage
-    const groupedByDay: { [key: string]: any } = {};
-    company.hours.forEach((h: any) => {
-      const key = `${h.openTime}-${h.closeTime}`;
-      if (!groupedByDay[key]) {
-        groupedByDay[key] = {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: [],
-          opens: h.openTime,
-          closes: h.closeTime,
-        };
-      }
-      groupedByDay[key].dayOfWeek.push(h.dayOfWeek);
-    });
+    if (company.hours) {
+      days.forEach((day) => {
+        const dayHours = company.hours?.[day as keyof typeof company.hours] as any;
+        if (dayHours && !dayHours.closed) {
+          openingHoursSpec.push({
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: day.charAt(0).toUpperCase() + day.slice(1),
+            opens: dayHours.open,
+            closes: dayHours.close,
+          });
+        }
+      });
+    }
 
     const response = {
       '@context': 'https://schema.org',
@@ -94,12 +87,10 @@ export async function GET(
         '@type': 'LocalBusiness',
         '@id': `${baseUrl}/companies/${company.slug}`,
         name: company.name,
-        openingHoursSpecification: Object.values(groupedByDay),
+        openingHoursSpecification: openingHoursSpec,
       },
-      detailedSchedule: openingHours,
-      totalResults: company.hours.length,
+      timezone: company.hours?.timezone || 'Europe/Paris',
       dateModified: new Date().toISOString(),
-      timezone: 'Europe/Paris',
       country: 'FR',
       license: 'CC-BY-4.0',
       attribution: {

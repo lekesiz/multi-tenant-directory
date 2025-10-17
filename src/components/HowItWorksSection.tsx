@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, MapPin, Star, CheckCircle, MessageSquare, ThumbsUp } from 'lucide-react';
+import { Search, MapPin, Star, CheckCircle, MessageSquare, ThumbsUp, TrendingUp } from 'lucide-react';
 
 interface Step {
   number: number;

@@ -48,10 +48,10 @@ export async function POST(request: NextRequest) {
           customerId: subscription.customer as string,
           subscriptionId: subscription.id,
           status: subscription.status as any,
-          currentPeriodStart: subscription.current_period_start,
-          currentPeriodEnd: subscription.current_period_end,
-          cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          trialEndDate: subscription.trial_end,
+          currentPeriodStart: subscription.current_period_start || 0,
+          currentPeriodEnd: subscription.current_period_end || 0,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+          trialEndDate: subscription.trial_end || undefined,
         });
 
         console.log(`✅ Subscription ${event.type} processed`);
@@ -95,16 +95,18 @@ export async function POST(request: NextRequest) {
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
 
-        await handleInvoicePayment({
-          id: invoice.id,
-          customerId: invoice.customer as string,
-          subscriptionId: invoice.subscription as string,
-          status: invoice.status,
-          amountPaid: invoice.amount_paid,
-          currency: invoice.currency,
-          paid: invoice.paid,
-          created: invoice.created,
-        });
+        if (invoice.customer && invoice.subscription) {
+          await handleInvoicePayment({
+            id: invoice.id,
+            customerId: invoice.customer as string,
+            subscriptionId: invoice.subscription as string,
+            status: invoice.status || 'unknown',
+            amountPaid: invoice.amount_paid || 0,
+            currency: invoice.currency || 'eur',
+            paid: event.type === 'invoice.paid',
+            created: invoice.created || 0,
+          });
+        }
 
         console.log(`✅ Invoice event ${event.type} processed`);
         break;

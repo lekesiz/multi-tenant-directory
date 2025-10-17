@@ -51,7 +51,6 @@ export async function GET(
         id: true,
         name: true,
         slug: true,
-        description: true,
         categories: true,
         content: {
           where: { domainId: domainRecord.id },
@@ -132,7 +131,7 @@ export async function GET(
         '@type': 'LocalBusiness',
         '@id': `${baseUrl}/companies/${company.slug}`,
         name: company.name,
-        description: content?.customDescription || company.description,
+        description: content?.customDescription || undefined,
         categories: company.categories,
       },
       itemListElement: services,
