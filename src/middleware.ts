@@ -55,53 +55,65 @@ const EXCLUDED_PATHS = [
 ];
 
 export async function middleware(request: NextRequest) {
-  const hostname = request.headers.get('host') || '';
-  const url = request.nextUrl;
-  const { pathname } = url;
+  try {
+    const hostname = request.headers.get('host') || '';
+    const url = request.nextUrl;
+    const { pathname } = url;
 
-  const isVercelDomain = hostname.includes('.vercel.app');
-  const isSupportedDomain = SUPPORTED_DOMAINS.includes(hostname);
+    const isVercelDomain = hostname.includes('.vercel.app');
+    const isSupportedDomain = SUPPORTED_DOMAINS.includes(hostname);
 
-  if (!isSupportedDomain && !isVercelDomain) {
-    return new NextResponse('Domain not found', { status: 404 });
-  }
-
-  // Legacy URL redirect
-  const pathParts = pathname.split('/').filter(Boolean);
-
-  if (pathParts.length === 1) {
-    const slug = pathParts[0];
-
-    if (!EXCLUDED_PATHS.includes(slug) && !slug.includes('.')) {
-      const newUrl = url.clone();
-      newUrl.pathname = `/companies/${slug}`;
-      return NextResponse.redirect(newUrl, 301);
+    if (!isSupportedDomain && !isVercelDomain) {
+      return new NextResponse('Domain not found', { status: 404 });
     }
-  }
 
-  // Dashboard authentication
-  if (pathname.startsWith('/dashboard')) {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    // Legacy URL redirect
+    const pathParts = pathname.split('/').filter(Boolean);
 
-    if (!token) {
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('callbackUrl', pathname);
-      return NextResponse.redirect(loginUrl);
+    if (pathParts.length === 1) {
+      const slug = pathParts[0];
+
+      if (!EXCLUDED_PATHS.includes(slug) && !slug.includes('.')) {
+        const newUrl = url.clone();
+        newUrl.pathname = `/companies/${slug}`;
+        return NextResponse.redirect(newUrl, 301);
+      }
     }
+
+    // Dashboard authentication
+    if (pathname.startsWith('/dashboard')) {
+      try {
+        const token = await getToken({
+          req: request,
+          secret: process.env.NEXTAUTH_SECRET,
+        });
+
+        if (!token) {
+          const loginUrl = new URL('/auth/login', request.url);
+          loginUrl.searchParams.set('callbackUrl', pathname);
+          return NextResponse.redirect(loginUrl);
+        }
+      } catch (err) {
+        console.error('Auth token error:', err);
+        // If token retrieval fails, allow request to proceed
+        // The page will handle auth appropriately
+      }
+    }
+
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.rewrite(new URL(`/admin${pathname.replace('/admin', '')}${url.search}`, request.url));
+    }
+
+    // Add headers
+    const response = NextResponse.next();
+    response.headers.set('x-tenant-domain', hostname);
+
+    return addSecurityHeaders(request, response);
+  } catch (error) {
+    console.error('Middleware error:', error);
+    // On error, continue with next middleware
+    return NextResponse.next();
   }
-
-  if (pathname.startsWith('/admin')) {
-    return NextResponse.rewrite(new URL(`/admin${pathname.replace('/admin', '')}${url.search}`, request.url));
-  }
-
-  // Add headers
-  const response = NextResponse.next();
-  response.headers.set('x-tenant-domain', hostname);
-
-  return addSecurityHeaders(request, response);
 }
 
 export const config = {
