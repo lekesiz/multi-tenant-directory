@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  staticPageGenerationTimeout: 120,
+  // Disable static page generation to avoid prerendering errors
+  // with dependencies that import Html
+  staticPageGenerationTimeout: 0,
   skipTrailingSlashRedirect: true,
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
@@ -89,5 +89,26 @@ export default function SuccessPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function SuccessPageFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-sm p-8 max-w-md w-full text-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 mx-auto" />
+        <h2 className="mt-4 text-lg font-semibold text-gray-900">
+          Chargement...
+        </h2>
+      </div>
+    </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<SuccessPageFallback />}>
+      <SuccessContent />
+    </Suspense>
   );
 }

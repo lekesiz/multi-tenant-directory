@@ -8,6 +8,10 @@ import { WebVitals } from "@/components/WebVitals";
 import { PerformanceMonitor } from "@/components/PerformanceMonitor";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
+// Skip static prerendering which causes build errors with dependency Html imports
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
