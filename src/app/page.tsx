@@ -7,6 +7,8 @@ import HeroSection from '@/components/HeroSection';
 import BenefitsSection from '@/components/BenefitsSection';
 import HowItWorksSection from '@/components/HowItWorksSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
+import FeaturedBusinessesCarousel from '@/components/FeaturedBusinessesCarousel';
+import PricingHomepageSection from '@/components/PricingHomepageSection';
 
 // Query utilities
 import { getCurrentDomainInfo } from '@/lib/queries/domain';
@@ -168,6 +170,14 @@ export default async function Home() {
 
       {/* Testimonials Section */}
       <TestimonialsSection />
+
+      {/* Featured Businesses Carousel */}
+      {featuredCompanies.length > 0 && (
+        <FeaturedBusinessesCarousel businesses={featuredCompanies} />
+      )}
+
+      {/* Pricing Section */}
+      <PricingHomepageSection />
 
       {/* Stats Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
