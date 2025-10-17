@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Loader } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -14,7 +14,7 @@ interface CheckoutSession {
   clientSecret?: string;
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -106,5 +106,26 @@ export default function CheckoutPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function CheckoutFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-sm p-8 max-w-md w-full text-center">
+        <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+        <h2 className="text-lg font-semibold text-gray-900">
+          Chargement du paiement...
+        </h2>
+      </div>
+    </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<CheckoutFallback />}>
+      <CheckoutContent />
+    </Suspense>
   );
 }
