@@ -1,23 +1,27 @@
 import { redirect } from 'next/navigation';
 
-export default function SearchPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
-  // Redirect to /annuaire with same query parameters
-  const params = new URLSearchParams();
+type PageProps = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function SearchPage({ searchParams }: PageProps) {
+  // Await searchParams for Next.js 15 compatibility
+  const params = await searchParams;
   
-  Object.entries(searchParams).forEach(([key, value]) => {
+  // Redirect to /annuaire with same query parameters
+  const urlParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
     if (value) {
       if (Array.isArray(value)) {
-        value.forEach(v => params.append(key, v));
+        value.forEach(v => urlParams.append(key, v));
       } else {
-        params.set(key, value);
+        urlParams.set(key, value);
       }
     }
   });
   
-  const queryString = params.toString();
+  const queryString = urlParams.toString();
   redirect(`/annuaire${queryString ? `?${queryString}` : ''}`);
 }
+
