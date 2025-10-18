@@ -7,13 +7,6 @@ async function CategoriesList() {
     orderBy: {
       frenchName: 'asc',
     },
-    include: {
-      _count: {
-        select: {
-          companies: true,
-        },
-      },
-    },
   });
 
   return (
@@ -42,16 +35,16 @@ async function CategoriesList() {
           {categories.map((category) => (
             <tr key={category.id}>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {category.slug}
+                {category.googleCategory}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {category.nameFr}
+                {category.frenchName}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-2xl">
-                {category.icon}
+                {category.icon || '🏪'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {category._count.companies}
+                -
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <Link
