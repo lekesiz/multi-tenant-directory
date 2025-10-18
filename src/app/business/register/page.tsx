@@ -44,7 +44,7 @@ export default function BusinessRegisterPage() {
       const validatedData = registerSchema.parse(formData);
 
       // Call register API
-      const response = await fetch('/api/business/register', {
+      const response = await fetch('/api/business/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

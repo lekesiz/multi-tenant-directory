@@ -18,8 +18,14 @@ export default async function CategoryEditPage({ params }: PageProps) {
     );
   }
 
+  const categoryId = parseInt(id, 10);
+  
+  if (isNaN(categoryId)) {
+    notFound();
+  }
+
   const category = await prisma.businessCategory.findUnique({
-    where: { id },
+    where: { id: categoryId },
   });
 
   if (!category) {
