@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 async function CategoriesList() {
   const categories = await prisma.businessCategory.findMany({
     orderBy: {
-      nameFr: 'asc',
+      frenchName: 'asc',
     },
     include: {
       _count: {
