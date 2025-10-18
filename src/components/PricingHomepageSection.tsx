@@ -2,6 +2,7 @@
 
 import { Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import PricingButton from './PricingButton';
 
 interface PricingTier {
   name: string;
@@ -140,16 +141,23 @@ export default function PricingHomepageSection() {
                 </div>
 
                 {/* CTA Button */}
-                <Link
-                  href={tier.ctaLink}
-                  className={`w-full block text-center py-3 px-4 rounded-lg font-bold transition-all mb-8 ${
-                    tier.highlighted
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:shadow-lg'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                  }`}
-                >
-                  {tier.cta}
-                </Link>
+                <div className="mb-8">
+                  {tier.name === 'Premium' ? (
+                    <Link
+                      href={tier.ctaLink}
+                      className="w-full block text-center py-3 px-4 rounded-lg font-bold transition-all bg-gray-100 text-gray-900 hover:bg-gray-200"
+                    >
+                      {tier.cta}
+                    </Link>
+                  ) : (
+                    <PricingButton
+                      planSlug={tier.name.toLowerCase()}
+                      period="month"
+                      label={tier.cta}
+                      highlighted={tier.highlighted}
+                    />
+                  )}
+                </div>
 
                 {/* Features */}
                 <div className="space-y-4">
