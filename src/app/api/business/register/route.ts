@@ -1,86 +1,22 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Validation schema
-const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  firstName: z.string().min(2),
-  lastName: z.string().min(2),
-  phone: z.string().optional(),
-  referralCode: z.string().optional(),
-});
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Validate input
-    const validatedData = registerSchema.parse(body);
-    
-    // Check if email already exists
-    const existingUser = await prisma.businessOwner.findUnique({
-      where: { email: validatedData.email },
-    });
-    
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'Un compte existe déjà avec cette adresse email' },
-        { status: 400 }
-      );
-    }
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
-    
-    // Create business owner
-    const businessOwner = await prisma.businessOwner.create({
-      data: {
-        email: validatedData.email,
-        password: hashedPassword,
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
-        phone: validatedData.phone,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-      },
-    });
-    
+    console.log('📝 Registration attempt:', body);
+
+    // Minimal test - just return success
     return NextResponse.json({
       success: true,
-      message: 'Compte créé avec succès. Vous pouvez maintenant vous connecter.',
-      user: businessOwner,
+      message: 'Test successful - API is working',
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Données invalides', details: error.issues },
-        { status: 400 }
-      );
-    }
-    
-    // Return detailed error for debugging
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { 
-          error: 'Une erreur est survenue lors de la création du compte',
-          details: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        },
-        { status: 500 }
-      );
-    }
-    
+    console.error('❌ Registration error:', error);
     return NextResponse.json(
-      { error: 'Une erreur est survenue lors de la création du compte' },
+      { 
+        error: 'Registration failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
