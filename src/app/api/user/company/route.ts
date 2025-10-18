@@ -18,7 +18,7 @@ export async function GET() {
     const businessOwner = await prisma.businessOwner.findUnique({
       where: { email: session.user.email },
       include: {
-        ownerships: {
+        companies: {
           include: {
             company: true,
           },
@@ -26,10 +26,10 @@ export async function GET() {
       },
     });
 
-    if (businessOwner && businessOwner.ownerships.length > 0) {
+    if (businessOwner && businessOwner.companies.length > 0) {
       // Return first company (users typically have one company)
       return NextResponse.json({
-        company: businessOwner.ownerships[0].company,
+        company: businessOwner.companies[0].company,
       });
     }
 
