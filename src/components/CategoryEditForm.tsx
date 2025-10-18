@@ -14,8 +14,8 @@ export default function CategoryEditForm({ category }: CategoryEditFormProps) {
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
-    slug: category?.slug || '',
-    nameFr: category?.nameFr || '',
+    googleCategory: category?.googleCategory || '',
+    frenchName: category?.frenchName || '',
     icon: category?.icon || '',
   });
 
@@ -91,34 +91,34 @@ export default function CategoryEditForm({ category }: CategoryEditFormProps) {
       )}
 
       <div>
-        <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-2">
-          Slug (identifiant unique)
+        <label htmlFor="googleCategory" className="block text-sm font-medium text-gray-700 mb-2">
+          Google Category (identifiant unique)
         </label>
         <input
           type="text"
-          id="slug"
-          value={formData.slug}
-          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+          id="googleCategory"
+          value={formData.googleCategory}
+          onChange={(e) => setFormData({ ...formData, googleCategory: e.target.value })}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
           required
-          disabled={!!category} // Slug cannot be changed after creation
+          disabled={!!category} // Google category cannot be changed after creation
         />
         {category && (
           <p className="mt-1 text-sm text-gray-500">
-            Le slug ne peut pas être modifié après la création
+            La catégorie Google ne peut pas être modifiée après la création
           </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="nameFr" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="frenchName" className="block text-sm font-medium text-gray-700 mb-2">
           Nom en Français
         </label>
         <input
           type="text"
-          id="nameFr"
-          value={formData.nameFr}
-          onChange={(e) => setFormData({ ...formData, nameFr: e.target.value })}
+          id="frenchName"
+          value={formData.frenchName}
+          onChange={(e) => setFormData({ ...formData, frenchName: e.target.value })}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
           required
         />
