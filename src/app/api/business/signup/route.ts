@@ -15,6 +15,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Split name into first and last name
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
     // Check if email already exists
     const existingOwner = await prisma.businessOwner.findUnique({
       where: { email },
@@ -33,11 +38,11 @@ export async function POST(request: NextRequest) {
     // Create business owner
     const businessOwner = await prisma.businessOwner.create({
       data: {
-        name,
+        firstName,
+        lastName,
         email,
         password: hashedPassword,
         phone: phone || null,
-        isVerified: false,
       },
     });
 
