@@ -306,7 +306,7 @@ export default async function Home() {
             Rejoignez notre plateforme et augmentez votre visibilité locale
           </p>
           <Link
-            href="/admin/login"
+            href="/business/register"
             className="inline-block bg-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-colors"
             style={{ color: domainData.primaryColor || '#2563EB' }}
           >

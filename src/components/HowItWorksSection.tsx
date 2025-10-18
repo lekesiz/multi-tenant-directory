@@ -1,6 +1,7 @@
 'use client';
 
 import { Search, MapPin, Star, CheckCircle, MessageSquare, ThumbsUp, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
 
 interface Step {
   number: number;
@@ -176,12 +177,18 @@ export default function HowItWorksSection({ userType = 'both' }: HowItWorksSecti
             Prêt à commencer?
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg hover:shadow-lg transition-shadow">
+            <Link
+              href="/annuaire"
+              className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg hover:shadow-lg transition-shadow"
+            >
               Je Cherche une Entreprise
-            </button>
-            <button className="px-8 py-4 bg-white border-2 border-gray-200 text-gray-900 font-bold rounded-lg hover:border-gray-300 transition-colors">
+            </Link>
+            <Link
+              href="/business/register"
+              className="inline-flex items-center justify-center px-8 py-4 bg-white border-2 border-gray-200 text-gray-900 font-bold rounded-lg hover:border-gray-300 transition-colors"
+            >
               Je Suis un Professionnel
-            </button>
+            </Link>
           </div>
         </div>
       </div>
