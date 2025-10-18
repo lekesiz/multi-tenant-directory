@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const categories = await prisma.businessCategory.findMany({
       orderBy: {
-        nameFr: 'asc',
+        frenchName: 'asc',
       },
     });
 
@@ -33,32 +33,32 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { slug, nameFr, icon } = body;
+    const { googleCategory, frenchName, icon } = body;
 
-    if (!slug || !nameFr || !icon) {
+    if (!googleCategory || !frenchName) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Check if slug already exists
+    // Check if googleCategory already exists
     const existing = await prisma.businessCategory.findUnique({
-      where: { slug },
+      where: { googleCategory },
     });
 
     if (existing) {
       return NextResponse.json(
-        { error: 'Category with this slug already exists' },
+        { error: 'Category with this googleCategory already exists' },
         { status: 400 }
       );
     }
 
     const category = await prisma.businessCategory.create({
       data: {
-        slug,
-        nameFr,
-        icon,
+        googleCategory,
+        frenchName,
+        icon: icon || '🏪',
       },
     });
 
