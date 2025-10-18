@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BusinessHoursForm from './BusinessHoursForm';
+import AIDescriptionGenerator from './AIDescriptionGenerator';
 
 interface Company {
   id: number;
@@ -559,9 +560,27 @@ export default function CompanyEditForm({
                 {settings.isVisible && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Özel Açıklama
-                      </label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Özel Açıklama
+                        </label>
+                        <AIDescriptionGenerator
+                          companyId={company.id}
+                          companyName={company.name}
+                          category={company.categories[0] || 'Business'}
+                          location={`${company.city || ''}, ${company.address || ''}`.trim()}
+                          currentDescription={settings.customDescription}
+                          onGenerated={(description) =>
+                            setDomainSettings({
+                              ...domainSettings,
+                              [domain.id]: {
+                                ...settings,
+                                customDescription: description,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                       <textarea
                         value={settings.customDescription}
                         onChange={(e) =>
