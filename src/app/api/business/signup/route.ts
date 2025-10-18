@@ -54,14 +54,9 @@ export async function POST(request: NextRequest) {
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/(^-|-$)/g, ''),
-        address: '',
         city: 'Haguenau',
-        postalCode: '',
-        phone: phone || '',
+        phone: phone || undefined,
         isActive: false, // Requires admin approval
-        isPremium: false,
-        rating: 0,
-        reviewCount: 0,
         categories: [],
       },
     });
