@@ -78,6 +78,32 @@ export async function POST(request: NextRequest) {
       messageLength: message.length,
     });
 
+    // Save to database
+    try {
+      const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                       request.headers.get('x-real-ip') || 
+                       'unknown';
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      await prisma.contactInquiry.create({
+        data: {
+          name,
+          email,
+          phone: phone || null,
+          subject,
+          message,
+          companyId: companyId ? parseInt(companyId) : null,
+          ipAddress,
+          userAgent,
+          status: 'new',
+        },
+      });
+      logger.info('Contact inquiry saved to database');
+    } catch (dbError) {
+      console.error('Error saving contact inquiry to database:', dbError);
+      // Continue without failing - email is more important
+    }
+
     // Track contact analytics (if companyId provided)
     if (companyId) {
       try {

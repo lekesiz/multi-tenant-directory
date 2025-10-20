@@ -76,6 +76,7 @@ model Company {
   photos               Photo[]
   products             Product[]
   reviews              Review[]
+  contactInquiries     ContactInquiry[]
 
   @@index([slug])
   @@index([city])
@@ -1145,3 +1146,27 @@ model PaymentMethod {
   @@index([stripePaymentMethodId])
   @@map("payment_methods")
 }
+
+
+model ContactInquiry {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  phone       String?
+  subject     String
+  message     String   @db.Text
+  companyId   Int?
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  status      String   @default("new") // new, read, replied, closed
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([email])
+  @@map("contact_inquiries")
+}
+
