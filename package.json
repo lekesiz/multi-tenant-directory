@@ -24,6 +24,8 @@
     "import:enhance": "tsx scripts/enhance-with-ai.ts",
     "import:db": "tsx scripts/import-haguenau-businesses.ts",
     "import:all": "npm run import:process && npm run import:enhance && npm run import:db",
+    "cleanup:dry-run": "node scripts/cleanup-database.js --dry-run",
+    "cleanup:production": "node scripts/cleanup-database.js --production",
     "postinstall": "prisma generate"
   },
   "prisma": {
