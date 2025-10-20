@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/(^-|-$)/g, ''),
         city: 'Haguenau',
-        phone: phone || undefined,
+        ...(phone && { phone }),
         isActive: false, // Requires admin approval
         categories: [],
       },
