@@ -13,7 +13,7 @@ async function getBusinessOwner(id: string) {
   return await prisma.businessOwner.findUnique({
     where: { id },
     include: {
-      ownerships: {
+      companies: {
         include: {
           company: {
             select: {
@@ -122,13 +122,13 @@ export default async function BusinessOwnerDetailPage({
       {/* Companies */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Entreprises ({owner.ownerships.length})
+          Entreprises ({owner.companies.length})
         </h2>
-        {owner.ownerships.length === 0 ? (
+        {owner.companies.length === 0 ? (
           <p className="text-gray-500">Aucune entreprise associée</p>
         ) : (
           <div className="space-y-4">
-            {owner.ownerships.map((ownership) => (
+            {owner.companies.map((ownership) => (
               <div
                 key={ownership.id}
                 className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
