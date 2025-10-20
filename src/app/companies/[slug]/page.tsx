@@ -45,6 +45,15 @@ export async function generateMetadata({
     }
 
     const { slug } = await params;
+    
+    // Yasal sayfa slug'larını exclude et
+    const legalSlugs = ['politique-confidentialite', 'politique-de-confidentialite', 'mentions-legales', 'cgu', 'contact', 'tarifs', 'pricing'];
+    if (legalSlugs.includes(slug)) {
+      return {
+        title: 'Page',
+      };
+    }
+    
     const company = await prisma.company.findFirst({
       where: {
         slug: slug,
@@ -133,6 +142,12 @@ export default async function CompanyDetailPage({
   }
 
   const { slug } = await params;
+
+  // Yasal sayfa slug'larını exclude et
+  const legalSlugs = ['politique-confidentialite', 'politique-de-confidentialite', 'mentions-legales', 'cgu', 'contact', 'tarifs', 'pricing'];
+  if (legalSlugs.includes(slug)) {
+    return notFound();
+  }
 
   const company = await prisma.company.findFirst({
     where: {
