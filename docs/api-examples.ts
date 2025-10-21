@@ -2414,3 +2414,1304 @@
  *         description: Détails de l'entreprise
  */
 
+
+
+
+// ============================================================================
+// BUSINESS HOURS API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/business/hours:
+ *   get:
+ *     summary: Horaires d'ouverture
+ *     description: Récupère les horaires d'ouverture de l'entreprise
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Horaires d'ouverture
+ *   put:
+ *     summary: Mettre à jour les horaires
+ *     description: Met à jour les horaires d'ouverture
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               monday:
+ *                 type: object
+ *               tuesday:
+ *                 type: object
+ *               wednesday:
+ *                 type: object
+ *               thursday:
+ *                 type: object
+ *               friday:
+ *                 type: object
+ *               saturday:
+ *                 type: object
+ *               sunday:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Horaires mis à jour
+ */
+
+/**
+ * @swagger
+ * /api/business/hours/special:
+ *   get:
+ *     summary: Horaires exceptionnels
+ *     description: Récupère les horaires exceptionnels (jours fériés, etc.)
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Horaires exceptionnels
+ *   post:
+ *     summary: Ajouter un horaire exceptionnel
+ *     description: Ajoute un horaire exceptionnel
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - date
+ *               - hours
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               hours:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Horaire ajouté
+ */
+
+/**
+ * @swagger
+ * /api/business/hours/special/{id}:
+ *   delete:
+ *     summary: Supprimer un horaire exceptionnel
+ *     description: Supprime un horaire exceptionnel
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Horaire supprimé
+ */
+
+/**
+ * @swagger
+ * /api/business/email-preferences:
+ *   get:
+ *     summary: Préférences email
+ *     description: Récupère les préférences de notification par email
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Préférences email
+ *   put:
+ *     summary: Mettre à jour les préférences
+ *     description: Met à jour les préférences de notification
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               newReviews:
+ *                 type: boolean
+ *               messages:
+ *                 type: boolean
+ *               marketing:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Préférences mises à jour
+ */
+
+/**
+ * @swagger
+ * /api/business/verify-email:
+ *   post:
+ *     summary: Vérifier l'email
+ *     description: Vérifie l'adresse email du propriétaire
+ *     tags: [Business Management]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Email vérifié
+ */
+
+/**
+ * @swagger
+ * /api/business/reviews/{reviewId}/reply:
+ *   post:
+ *     summary: Répondre à un avis
+ *     description: Ajoute une réponse à un avis client
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reply
+ *             properties:
+ *               reply:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Réponse ajoutée
+ */
+
+/**
+ * @swagger
+ * /api/business/reviews/{reviewId}/verify:
+ *   post:
+ *     summary: Vérifier un avis
+ *     description: Marque un avis comme vérifié
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Avis vérifié
+ */
+
+/**
+ * @swagger
+ * /api/business/photos/{photoId}/primary:
+ *   put:
+ *     summary: Définir la photo principale
+ *     description: Définit une photo comme photo principale de l'entreprise
+ *     tags: [Business Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: photoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Photo principale définie
+ */
+
+// ============================================================================
+// COMPANIES EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/companies/my-companies:
+ *   get:
+ *     summary: Mes entreprises
+ *     description: Récupère les entreprises de l'utilisateur connecté
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des entreprises
+ */
+
+/**
+ * @swagger
+ * /api/companies/{id}/content:
+ *   get:
+ *     summary: Contenu de l'entreprise
+ *     description: Récupère le contenu éditorial de l'entreprise
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Contenu de l'entreprise
+ *   put:
+ *     summary: Mettre à jour le contenu
+ *     description: Met à jour le contenu éditorial
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Contenu mis à jour
+ */
+
+/**
+ * @swagger
+ * /api/companies/{id}/hours:
+ *   get:
+ *     summary: Horaires d'une entreprise
+ *     description: Récupère les horaires d'ouverture d'une entreprise
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Horaires d'ouverture
+ */
+
+/**
+ * @swagger
+ * /api/companies/{id}/photos:
+ *   get:
+ *     summary: Photos d'une entreprise
+ *     description: Récupère toutes les photos d'une entreprise
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Liste des photos
+ */
+
+// ============================================================================
+// REVIEWS EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/reviews/{reviewId}/report:
+ *   post:
+ *     summary: Signaler un avis
+ *     description: Signale un avis inapproprié
+ *     tags: [Reviews]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reason
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 enum: [spam, inappropriate, fake, offensive]
+ *               details:
+ *                 type: string
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Signalement enregistré
+ */
+
+/**
+ * @swagger
+ * /api/reviews/{reviewId}/vote:
+ *   post:
+ *     summary: Voter pour un avis
+ *     description: Vote pour un avis (utile/pas utile)
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - vote
+ *             properties:
+ *               vote:
+ *                 type: string
+ *                 enum: [helpful, not_helpful]
+ *     responses:
+ *       200:
+ *         description: Vote enregistré
+ */
+
+// ============================================================================
+// PROFILES API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/profiles/{id}:
+ *   get:
+ *     summary: Profil public
+ *     description: Récupère le profil public d'une entreprise
+ *     tags: [Profiles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Profil de l'entreprise
+ */
+
+/**
+ * @swagger
+ * /api/profiles/{id}/hours:
+ *   get:
+ *     summary: Horaires du profil
+ *     description: Récupère les horaires d'un profil public
+ *     tags: [Profiles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Horaires
+ */
+
+/**
+ * @swagger
+ * /api/profiles/{id}/reviews:
+ *   get:
+ *     summary: Avis du profil
+ *     description: Récupère les avis d'un profil public
+ *     tags: [Profiles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Liste des avis
+ */
+
+/**
+ * @swagger
+ * /api/profiles/{id}/services:
+ *   get:
+ *     summary: Services du profil
+ *     description: Récupère les services d'un profil public
+ *     tags: [Profiles]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Liste des services
+ */
+
+// ============================================================================
+// SEARCH EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/search/suggestions:
+ *   get:
+ *     summary: Suggestions de recherche
+ *     description: Obtient des suggestions de recherche en temps réel
+ *     tags: [Search]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Suggestions de recherche
+ */
+
+// ============================================================================
+// SUBSCRIPTIONS EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/subscriptions/{companyId}:
+ *   get:
+ *     summary: Abonnement d'une entreprise
+ *     description: Récupère l'abonnement actif d'une entreprise
+ *     tags: [Subscriptions]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: companyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails de l'abonnement
+ */
+
+// ============================================================================
+// STRIPE EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/stripe/subscription:
+ *   get:
+ *     summary: Abonnement Stripe
+ *     description: Récupère les détails de l'abonnement Stripe
+ *     tags: [Subscriptions]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Détails de l'abonnement
+ *   post:
+ *     summary: Créer un abonnement
+ *     description: Crée un nouvel abonnement Stripe
+ *     tags: [Subscriptions]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - priceId
+ *             properties:
+ *               priceId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Abonnement créé
+ */
+
+/**
+ * @swagger
+ * /api/stripe/webhook:
+ *   post:
+ *     summary: Webhook Stripe
+ *     description: Endpoint pour recevoir les événements Stripe
+ *     tags: [Subscriptions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Événement traité
+ */
+
+/**
+ * @swagger
+ * /api/webhooks/stripe:
+ *   post:
+ *     summary: Webhook Stripe (alternatif)
+ *     description: Endpoint alternatif pour les webhooks Stripe
+ *     tags: [Subscriptions]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Événement traité
+ */
+
+// ============================================================================
+// FEATURED LISTING API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/featured-listing/purchase:
+ *   post:
+ *     summary: Acheter une mise en avant
+ *     description: Achète une mise en avant pour une entreprise
+ *     tags: [Subscriptions]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - companyId
+ *               - duration
+ *             properties:
+ *               companyId:
+ *                 type: string
+ *               duration:
+ *                 type: integer
+ *                 description: Durée en jours
+ *     responses:
+ *       200:
+ *         description: Achat effectué
+ */
+
+// ============================================================================
+// CHECKOUT API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/checkout/create-session:
+ *   post:
+ *     summary: Créer une session de paiement
+ *     description: Crée une session de paiement pour le checkout
+ *     tags: [Billing]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Session créée
+ */
+
+// ============================================================================
+// CART EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/cart/{itemId}:
+ *   delete:
+ *     summary: Retirer du panier
+ *     description: Retire un article du panier
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Article retiré
+ */
+
+// ============================================================================
+// PRODUCTS EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/products/{productId}:
+ *   get:
+ *     summary: Détails d'un produit
+ *     description: Récupère les détails d'un produit
+ *     tags: [E-commerce]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails du produit
+ *   put:
+ *     summary: Mettre à jour un produit
+ *     description: Met à jour les informations d'un produit
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Produit mis à jour
+ *   delete:
+ *     summary: Supprimer un produit
+ *     description: Supprime un produit
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Produit supprimé
+ */
+
+// ============================================================================
+// ORDERS EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/orders/{orderId}:
+ *   get:
+ *     summary: Détails d'une commande
+ *     description: Récupère les détails d'une commande
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails de la commande
+ */
+
+// ============================================================================
+// BOOKINGS EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/bookings/{bookingId}:
+ *   get:
+ *     summary: Détails d'une réservation
+ *     description: Récupère les détails d'une réservation
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails de la réservation
+ *   put:
+ *     summary: Modifier une réservation
+ *     description: Modifie une réservation existante
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Réservation modifiée
+ *   delete:
+ *     summary: Annuler une réservation
+ *     description: Annule une réservation
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Réservation annulée
+ */
+
+// ============================================================================
+// REFERRALS EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/referrals/{businessOwnerId}:
+ *   get:
+ *     summary: Statistiques de parrainage
+ *     description: Récupère les statistiques de parrainage d'un propriétaire
+ *     tags: [Marketing]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: businessOwnerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Statistiques de parrainage
+ */
+
+/**
+ * @swagger
+ * /api/referrals/validate:
+ *   post:
+ *     summary: Valider un code de parrainage
+ *     description: Valide un code de parrainage
+ *     tags: [Marketing]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Code valide
+ */
+
+// ============================================================================
+// MARKETING EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/marketing/lead-scores:
+ *   get:
+ *     summary: Scores de leads
+ *     description: Récupère les scores de leads marketing
+ *     tags: [Marketing]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Scores de leads
+ */
+
+/**
+ * @swagger
+ * /api/marketing/segments:
+ *   get:
+ *     summary: Segments marketing
+ *     description: Récupère les segments de clients
+ *     tags: [Marketing]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Segments
+ */
+
+/**
+ * @swagger
+ * /api/marketing/templates:
+ *   get:
+ *     summary: Templates marketing
+ *     description: Récupère les templates d'emails marketing
+ *     tags: [Marketing]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Templates
+ */
+
+// ============================================================================
+// MOBILE EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/mobile/auth/refresh:
+ *   post:
+ *     summary: Rafraîchir le token mobile
+ *     description: Rafraîchit le token d'authentification mobile
+ *     tags: [Mobile]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Nouveau token
+ */
+
+/**
+ * @swagger
+ * /api/mobile/profile:
+ *   get:
+ *     summary: Profil mobile
+ *     description: Récupère le profil utilisateur mobile
+ *     tags: [Mobile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profil utilisateur
+ *   put:
+ *     summary: Mettre à jour le profil mobile
+ *     description: Met à jour le profil utilisateur mobile
+ *     tags: [Mobile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Profil mis à jour
+ */
+
+/**
+ * @swagger
+ * /api/mobile/analytics/{companyId}:
+ *   get:
+ *     summary: Analytics mobile
+ *     description: Récupère les analytics d'une entreprise pour mobile
+ *     tags: [Mobile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: companyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Analytics mobile
+ */
+
+// ============================================================================
+// AI EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/ai/chatbot:
+ *   post:
+ *     summary: Chatbot IA
+ *     description: Interagit avec le chatbot IA
+ *     tags: [AI/ML]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Réponse du chatbot
+ */
+
+/**
+ * @swagger
+ * /api/ai/analyze-company:
+ *   post:
+ *     summary: Analyser une entreprise
+ *     description: Analyse une entreprise avec l'IA
+ *     tags: [AI/ML]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - companyId
+ *             properties:
+ *               companyId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Analyse de l'entreprise
+ */
+
+/**
+ * @swagger
+ * /api/ai/analyze-review:
+ *   post:
+ *     summary: Analyser un avis
+ *     description: Analyse un avis avec l'IA
+ *     tags: [AI/ML]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reviewText
+ *             properties:
+ *               reviewText:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Analyse de l'avis
+ */
+
+/**
+ * @swagger
+ * /api/ai/insights:
+ *   get:
+ *     summary: Insights IA
+ *     description: Obtient des insights générés par l'IA
+ *     tags: [AI/ML]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: companyId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Insights IA
+ */
+
+/**
+ * @swagger
+ * /api/ai/analytics-insights:
+ *   get:
+ *     summary: Insights analytiques
+ *     description: Obtient des insights analytiques générés par l'IA
+ *     tags: [AI/ML]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Insights analytiques
+ */
+
+/**
+ * @swagger
+ * /api/ai/generate-review-response:
+ *   post:
+ *     summary: Générer une réponse à un avis
+ *     description: Génère automatiquement une réponse à un avis
+ *     tags: [AI/ML]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reviewText
+ *             properties:
+ *               reviewText:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Réponse générée
+ */
+
+/**
+ * @swagger
+ * /api/ai/review-response:
+ *   post:
+ *     summary: Réponse automatique aux avis
+ *     description: Génère une réponse automatique personnalisée
+ *     tags: [AI/ML]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reviewId
+ *             properties:
+ *               reviewId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Réponse générée
+ */
+
+/**
+ * @swagger
+ * /api/ai/search-suggestions:
+ *   get:
+ *     summary: Suggestions de recherche IA
+ *     description: Obtient des suggestions de recherche intelligentes
+ *     tags: [AI/ML]
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Suggestions
+ */
+
+/**
+ * @swagger
+ * /api/ai/optimize-search:
+ *   post:
+ *     summary: Optimiser la recherche
+ *     description: Optimise une requête de recherche avec l'IA
+ *     tags: [AI/ML]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - query
+ *             properties:
+ *               query:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Recherche optimisée
+ */
+
+/**
+ * @swagger
+ * /api/ai/seo-content:
+ *   post:
+ *     summary: Contenu SEO IA
+ *     description: Génère du contenu SEO optimisé
+ *     tags: [AI/ML]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - topic
+ *             properties:
+ *               topic:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Contenu SEO généré
+ */
+
+// ============================================================================
+// DOMAINS EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/domains/{id}:
+ *   get:
+ *     summary: Détails d'un domaine
+ *     description: Récupère les détails d'un domaine
+ *     tags: [Domains]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails du domaine
+ *   put:
+ *     summary: Mettre à jour un domaine
+ *     description: Met à jour la configuration d'un domaine
+ *     tags: [Domains]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Domaine mis à jour
+ *   delete:
+ *     summary: Supprimer un domaine
+ *     description: Supprime un domaine
+ *     tags: [Domains]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Domaine supprimé
+ */
+
+// ============================================================================
+// DEVELOPER EXTENDED API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/developer/docs:
+ *   get:
+ *     summary: Documentation développeur
+ *     description: Récupère la documentation de l'API
+ *     tags: [Developer]
+ *     responses:
+ *       200:
+ *         description: Documentation
+ */
+
