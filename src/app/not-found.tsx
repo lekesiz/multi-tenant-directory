@@ -63,13 +63,13 @@ export default async function NotFound() {
               Catégories Populaires
             </h2>
             <div className="flex flex-wrap gap-3 justify-center">
-              {[
-                { name: 'Restaurant', icon: '🍽️', href: '/categories/restaurant' },
-                { name: 'Plombier', icon: '🔧', href: '/categories/plombier' },
-                { name: 'Coiffeur', icon: '💇', href: '/categories/coiffeur' },
-                { name: 'Garage', icon: '🚗', href: '/categories/garage' },
-                { name: 'Médecin', icon: '⚕️', href: '/categories/medecin' },
-              ].map((category) => (
+              {
+                { name: 'Restaurant', icon: '🍽️', href: '/categories/Restaurant' },
+                { name: 'Boulangerie', icon: '🥖', href: '/categories/Boulangerie' },
+                { name: 'Pâtisserie', icon: '🍰', href: '/categories/Pâtisserie' },
+                { name: 'Garage', icon: '🚗', href: '/categories/Garage' },
+                { name: 'Santé', icon: '⚕️', href: '/categories/Santé' },
+              ].map((category) => ((
                 <Link
                   key={category.name}
                   href={category.href}
