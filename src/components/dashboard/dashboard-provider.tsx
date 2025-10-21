@@ -113,7 +113,7 @@ export function DashboardProvider({ children, initialTenant }: DashboardProvider
         }),
       });
     } catch (error) {
-      logger.warn('Failed to track event:', error);
+      logger.warn('Failed to track event', { error });
     }
   };
 
