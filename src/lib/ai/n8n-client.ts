@@ -5,6 +5,8 @@
  * Used for AI orchestration and automation workflows
  */
 
+import { logger } from '@/lib/logger';
+
 export interface N8nWorkflow {
   id: string;
   name: string;
