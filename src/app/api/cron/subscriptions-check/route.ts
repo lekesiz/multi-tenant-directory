@@ -224,7 +224,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     results.renewalRemindersSent = await sendRenewalReminders();
     results.reactivatedCount = await checkForReactivation();
 
-    logger.info('✅ Subscription lifecycle check completed:', results);
+    logger.info('✅ Subscription lifecycle check completed', { results });
 
     return NextResponse.json(
       {

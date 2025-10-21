@@ -71,14 +71,14 @@ export async function POST(
       city: company.city || undefined,
     };
 
-    logger.info('🎨 Generating cover image for:', company.name);
+    logger.info('🎨 Generating cover image for: ' + company.name);
 
     // Try to generate image using Replicate (Flux model)
     let imageUrl = await generateCoverImage(imageParams);
 
     // Fallback to Unsplash if generation fails
     if (!imageUrl) {
-      logger.info('⚠️ Replicate failed, trying Unsplash fallback...');
+      logger.info('⚠️ Replicate failed, trying Unsplash fallback');
       imageUrl = await generateCoverImageFallback(imageParams);
     }
 
@@ -100,7 +100,7 @@ export async function POST(
       },
     });
 
-    logger.info('✅ Cover image generated and saved for:', company.name);
+    logger.info('✅ Cover image generated and saved for: ' + company.name);
 
     return NextResponse.json({
       success: true,

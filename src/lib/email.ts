@@ -72,7 +72,7 @@ export async function sendEmail({
       html,
     });
 
-    logger.info('✅ Email sent successfully:', data);
+    logger.info('✅ Email sent successfully', { data });
     return { success: true, data };
   } catch (error) {
     logger.error('❌ Email error:', error);

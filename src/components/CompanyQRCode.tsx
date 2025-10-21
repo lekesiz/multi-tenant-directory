@@ -68,7 +68,7 @@ export default function CompanyQRCode({
         });
       } catch (err) {
         // User cancelled or share failed
-        logger.info('Share cancelled or failed:', err);
+        logger.info('Share cancelled or failed', { error: err });
       }
     } else {
       // Fallback: copy URL to clipboard

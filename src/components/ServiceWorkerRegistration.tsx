@@ -18,7 +18,7 @@ export default function ServiceWorkerRegistration() {
       navigator.serviceWorker
         .register('/sw.js', { scope: '/' })
         .then((registration) => {
-          logger.info('[SW] Service Worker registered successfully:', registration.scope);
+          logger.info('[SW] Service Worker registered successfully', { scope: registration.scope });
 
           // Check for updates periodically
           registration.addEventListener('updatefound', () => {
@@ -56,7 +56,7 @@ export default function ServiceWorkerRegistration() {
 
       // Listen for messages from service worker
       navigator.serviceWorker.addEventListener('message', (event) => {
-        logger.info('[SW] Message from service worker:', event.data);
+        logger.info('[SW] Message from service worker', { data: event.data });
 
         if (event.data.type === 'CACHE_UPDATED') {
           logger.info('[SW] Cache has been updated');

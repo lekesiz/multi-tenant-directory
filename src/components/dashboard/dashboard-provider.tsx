@@ -203,7 +203,7 @@ export function useRealTimeUpdates(tenantId: string) {
           break;
         
         default:
-          logger.info('Unknown real-time event:', data);
+          logger.info('Unknown real-time event', { data });
       }
     };
 

@@ -16,7 +16,7 @@ export default function StructuredData(props: StructuredDataProps) {
   useEffect(() => {
     // Log structured data for debugging
     if (process.env.NODE_ENV === 'development') {
-      logger.info('📊 Structured Data:', JSON.parse(jsonLd));
+      logger.info('📊 Structured Data', { data: JSON.parse(jsonLd) });
     }
   }, [jsonLd]);
 

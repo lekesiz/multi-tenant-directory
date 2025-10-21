@@ -7,7 +7,7 @@ export function WebVitals() {
   useReportWebVitals((metric) => {
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      logger.info('[Web Vitals]', metric);
+      logger.info('[Web Vitals]', { metric });
     }
 
     // Send to analytics in production

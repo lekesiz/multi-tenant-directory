@@ -120,7 +120,7 @@ async function handleCheckoutSessionCompleted(session: any) {
     // Track referral conversion if user was referred
     try {
       await trackReferralConversion(businessOwnerId);
-      logger.info('✅ Referral conversion tracked for business owner:', businessOwnerId);
+      logger.info('✅ Referral conversion tracked for business owner', { businessOwnerId });
     } catch (error) {
       logger.error('⚠️ Error tracking referral conversion:', error);
       // Don't fail the webhook if referral tracking fails
