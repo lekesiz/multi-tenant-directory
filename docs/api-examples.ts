@@ -742,3 +742,599 @@
  *                   example: 1.0.0
  */
 
+
+
+// ============================================================================
+// ADMIN API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/admin/users:
+ *   post:
+ *     summary: Créer un nouvel administrateur
+ *     description: Crée un nouvel utilisateur avec un rôle administrateur (admin ou super_admin)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - role
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nom complet de l'administrateur
+ *                 example: "Jean Dupont"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Adresse email
+ *                 example: "admin@example.com"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 8
+ *                 description: Mot de passe (minimum 8 caractères)
+ *                 example: "SecurePass123!"
+ *               role:
+ *                 type: string
+ *                 enum: [admin, super_admin]
+ *                 description: Rôle de l'administrateur
+ *                 example: "admin"
+ *     responses:
+ *       201:
+ *         description: Administrateur créé avec succès
+ *       400:
+ *         description: Données invalides
+ *       401:
+ *         description: Non autorisé
+ *       409:
+ *         description: L'utilisateur existe déjà
+ */
+
+/**
+ * @swagger
+ * /api/admin/categories:
+ *   get:
+ *     summary: Liste des catégories
+ *     description: Récupère toutes les catégories d'entreprises
+ *     tags: [Admin]
+ *     responses:
+ *       200:
+ *         description: Liste des catégories
+ *   post:
+ *     summary: Créer une catégorie
+ *     description: Crée une nouvelle catégorie d'entreprise
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - googleCategory
+ *               - frenchName
+ *             properties:
+ *               googleCategory:
+ *                 type: string
+ *                 example: "restaurant"
+ *               frenchName:
+ *                 type: string
+ *                 example: "Restaurant"
+ *               icon:
+ *                 type: string
+ *                 example: "🍽️"
+ *     responses:
+ *       201:
+ *         description: Catégorie créée
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/categories/{id}:
+ *   put:
+ *     summary: Mettre à jour une catégorie
+ *     description: Met à jour les informations d'une catégorie
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               googleCategory:
+ *                 type: string
+ *               frenchName:
+ *                 type: string
+ *               icon:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Catégorie mise à jour
+ *       401:
+ *         description: Non autorisé
+ *   delete:
+ *     summary: Supprimer une catégorie
+ *     description: Supprime une catégorie d'entreprise
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Catégorie supprimée
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/reviews:
+ *   get:
+ *     summary: Liste des avis (admin)
+ *     description: Récupère tous les avis pour modération
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, approved, rejected]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Liste des avis
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/reviews/sync:
+ *   post:
+ *     summary: Synchroniser tous les avis Google
+ *     description: Lance la synchronisation des avis Google pour toutes les entreprises
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Synchronisation lancée
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/companies/{id}/status:
+ *   put:
+ *     summary: Changer le statut d'une entreprise
+ *     description: Active ou désactive une entreprise
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isActive
+ *             properties:
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Statut mis à jour
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/companies/{id}/sync-reviews:
+ *   post:
+ *     summary: Synchroniser les avis d'une entreprise
+ *     description: Synchronise les avis Google pour une entreprise spécifique
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Avis synchronisés
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/companies/generate-description:
+ *   post:
+ *     summary: Générer une description avec AI
+ *     description: Génère une description d'entreprise en utilisant l'intelligence artificielle
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - companyName
+ *               - category
+ *             properties:
+ *               companyName:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               additionalInfo:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Description générée
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/companies/{id}/generate-cover-image:
+ *   post:
+ *     summary: Générer une image de couverture
+ *     description: Génère une image de couverture pour une entreprise
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Image générée
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/domains/{id}/seo:
+ *   put:
+ *     summary: Mettre à jour le SEO d'un domaine
+ *     description: Met à jour les métadonnées SEO d'un domaine
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               siteTitle:
+ *                 type: string
+ *               siteDescription:
+ *                 type: string
+ *               keywords:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: SEO mis à jour
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/legal-pages:
+ *   get:
+ *     summary: Liste des pages légales
+ *     description: Récupère toutes les pages légales (CGU, CGV, etc.)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des pages légales
+ *       401:
+ *         description: Non autorisé
+ *   post:
+ *     summary: Créer une page légale
+ *     description: Crée une nouvelle page légale
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *               - content
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [cgu, cgv, privacy, mentions]
+ *               content:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Page créée
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/legal-pages/{id}:
+ *   put:
+ *     summary: Mettre à jour une page légale
+ *     description: Met à jour le contenu d'une page légale
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Page mise à jour
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/inquiries/{id}:
+ *   get:
+ *     summary: Détails d'une demande de contact
+ *     description: Récupère les détails d'une demande de contact
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails de la demande
+ *       401:
+ *         description: Non autorisé
+ *   put:
+ *     summary: Mettre à jour le statut d'une demande
+ *     description: Change le statut d'une demande de contact
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, in_progress, resolved, closed]
+ *     responses:
+ *       200:
+ *         description: Statut mis à jour
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/subscriptions:
+ *   get:
+ *     summary: Liste des abonnements
+ *     description: Récupère tous les abonnements actifs et inactifs
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive, cancelled]
+ *       - in: query
+ *         name: plan
+ *         schema:
+ *           type: string
+ *           enum: [basic, pro, enterprise]
+ *     responses:
+ *       200:
+ *         description: Liste des abonnements
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/business-owners/{id}:
+ *   get:
+ *     summary: Détails d'un propriétaire d'entreprise
+ *     description: Récupère les informations détaillées d'un propriétaire
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails du propriétaire
+ *       401:
+ *         description: Non autorisé
+ *   put:
+ *     summary: Mettre à jour un propriétaire
+ *     description: Met à jour les informations d'un propriétaire d'entreprise
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isVerified:
+ *                 type: boolean
+ *               status:
+ *                 type: string
+ *                 enum: [active, suspended, banned]
+ *     responses:
+ *       200:
+ *         description: Propriétaire mis à jour
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/sitemap/generate:
+ *   post:
+ *     summary: Générer le sitemap
+ *     description: Génère le fichier sitemap.xml pour tous les domaines
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sitemap généré
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/sitemap/stats:
+ *   get:
+ *     summary: Statistiques du sitemap
+ *     description: Récupère les statistiques de génération du sitemap
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statistiques du sitemap
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/admin/sync-all-reviews:
+ *   post:
+ *     summary: Synchroniser tous les avis
+ *     description: Lance la synchronisation des avis pour toutes les entreprises
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Synchronisation lancée
+ *       401:
+ *         description: Non autorisé
+ */
+
