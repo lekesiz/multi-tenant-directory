@@ -1338,3 +1338,1079 @@
  *         description: Non autorisé
  */
 
+
+
+
+// ============================================================================
+// ANALYTICS API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/analytics/ecommerce:
+ *   post:
+ *     summary: Suivre les événements e-commerce
+ *     description: Enregistre les événements e-commerce (vues, clics, achats)
+ *     tags: [Analytics]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - event
+ *               - data
+ *             properties:
+ *               event:
+ *                 type: string
+ *                 enum: [view, click, purchase]
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Événement enregistré
+ */
+
+/**
+ * @swagger
+ * /api/analytics/vitals:
+ *   post:
+ *     summary: Enregistrer les Core Web Vitals
+ *     description: Enregistre les métriques de performance (LCP, FID, CLS)
+ *     tags: [Analytics]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               lcp:
+ *                 type: number
+ *               fid:
+ *                 type: number
+ *               cls:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Métriques enregistrées
+ */
+
+/**
+ * @swagger
+ * /api/companies/{id}/analytics:
+ *   get:
+ *     summary: Statistiques d'une entreprise
+ *     description: Récupère les statistiques détaillées d'une entreprise
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [7d, 30d, 90d, 1y]
+ *           default: 30d
+ *     responses:
+ *       200:
+ *         description: Statistiques de l'entreprise
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/business/analytics:
+ *   get:
+ *     summary: Tableau de bord analytique
+ *     description: Récupère les analytics du propriétaire d'entreprise
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [7d, 30d, 90d, 1y]
+ *     responses:
+ *       200:
+ *         description: Données analytiques
+ *       401:
+ *         description: Non autorisé
+ */
+
+// ============================================================================
+// AI/ML API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/ai/chat:
+ *   post:
+ *     summary: Chat avec l'assistant IA
+ *     description: Envoie un message à l'assistant IA et reçoit une réponse
+ *     tags: [AI/ML]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *               context:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Réponse de l'IA
+ */
+
+/**
+ * @swagger
+ * /api/ai/analyze-sentiment:
+ *   post:
+ *     summary: Analyser le sentiment d'un texte
+ *     description: Analyse le sentiment (positif/négatif/neutre) d'un texte
+ *     tags: [AI/ML]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - text
+ *             properties:
+ *               text:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Résultat de l'analyse
+ */
+
+/**
+ * @swagger
+ * /api/ai/generate-description:
+ *   post:
+ *     summary: Générer une description
+ *     description: Génère une description optimisée pour une entreprise
+ *     tags: [AI/ML]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - companyName
+ *               - category
+ *             properties:
+ *               companyName:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Description générée
+ *       401:
+ *         description: Non autorisé
+ */
+
+/**
+ * @swagger
+ * /api/ai/recommendations:
+ *   get:
+ *     summary: Recommandations personnalisées
+ *     description: Obtient des recommandations d'entreprises basées sur l'IA
+ *     tags: [AI/ML]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Liste de recommandations
+ */
+
+/**
+ * @swagger
+ * /api/ai/generate-seo-content:
+ *   post:
+ *     summary: Générer du contenu SEO
+ *     description: Génère du contenu optimisé pour le référencement
+ *     tags: [AI/ML]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - keywords
+ *             properties:
+ *               keywords:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Contenu SEO généré
+ */
+
+// ============================================================================
+// MOBILE API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/mobile/auth/login:
+ *   post:
+ *     summary: Connexion mobile
+ *     description: Authentifie un utilisateur mobile
+ *     tags: [Mobile]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token d'authentification
+ */
+
+/**
+ * @swagger
+ * /api/mobile/config:
+ *   get:
+ *     summary: Configuration mobile
+ *     description: Récupère la configuration de l'application mobile
+ *     tags: [Mobile]
+ *     responses:
+ *       200:
+ *         description: Configuration de l'app
+ */
+
+/**
+ * @swagger
+ * /api/mobile/companies/{companyId}:
+ *   get:
+ *     summary: Détails entreprise (mobile)
+ *     description: Récupère les détails d'une entreprise optimisés pour mobile
+ *     tags: [Mobile]
+ *     parameters:
+ *       - in: path
+ *         name: companyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails de l'entreprise
+ */
+
+/**
+ * @swagger
+ * /api/mobile/notifications/send:
+ *   post:
+ *     summary: Envoyer une notification push
+ *     description: Envoie une notification push aux utilisateurs mobiles
+ *     tags: [Mobile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - body
+ *             properties:
+ *               title:
+ *                 type: string
+ *               body:
+ *                 type: string
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Notification envoyée
+ */
+
+// ============================================================================
+// DEVELOPER API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/developer/api-keys:
+ *   get:
+ *     summary: Liste des clés API
+ *     description: Récupère toutes les clés API du développeur
+ *     tags: [Developer]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des clés API
+ *   post:
+ *     summary: Créer une clé API
+ *     description: Génère une nouvelle clé API
+ *     tags: [Developer]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               permissions:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Clé API créée
+ */
+
+/**
+ * @swagger
+ * /api/developer/api-keys/{keyId}:
+ *   delete:
+ *     summary: Supprimer une clé API
+ *     description: Révoque une clé API existante
+ *     tags: [Developer]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: keyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Clé API supprimée
+ */
+
+/**
+ * @swagger
+ * /api/developer/webhooks:
+ *   get:
+ *     summary: Liste des webhooks
+ *     description: Récupère tous les webhooks configurés
+ *     tags: [Developer]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des webhooks
+ *   post:
+ *     summary: Créer un webhook
+ *     description: Configure un nouveau webhook
+ *     tags: [Developer]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *               - events
+ *             properties:
+ *               url:
+ *                 type: string
+ *               events:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Webhook créé
+ */
+
+/**
+ * @swagger
+ * /api/developer/webhooks/{webhookId}/test:
+ *   post:
+ *     summary: Tester un webhook
+ *     description: Envoie un événement de test au webhook
+ *     tags: [Developer]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Test envoyé
+ */
+
+// ============================================================================
+// E-COMMERCE API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/products:
+ *   get:
+ *     summary: Liste des produits
+ *     description: Récupère tous les produits disponibles
+ *     tags: [E-commerce]
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Liste des produits
+ *   post:
+ *     summary: Créer un produit
+ *     description: Ajoute un nouveau produit
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - price
+ *             properties:
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Produit créé
+ */
+
+/**
+ * @swagger
+ * /api/cart:
+ *   get:
+ *     summary: Contenu du panier
+ *     description: Récupère le contenu du panier de l'utilisateur
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Contenu du panier
+ *   post:
+ *     summary: Ajouter au panier
+ *     description: Ajoute un produit au panier
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *               - quantity
+ *             properties:
+ *               productId:
+ *                 type: string
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Produit ajouté
+ */
+
+/**
+ * @swagger
+ * /api/orders:
+ *   get:
+ *     summary: Liste des commandes
+ *     description: Récupère toutes les commandes de l'utilisateur
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des commandes
+ *   post:
+ *     summary: Créer une commande
+ *     description: Crée une nouvelle commande
+ *     tags: [E-commerce]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       201:
+ *         description: Commande créée
+ */
+
+// ============================================================================
+// MARKETING API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/marketing/campaigns:
+ *   get:
+ *     summary: Liste des campagnes
+ *     description: Récupère toutes les campagnes marketing
+ *     tags: [Marketing]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des campagnes
+ *   post:
+ *     summary: Créer une campagne
+ *     description: Crée une nouvelle campagne marketing
+ *     tags: [Marketing]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - type
+ *             properties:
+ *               name:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [email, sms, push]
+ *     responses:
+ *       201:
+ *         description: Campagne créée
+ */
+
+/**
+ * @swagger
+ * /api/referrals:
+ *   get:
+ *     summary: Programme de parrainage
+ *     description: Récupère les informations du programme de parrainage
+ *     tags: [Marketing]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Informations de parrainage
+ *   post:
+ *     summary: Créer un lien de parrainage
+ *     description: Génère un nouveau lien de parrainage
+ *     tags: [Marketing]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Lien créé
+ */
+
+// ============================================================================
+// BOOKINGS API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/bookings:
+ *   get:
+ *     summary: Liste des réservations
+ *     description: Récupère toutes les réservations de l'utilisateur
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des réservations
+ *   post:
+ *     summary: Créer une réservation
+ *     description: Crée une nouvelle réservation
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - companyId
+ *               - date
+ *               - time
+ *             properties:
+ *               companyId:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               time:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Réservation créée
+ */
+
+/**
+ * @swagger
+ * /api/bookings/availability:
+ *   get:
+ *     summary: Disponibilités
+ *     description: Vérifie les créneaux disponibles pour une entreprise
+ *     tags: [Bookings]
+ *     parameters:
+ *       - in: query
+ *         name: companyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Créneaux disponibles
+ */
+
+// ============================================================================
+// CRON JOBS API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/cron/sync-google-reviews:
+ *   get:
+ *     summary: Synchronisation automatique des avis
+ *     description: Tâche planifiée pour synchroniser les avis Google
+ *     tags: [Cron Jobs]
+ *     security:
+ *       - apiKey: []
+ *     responses:
+ *       200:
+ *         description: Synchronisation effectuée
+ */
+
+/**
+ * @swagger
+ * /api/cron/subscriptions-check:
+ *   get:
+ *     summary: Vérification des abonnements
+ *     description: Tâche planifiée pour vérifier les abonnements expirés
+ *     tags: [Cron Jobs]
+ *     security:
+ *       - apiKey: []
+ *     responses:
+ *       200:
+ *         description: Vérification effectuée
+ */
+
+// ============================================================================
+// BILLING & PAYMENTS API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/billing/create-checkout:
+ *   post:
+ *     summary: Créer une session de paiement
+ *     description: Crée une session Stripe Checkout
+ *     tags: [Billing]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - priceId
+ *             properties:
+ *               priceId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Session créée
+ */
+
+/**
+ * @swagger
+ * /api/billing/portal:
+ *   post:
+ *     summary: Portail de facturation
+ *     description: Crée une session pour le portail de facturation Stripe
+ *     tags: [Billing]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: URL du portail
+ */
+
+/**
+ * @swagger
+ * /api/plans:
+ *   get:
+ *     summary: Plans d'abonnement
+ *     description: Récupère tous les plans d'abonnement disponibles
+ *     tags: [Billing]
+ *     responses:
+ *       200:
+ *         description: Liste des plans
+ */
+
+// ============================================================================
+// UPLOAD & MEDIA API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/upload:
+ *   post:
+ *     summary: Télécharger un fichier
+ *     description: Upload un fichier (image, document)
+ *     tags: [Media]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Fichier uploadé
+ */
+
+/**
+ * @swagger
+ * /api/business/photos:
+ *   get:
+ *     summary: Photos de l'entreprise
+ *     description: Récupère toutes les photos de l'entreprise
+ *     tags: [Media]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des photos
+ *   post:
+ *     summary: Ajouter une photo
+ *     description: Ajoute une nouvelle photo à l'entreprise
+ *     tags: [Media]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - photo
+ *             properties:
+ *               photo:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Photo ajoutée
+ */
+
+// ============================================================================
+// DOMAINS API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/domains:
+ *   get:
+ *     summary: Liste des domaines
+ *     description: Récupère tous les domaines configurés
+ *     tags: [Domains]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des domaines
+ *   post:
+ *     summary: Ajouter un domaine
+ *     description: Configure un nouveau domaine
+ *     tags: [Domains]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - domain
+ *             properties:
+ *               domain:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Domaine ajouté
+ */
+
+// ============================================================================
+// GOOGLE MAPS API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/google-maps/search:
+ *   get:
+ *     summary: Rechercher sur Google Maps
+ *     description: Recherche des entreprises via l'API Google Maps
+ *     tags: [Google Maps]
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: location
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Résultats de recherche
+ */
+
+/**
+ * @swagger
+ * /api/google-maps/place/{placeId}:
+ *   get:
+ *     summary: Détails d'un lieu Google
+ *     description: Récupère les détails d'un lieu via son Place ID
+ *     tags: [Google Maps]
+ *     parameters:
+ *       - in: path
+ *         name: placeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails du lieu
+ */
+
+// ============================================================================
+// DASHBOARD API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/dashboard/layout:
+ *   get:
+ *     summary: Configuration du tableau de bord
+ *     description: Récupère la configuration du layout du dashboard
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Configuration du layout
+ *   put:
+ *     summary: Mettre à jour le layout
+ *     description: Sauvegarde la configuration du dashboard
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Layout mis à jour
+ */
+
+/**
+ * @swagger
+ * /api/dashboard/widget-data:
+ *   get:
+ *     summary: Données des widgets
+ *     description: Récupère les données pour les widgets du dashboard
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: widgets
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *     responses:
+ *       200:
+ *         description: Données des widgets
+ */
+
+// ============================================================================
+// USER & PROFILE API ENDPOINTS
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/user/company:
+ *   get:
+ *     summary: Entreprises de l'utilisateur
+ *     description: Récupère les entreprises liées à l'utilisateur
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des entreprises
+ */
+
+/**
+ * @swagger
+ * /api/unsubscribe:
+ *   post:
+ *     summary: Se désabonner
+ *     description: Désabonnement des emails marketing
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Désabonnement effectué
+ */
+
+// ============================================================================
+// VERSIONED API (v1)
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/v1/companies:
+ *   get:
+ *     summary: Liste des entreprises (API v1)
+ *     description: Version 1 de l'API - Liste des entreprises
+ *     tags: [API v1]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Liste des entreprises
+ */
+
+/**
+ * @swagger
+ * /api/v1/companies/{companyId}:
+ *   get:
+ *     summary: Détails entreprise (API v1)
+ *     description: Version 1 de l'API - Détails d'une entreprise
+ *     tags: [API v1]
+ *     parameters:
+ *       - in: path
+ *         name: companyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Détails de l'entreprise
+ */
+
