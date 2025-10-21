@@ -415,6 +415,7 @@ export default async function CompanyDetailPage({
               totalReviews={company.reviewCount}
               googleRating={company.rating}
               googlePlaceId={company.googlePlaceId}
+              ratingDistribution={company.ratingDistribution as Record<string, number> | null}
             />
 
             {/* Contact Form */}

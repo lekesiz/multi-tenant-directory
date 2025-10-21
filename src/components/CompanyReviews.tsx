@@ -20,12 +20,13 @@ interface CompanyReviewsProps {
   totalReviews?: number;
   googleRating?: number | null;
   googlePlaceId?: string | null;
+  ratingDistribution?: Record<string, number> | null;
 }
 
 type SortOption = 'recent' | 'oldest' | 'highest' | 'lowest';
 type FilterOption = 'all' | 'google' | 'manual';
 
-export default function CompanyReviews({ companyId, companyName, totalReviews, googleRating, googlePlaceId }: CompanyReviewsProps) {
+export default function CompanyReviews({ companyId, companyName, totalReviews, googleRating, googlePlaceId, ratingDistribution }: CompanyReviewsProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -81,14 +82,26 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
 
     const total = reviews.length;
     const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / total;
-    const distribution = [5, 4, 3, 2, 1].map((star) => ({
-      star,
-      count: reviews.filter((r) => r.rating === star).length,
-      percentage: (reviews.filter((r) => r.rating === star).length / total) * 100,
-    }));
+    
+    // Use Google's rating distribution if available, otherwise calculate from local reviews
+    let distribution;
+    if (ratingDistribution && Object.keys(ratingDistribution).length > 0) {
+      const totalDistribution = Object.values(ratingDistribution).reduce((sum, count) => sum + count, 0);
+      distribution = [5, 4, 3, 2, 1].map((star) => ({
+        star,
+        count: ratingDistribution[star.toString()] || 0,
+        percentage: totalDistribution > 0 ? ((ratingDistribution[star.toString()] || 0) / totalDistribution) * 100 : 0,
+      }));
+    } else {
+      distribution = [5, 4, 3, 2, 1].map((star) => ({
+        star,
+        count: reviews.filter((r) => r.rating === star).length,
+        percentage: (reviews.filter((r) => r.rating === star).length / total) * 100,
+      }));
+    }
 
     return { total, avgRating, distribution };
-  }, [reviews]);
+  }, [reviews, ratingDistribution]);
 
   // Filter and sort reviews
   const filteredAndSortedReviews = useMemo(() => {

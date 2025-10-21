@@ -48,6 +48,7 @@ model Company {
   updatedAt            DateTime             @updatedAt
   rating               Float?
   reviewCount          Int                  @default(0)
+  ratingDistribution   Json?                // Google's rating distribution: {"5": 350, "4": 80, "3": 30, "2": 10, "1": 6}
   isActive             Boolean              @default(true)
   cancelAtPeriodEnd    Boolean              @default(false)
   currentPeriodEnd     DateTime?
