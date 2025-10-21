@@ -32,7 +32,7 @@ class Logger {
     const formattedMessage = this.formatMessage('info', message, context);
     
     if (this.isDevelopment) {
-      logger.info(formattedMessage);
+      console.info(formattedMessage);
     }
     
     // In production: send to logging service (never console.log)
@@ -49,7 +49,7 @@ class Logger {
    */
   warn(message: string, context?: LogContext) {
     if (this.isDevelopment) {
-      logger.warn(this.formatMessage('warn', message, context));
+      console.warn(this.formatMessage('warn', message, context));
     }
     if (this.isProduction && process.env.SENTRY_DSN) {
       // Sentry.captureMessage(message, 'warning');
@@ -63,10 +63,10 @@ class Logger {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
 
-    logger.error(this.formatMessage('error', message, { ...context, error: errorMessage }));
+    console.error(this.formatMessage('error', message, { ...context, error: errorMessage }));
 
     if (errorStack && this.isDevelopment) {
-      logger.error(errorStack);
+      console.error(errorStack);
     }
 
     // In production: send to error tracking service
@@ -81,7 +81,7 @@ class Logger {
    */
   debug(message: string, context?: LogContext) {
     if (this.isDevelopment) {
-      logger.debug(this.formatMessage('debug', message, context));
+      console.debug(this.formatMessage('debug', message, context));
     }
   }
 
@@ -135,3 +135,4 @@ export const logger = new Logger();
 
 // Export type for external use
 export type { LogLevel, LogContext };
+

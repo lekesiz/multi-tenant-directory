@@ -34,6 +34,7 @@ const SUPPORTED_DOMAINS = [
 const EXCLUDED_PATHS = [
   'companies',
   'api',
+  'docs',
   'auth',
   'admin',
   'business',
@@ -74,6 +75,7 @@ export async function middleware(request: NextRequest) {
     if (pathParts.length === 1) {
       const slug = pathParts[0];
 
+      // Check if the slug is in excluded paths or contains a dot (file extension)
       if (!EXCLUDED_PATHS.includes(slug) && !slug.includes('.')) {
         const newUrl = url.clone();
         newUrl.pathname = `/companies/${slug}`;
