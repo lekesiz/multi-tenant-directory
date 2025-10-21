@@ -240,6 +240,12 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
                       </span>
                     </div>
                   ))}
+                  {/* Warning if distribution is calculated from few reviews */}
+                  {!ratingDistribution && stats.total < 10 && (
+                    <p className="text-xs text-gray-500 mt-2 italic">
+                      * Distribution calculée à partir des avis affichés
+                    </p>
+                  )}
                 </div>
               </div>
 

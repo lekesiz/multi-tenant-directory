@@ -56,6 +56,14 @@ interface GoogleReview {
   time: number;
 }
 
+export interface RatingDistribution {
+  five_star: number;
+  four_star: number;
+  three_star: number;
+  two_star: number;
+  one_star: number;
+}
+
 /**
  * Search for a place by name and address
  */
@@ -217,12 +225,17 @@ export async function syncCompanyReviews(companyId: number): Promise<{
       }
     }
 
-    // Update company rating and review count
+    // Calculate rating distribution from reviews
+    const ratingDistribution = calculateRatingDistribution(placeDetails.reviews);
+
+    // Update company rating, review count, and rating distribution
     await prisma.company.update({
       where: { id: companyId },
       data: {
         rating: placeDetails.rating,
         reviewCount: placeDetails.user_ratings_total || 0,
+        ratingDistribution: ratingDistribution as any,
+        lastSyncedAt: new Date(),
       },
     });
 
@@ -278,5 +291,33 @@ export async function syncAllCompaniesReviews(): Promise<{
       companiesProcessed: 0,
     };
   }
+}
+
+
+
+/**
+ * Calculate rating distribution from Google reviews
+ * Note: This calculates distribution from the reviews returned by the API (max 5)
+ * For more accurate distribution, we would need to scrape Google Maps
+ */
+function calculateRatingDistribution(reviews: GoogleReview[]): RatingDistribution {
+  const distribution: RatingDistribution = {
+    five_star: 0,
+    four_star: 0,
+    three_star: 0,
+    two_star: 0,
+    one_star: 0,
+  };
+
+  reviews.forEach((review) => {
+    const rating = review.rating || 0;
+    if (rating === 5) distribution.five_star++;
+    else if (rating === 4) distribution.four_star++;
+    else if (rating === 3) distribution.three_star++;
+    else if (rating === 2) distribution.two_star++;
+    else if (rating === 1) distribution.one_star++;
+  });
+
+  return distribution;
 }
 
