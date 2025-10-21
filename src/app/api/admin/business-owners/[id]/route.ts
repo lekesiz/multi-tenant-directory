@@ -12,7 +12,7 @@ export async function DELETE(
     const owner = await prisma.businessOwner.findUnique({
       where: { id },
       include: {
-        ownerships: {
+        companies: {
           include: {
             company: true,
           },
@@ -28,7 +28,7 @@ export async function DELETE(
     }
 
     // Check if owner has active companies
-    const hasActiveCompanies = owner.ownerships.some(o => o.company.isActive);
+    const hasActiveCompanies = owner.companies.some(o => o.company.isActive);
     if (hasActiveCompanies) {
       return NextResponse.json(
         { error: 'Impossible de supprimer: le propriétaire a des entreprises actives' },
