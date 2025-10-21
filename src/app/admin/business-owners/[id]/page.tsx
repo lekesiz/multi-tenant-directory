@@ -146,11 +146,7 @@ export default async function BusinessOwnerDetailPage({
                         Inactif
                       </span>
                     )}
-                    {ownership.isPrimary && (
-                      <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                        Principal
-                      </span>
-                    )}
+
                   </div>
                   <div className="text-sm text-gray-500">
                     Depuis {format(new Date(ownership.createdAt), 'PPP', { locale: fr })}
