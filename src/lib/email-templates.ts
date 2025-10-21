@@ -2,6 +2,8 @@
  * Email Templates for Subscription Lifecycle
  */
 
+import { logger } from './logger';
+
 interface EmailTemplate {
   subject: string;
   html: string;

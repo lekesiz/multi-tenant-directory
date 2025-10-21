@@ -3,6 +3,8 @@
  * Handles error reporting, performance monitoring, and health checks
  */
 
+import { logger } from './logger';
+
 interface ErrorEvent {
   message: string;
   stack?: string;
