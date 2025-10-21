@@ -10,7 +10,7 @@ export const metadata = {
 async function getBusinessOwners() {
   return await prisma.businessOwner.findMany({
     include: {
-      ownerships: {
+      companies: {
         include: {
           company: {
             select: {
@@ -35,12 +35,12 @@ export default async function BusinessOwnersPage() {
   const stats = {
     total: businessOwners.length,
     active: businessOwners.filter(bo => 
-      bo.ownerships.some(o => o.company.isActive)
+      bo.companies.some(o => o.company.isActive)
     ).length,
     inactive: businessOwners.filter(bo => 
-      !bo.ownerships.some(o => o.company.isActive)
+      !bo.companies.some(o => o.company.isActive)
     ).length,
-    withCompanies: businessOwners.filter(bo => bo.ownerships.length > 0).length,
+    withCompanies: businessOwners.filter(bo => bo.companies.length > 0).length,
   };
 
   return (
@@ -127,11 +127,11 @@ export default async function BusinessOwnersPage() {
                     </a>
                   </td>
                   <td className="px-6 py-4">
-                    {owner.ownerships.length === 0 ? (
+                    {owner.companies.length === 0 ? (
                       <span className="text-sm text-gray-400">Aucune</span>
                     ) : (
                       <div className="space-y-1">
-                        {owner.ownerships.map((ownership) => (
+                        {owner.companies.map((ownership) => (
                           <div key={ownership.id}>
                             <Link
                               href={`/admin/companies/${ownership.company.id}`}
