@@ -385,7 +385,13 @@ export default async function CompanyDetailPage({
             />
 
             {/* Reviews */}
-            <CompanyReviews companyId={company.id} companyName={company.name} />
+            <CompanyReviews 
+              companyId={company.id} 
+              companyName={company.name}
+              totalReviews={company.reviewCount}
+              googleRating={company.rating}
+              googlePlaceId={company.googlePlaceId}
+            />
 
             {/* Contact Form */}
             <div className="bg-white rounded-lg shadow p-4 sm:p-6 lg:p-8">
