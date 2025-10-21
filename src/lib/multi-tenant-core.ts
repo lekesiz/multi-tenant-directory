@@ -443,7 +443,7 @@ export class TenantPerformance {
         await prisma.$executeRawUnsafe(query);
       } catch (error) {
         // Index might already exist, continue
-        logger.warn(`Index creation warning for tenant ${tenantId}:`, error);
+        logger.warn(`Index creation warning for tenant ${tenantId}`, { error });
       }
     }
   }
