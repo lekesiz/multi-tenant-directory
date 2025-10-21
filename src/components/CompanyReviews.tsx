@@ -21,12 +21,13 @@ interface CompanyReviewsProps {
   googleRating?: number | null;
   googlePlaceId?: string | null;
   ratingDistribution?: Record<string, number> | null;
+  lastSyncedAt?: Date | string | null;
 }
 
 type SortOption = 'recent' | 'oldest' | 'highest' | 'lowest';
 type FilterOption = 'all' | 'google' | 'manual';
 
-export default function CompanyReviews({ companyId, companyName, totalReviews, googleRating, googlePlaceId, ratingDistribution }: CompanyReviewsProps) {
+export default function CompanyReviews({ companyId, companyName, totalReviews, googleRating, googlePlaceId, ratingDistribution, lastSyncedAt }: CompanyReviewsProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -164,13 +165,25 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
           Avis Clients ({totalReviews || reviews.length})
         </h2>
-        <button
-          onClick={syncGoogleReviews}
-          disabled={syncing}
-          className="bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 text-sm whitespace-nowrap"
-        >
-          {syncing ? '⏳ Sync...' : '🔄 Sync Google'}
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={syncGoogleReviews}
+            disabled={syncing}
+            className="bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 text-sm whitespace-nowrap"
+          >
+            {syncing ? '⏳ Sync...' : '🔄 Sync Google'}
+          </button>
+          {lastSyncedAt && (
+            <span className="text-xs text-gray-500">
+              Dernière sync: {new Date(lastSyncedAt).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          )}
+        </div>
       </div>
 
       {reviews.length === 0 ? (

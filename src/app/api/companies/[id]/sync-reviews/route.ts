@@ -64,12 +64,13 @@ export async function POST(
     const place = data.result;
     const googleReviews = place.reviews || [];
 
-    // Update company rating
+    // Update company rating and last sync time
     await prisma.company.update({
       where: { id: companyId },
       data: {
         rating: place.rating || null,
         reviewCount: place.user_ratings_total || 0,
+        lastSyncedAt: new Date(),
       },
     });
 
