@@ -69,7 +69,7 @@ export default async function NotFound() {
                 { name: 'Pâtisserie', icon: '🍰', href: '/categories/Pâtisserie' },
                 { name: 'Garage', icon: '🚗', href: '/categories/Garage' },
                 { name: 'Santé', icon: '⚕️', href: '/categories/Santé' },
-              ].map((category) => ((
+              ].map((category) => (
                 <Link
                   key={category.name}
                   href={category.href}
@@ -78,7 +78,7 @@ export default async function NotFound() {
                   <span className="mr-2">{category.icon}</span>
                   {category.name}
                 </Link>
-              ))}
+              ))
             </div>
           </div>
 
