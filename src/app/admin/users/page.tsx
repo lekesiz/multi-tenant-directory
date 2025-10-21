@@ -20,8 +20,8 @@ export default async function AdminUsersPage() {
 
   const stats = {
     total: users.length,
-    active: users.filter(u => u.isActive).length,
-    inactive: users.filter(u => !u.isActive).length,
+    admins: users.filter(u => u.role === 'admin').length,
+    superAdmins: users.filter(u => u.role === 'super_admin').length,
   };
 
   return (
@@ -52,13 +52,13 @@ export default async function AdminUsersPage() {
           <div className="text-sm text-gray-600 mb-1">Total</div>
           <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
         </div>
-        <div className="bg-green-50 rounded-lg shadow p-6">
-          <div className="text-sm text-green-600 mb-1">Actifs</div>
-          <div className="text-3xl font-bold text-green-600">{stats.active}</div>
+        <div className="bg-blue-50 rounded-lg shadow p-6">
+          <div className="text-sm text-blue-600 mb-1">Admins</div>
+          <div className="text-3xl font-bold text-blue-600">{stats.admins}</div>
         </div>
-        <div className="bg-gray-50 rounded-lg shadow p-6">
-          <div className="text-sm text-gray-600 mb-1">Inactifs</div>
-          <div className="text-3xl font-bold text-gray-600">{stats.inactive}</div>
+        <div className="bg-purple-50 rounded-lg shadow p-6">
+          <div className="text-sm text-purple-600 mb-1">Super Admins</div>
+          <div className="text-3xl font-bold text-purple-600">{stats.superAdmins}</div>
         </div>
       </div>
 
