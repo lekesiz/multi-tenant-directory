@@ -184,6 +184,30 @@ export default async function CompanyDetailPage({
 
   const content = company.content[0];
 
+  // Get French category names
+  const categoryMappings = await prisma.businessCategory.findMany({
+    where: {
+      googleCategory: { in: company.categories },
+      isActive: true,
+    },
+    select: {
+      googleCategory: true,
+      frenchName: true,
+    },
+  });
+
+  const categoryMap: Record<string, string> = {};
+  categoryMappings.forEach((mapping) => {
+    categoryMap[mapping.googleCategory] = mapping.frenchName;
+  });
+
+  // Helper function to get French name or fallback
+  const getCategoryName = (slug: string) => {
+    return categoryMap[slug] || slug.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
   // Get related companies (same category and city, excluding current company)
   const relatedCompanies = await prisma.company.findMany({
     where: {
@@ -293,7 +317,7 @@ export default async function CompanyDetailPage({
                           key={category}
                           className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
                         >
-                          {category}
+                          {getCategoryName(category)}
                         </span>
                       ))}
                     </div>
