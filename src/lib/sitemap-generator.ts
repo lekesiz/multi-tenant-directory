@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { prisma } from './prisma';
 
 export interface SitemapUrl {
@@ -141,7 +142,7 @@ export async function generateSitemapForDomain(
     return urls;
 
   } catch (error) {
-    console.error(`Error generating sitemap for domain ${domainName}:`, error);
+    logger.error(`Error generating sitemap for domain ${domainName}:`, error);
     throw error;
   }
 }
@@ -236,7 +237,7 @@ export async function getSitemapStats(domainName: string) {
     };
 
   } catch (error) {
-    console.error(`Error getting sitemap stats for domain ${domainName}:`, error);
+    logger.error(`Error getting sitemap stats for domain ${domainName}:`, error);
     throw error;
   }
 }
@@ -276,7 +277,7 @@ export async function generateAllSitemaps() {
     return results;
 
   } catch (error) {
-    console.error('Error generating all sitemaps:', error);
+    logger.error('Error generating all sitemaps:', error);
     throw error;
   }
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 
 export default function SyncReviewsButton({ companyId }: { companyId?: number }) {
@@ -40,7 +41,7 @@ export default function SyncReviewsButton({ companyId }: { companyId?: number })
       }
     } catch (error) {
       setMessage('❌ Bir hata oluştu');
-      console.error('Sync error:', error);
+      logger.error('Sync error:', error);
     } finally {
       setLoading(false);
     }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -34,7 +35,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Get booking API error:', error);
+    logger.error('Get booking API error:', error);
     return NextResponse.json(
       { error: 'Failed to get booking' },
       { status: 500 }
@@ -107,7 +108,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error('Update booking API error:', error);
+    logger.error('Update booking API error:', error);
     return NextResponse.json(
       { error: 'Failed to update booking' },
       { status: 500 }
@@ -182,7 +183,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Cancel booking API error:', error);
+    logger.error('Cancel booking API error:', error);
     return NextResponse.json(
       { error: 'Failed to cancel booking' },
       { status: 500 }

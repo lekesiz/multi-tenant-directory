@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -92,7 +93,7 @@ export default function SEOContentGenerator({ businessData, onContentGenerated, 
       setGeneratedContent(data.content);
       setIsEditing(true);
     } catch (error) {
-      console.error('Error generating SEO content:', error);
+      logger.error('Error generating SEO content:', error);
       toast.error('Erreur lors de la génération du contenu');
     } finally {
       setIsGenerating(false);

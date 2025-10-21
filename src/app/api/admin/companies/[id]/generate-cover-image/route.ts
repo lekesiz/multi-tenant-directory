@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -70,14 +71,14 @@ export async function POST(
       city: company.city || undefined,
     };
 
-    console.log('🎨 Generating cover image for:', company.name);
+    logger.info('🎨 Generating cover image for:', company.name);
 
     // Try to generate image using Replicate (Flux model)
     let imageUrl = await generateCoverImage(imageParams);
 
     // Fallback to Unsplash if generation fails
     if (!imageUrl) {
-      console.log('⚠️ Replicate failed, trying Unsplash fallback...');
+      logger.info('⚠️ Replicate failed, trying Unsplash fallback...');
       imageUrl = await generateCoverImageFallback(imageParams);
     }
 
@@ -99,7 +100,7 @@ export async function POST(
       },
     });
 
-    console.log('✅ Cover image generated and saved for:', company.name);
+    logger.info('✅ Cover image generated and saved for:', company.name);
 
     return NextResponse.json({
       success: true,
@@ -108,7 +109,7 @@ export async function POST(
       company: updatedCompany,
     });
   } catch (error) {
-    console.error('Error generating cover image:', error);
+    logger.error('Error generating cover image:', error);
     return NextResponse.json(
       { error: 'Failed to generate cover image' },
       { status: 500 }

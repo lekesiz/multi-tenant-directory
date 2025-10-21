@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -42,7 +43,7 @@ export default function SettingsPage() {
         setPreferences(data.preferences);
       }
     } catch (error) {
-      console.error('Error fetching preferences:', error);
+      logger.error('Error fetching preferences:', error);
       setMessage('Erreur lors du chargement des préférences');
     } finally {
       setLoading(false);
@@ -75,7 +76,7 @@ export default function SettingsPage() {
         setMessage(error.error || 'Erreur lors de la sauvegarde');
       }
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      logger.error('Error saving preferences:', error);
       setMessage('Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);

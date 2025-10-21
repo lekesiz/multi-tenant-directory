@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { stripeService, getPlanById, canUpgrade, canDowngrade } from '@/lib/stripe-config';
 import { prisma } from '@/lib/prisma';
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
           });
         }
       } catch (error) {
-        console.error('Error fetching subscription details:', error);
+        logger.error('Error fetching subscription details:', error);
       }
     }
 
@@ -98,7 +99,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Get subscription error:', error);
+    logger.error('Get subscription error:', error);
     return NextResponse.json(
       { error: 'Erreur lors du chargement de l\'abonnement' },
       { status: 500 }
@@ -194,7 +195,7 @@ export async function PUT(request: Request) {
     });
 
   } catch (error) {
-    console.error('Update subscription error:', error);
+    logger.error('Update subscription error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -275,7 +276,7 @@ export async function DELETE(request: Request) {
     });
 
   } catch (error) {
-    console.error('Cancel subscription error:', error);
+    logger.error('Cancel subscription error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

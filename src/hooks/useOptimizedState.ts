@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { 
   useState, 
   useCallback, 
@@ -164,7 +165,7 @@ export function useLocalStorage<T>(
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+      logger.warn(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   });
@@ -178,7 +179,7 @@ export function useLocalStorage<T>(
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
     } catch (error) {
-      console.warn(`Error setting localStorage key "${key}":`, error);
+      logger.warn(`Error setting localStorage key "${key}":`, error);
     }
   }, [key, storedValue]);
 

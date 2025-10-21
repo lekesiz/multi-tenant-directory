@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -55,7 +56,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Test webhook error:', error);
+    logger.error('Test webhook error:', error);
     return NextResponse.json(
       { error: 'Failed to test webhook' },
       { status: 500 }

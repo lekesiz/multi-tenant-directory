@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🤖 Generating SEO content for: ${name} (${category})`);
+    logger.info(`🤖 Generating SEO content for: ${name} (${category})`);
 
     // Generate content using Claude
     const generatedContent = await generateBusinessDescription({
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Content generated for ${name}`);
+    logger.info(`✅ Content generated for ${name}`);
 
     return NextResponse.json({
       success: true,
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
       message: 'Content generated successfully',
     });
   } catch (error) {
-    console.error('Error generating description:', error);
+    logger.error('Error generating description:', error);
     return NextResponse.json(
       { error: 'Failed to generate description' },
       { status: 500 }

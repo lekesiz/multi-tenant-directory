@@ -6,7 +6,7 @@
 // Slow query logging (can be added via Prisma extension if needed)
 export function logSlowQuery(model: string, action: string, duration: number) {
   if (process.env.NODE_ENV === 'development' && duration > 1000) {
-    console.warn(
+    logger.warn(
       `⚠️ Slow query detected (${duration}ms): ${model}.${action}`
     );
   }

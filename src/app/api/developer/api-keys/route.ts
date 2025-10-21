@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -35,7 +36,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Get API keys error:', error);
+    logger.error('Get API keys error:', error);
     return NextResponse.json(
       { error: 'Failed to get API keys' },
       { status: 500 }
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Create API key error:', error);
+    logger.error('Create API key error:', error);
     return NextResponse.json(
       { error: 'Failed to create API key' },
       { status: 500 }

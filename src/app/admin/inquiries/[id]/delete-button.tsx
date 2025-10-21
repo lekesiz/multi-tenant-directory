@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -29,7 +30,7 @@ export default function DeleteInquiryButton({ inquiryId }: DeleteInquiryButtonPr
         alert('Erreur lors de la suppression du message');
       }
     } catch (error) {
-      console.error('Error deleting inquiry:', error);
+      logger.error('Error deleting inquiry:', error);
       alert('Erreur lors de la suppression du message');
     } finally {
       setIsDeleting(false);

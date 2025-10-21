@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
@@ -42,7 +43,7 @@ export async function getCurrentSession(): Promise<AuthContext | null> {
       session,
     };
   } catch (error) {
-    console.error('Error getting session:', error);
+    logger.error('Error getting session:', error);
     return null;
   }
 }

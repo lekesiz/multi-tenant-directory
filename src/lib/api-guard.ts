@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './prisma';
 
@@ -51,7 +52,7 @@ export async function resolveTenant(request: NextRequest): Promise<TenantContext
 
     return { domain };
   } catch (error) {
-    console.error('Error resolving tenant:', error);
+    logger.error('Error resolving tenant:', error);
     throw error;
   }
 }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { PrismaClient } from '@prisma/client';
 import { translateToFrench, detectLanguage } from './translation';
 
@@ -86,7 +87,7 @@ export async function searchPlace(
 
     return null;
   } catch (error) {
-    console.error('Error searching place:', error);
+    logger.error('Error searching place:', error);
     return null;
   }
 }
@@ -107,7 +108,7 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | n
 
     return null;
   } catch (error) {
-    console.error('Error getting place details:', error);
+    logger.error('Error getting place details:', error);
     return null;
   }
 }
@@ -191,7 +192,7 @@ export async function syncCompanyReviews(companyId: number): Promise<{
       if (!existingReview) {
         // Skip empty reviews
         if (!googleReview.text || googleReview.text.trim().length === 0) {
-          console.warn(`Skipping empty review from ${googleReview.author_name}`);
+          logger.warn(`Skipping empty review from ${googleReview.author_name}`);
           continue;
         }
 
@@ -245,7 +246,7 @@ export async function syncCompanyReviews(companyId: number): Promise<{
       reviewsAdded,
     };
   } catch (error) {
-    console.error('Error syncing reviews:', error);
+    logger.error('Error syncing reviews:', error);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -284,7 +285,7 @@ export async function syncAllCompaniesReviews(): Promise<{
       companiesProcessed,
     };
   } catch (error) {
-    console.error('Error syncing all reviews:', error);
+    logger.error('Error syncing all reviews:', error);
     return {
       success: false,
       totalReviewsAdded: 0,

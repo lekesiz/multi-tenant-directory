@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useEffect } from 'react';
 
 /**
@@ -17,7 +18,7 @@ export default function ServiceWorkerRegistration() {
       navigator.serviceWorker
         .register('/sw.js', { scope: '/' })
         .then((registration) => {
-          console.log('[SW] Service Worker registered successfully:', registration.scope);
+          logger.info('[SW] Service Worker registered successfully:', registration.scope);
 
           // Check for updates periodically
           registration.addEventListener('updatefound', () => {
@@ -26,7 +27,7 @@ export default function ServiceWorkerRegistration() {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   // New service worker available, show update notification
-                  console.log('[SW] New service worker available. Refresh to update.');
+                  logger.info('[SW] New service worker available. Refresh to update.');
 
                   // Optional: Show a notification to the user
                   if ('Notification' in window && Notification.permission === 'granted') {
@@ -50,15 +51,15 @@ export default function ServiceWorkerRegistration() {
           );
         })
         .catch((error) => {
-          console.error('[SW] Service Worker registration failed:', error);
+          logger.error('[SW] Service Worker registration failed:', error);
         });
 
       // Listen for messages from service worker
       navigator.serviceWorker.addEventListener('message', (event) => {
-        console.log('[SW] Message from service worker:', event.data);
+        logger.info('[SW] Message from service worker:', event.data);
 
         if (event.data.type === 'CACHE_UPDATED') {
-          console.log('[SW] Cache has been updated');
+          logger.info('[SW] Cache has been updated');
         }
       });
 

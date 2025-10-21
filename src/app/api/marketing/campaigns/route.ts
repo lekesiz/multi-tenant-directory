@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { marketingAutomation } from '@/lib/marketing-automation';
 import { authenticateMobileUser } from '@/lib/mobile-auth';
@@ -102,7 +103,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Get campaigns error:', error);
+    logger.error('Get campaigns error:', error);
     return NextResponse.json(
       { error: 'Erreur lors du chargement des campagnes' },
       { status: 500 }
@@ -143,7 +144,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Create campaign error:', error);
+    logger.error('Create campaign error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

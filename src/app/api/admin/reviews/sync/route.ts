@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { syncCompanyReviews, syncAllCompaniesReviews } from '@/lib/google-places';
 import { requireAdmin } from '@/lib/auth-guard';
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Error in sync reviews API:', error);
+    logger.error('Error in sync reviews API:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

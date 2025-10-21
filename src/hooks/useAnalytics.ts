@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useEffect } from 'react';
 
 interface TrackEventOptions {
@@ -19,7 +20,7 @@ export function useAnalytics() {
         body: JSON.stringify({ event, source }),
       });
     } catch (error) {
-      console.error('Analytics tracking error:', error);
+      logger.error('Analytics tracking error:', error);
     }
   };
 

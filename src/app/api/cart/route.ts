@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { CartService } from '@/lib/ecommerce';
 import { cookies } from 'next/headers';
@@ -36,7 +37,7 @@ export async function GET() {
     return response;
 
   } catch (error) {
-    console.error('Get cart API error:', error);
+    logger.error('Get cart API error:', error);
     return NextResponse.json(
       { error: 'Failed to get cart' },
       { status: 500 }
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
     return response;
 
   } catch (error) {
-    console.error('Add to cart API error:', error);
+    logger.error('Add to cart API error:', error);
     return NextResponse.json(
       { error: 'Failed to add item to cart' },
       { status: 500 }
@@ -104,7 +105,7 @@ export async function DELETE() {
     });
 
   } catch (error) {
-    console.error('Clear cart API error:', error);
+    logger.error('Clear cart API error:', error);
     return NextResponse.json(
       { error: 'Failed to clear cart' },
       { status: 500 }

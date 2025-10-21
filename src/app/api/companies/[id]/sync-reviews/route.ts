@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -107,7 +108,7 @@ export async function POST(
       reviews: createdReviews,
     });
   } catch (error) {
-    console.error('Error syncing reviews:', error);
+    logger.error('Error syncing reviews:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

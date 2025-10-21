@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Mobile login error:', error);
+    logger.error('Mobile login error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

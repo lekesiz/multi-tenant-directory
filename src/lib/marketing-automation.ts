@@ -3,6 +3,7 @@
  * Automated email campaigns, lead scoring, customer segmentation
  */
 
+import { logger } from '@/lib/logger';
 import { prisma } from './prisma';
 import { sendEmail } from './emails';
 import { nanoid } from 'nanoid';
@@ -284,7 +285,7 @@ export class MarketingAutomation {
 
       return true;
     } catch (error) {
-      console.error('Error sending automated email:', error);
+      logger.error('Error sending automated email:', error);
       return false;
     }
   }

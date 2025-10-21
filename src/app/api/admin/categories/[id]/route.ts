@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -48,7 +49,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(category);
   } catch (error) {
-    console.error('Error updating category:', error);
+    logger.error('Error updating category:', error);
     return NextResponse.json(
       { error: 'Failed to update category' },
       { status: 500 }
@@ -86,7 +87,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting category:', error);
+    logger.error('Error deleting category:', error);
     return NextResponse.json(
       { error: 'Failed to delete category' },
       { status: 500 }

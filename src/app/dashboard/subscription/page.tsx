@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
@@ -49,7 +50,7 @@ function SubscriptionContent() {
           setError('Failed to load companies');
         }
       } catch (err) {
-        console.error('Error:', err);
+        logger.error('Error:', err);
         setError('An error occurred');
       } finally {
         setLoading(false);

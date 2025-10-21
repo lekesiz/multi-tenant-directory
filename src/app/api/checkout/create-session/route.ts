@@ -2,6 +2,7 @@
  * Create Stripe Checkout Session
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       cancelUrl: `${origin}/dashboard/subscription/cancel`,
     });
 
-    console.log(`✅ Checkout session created: ${checkoutSession.id} for company ${companyId}`);
+    logger.info(`✅ Checkout session created: ${checkoutSession.id} for company ${companyId}`);
 
     return NextResponse.json(
       {
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Checkout error:', error.message);
+    logger.error('❌ Checkout error:', error.message);
 
     return NextResponse.json(
       { error: error.message || 'Failed to create checkout session' },

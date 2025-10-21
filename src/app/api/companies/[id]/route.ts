@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveTenant, getDomainId } from '@/lib/api-guard';
@@ -59,7 +60,7 @@ export async function GET(
 
     return NextResponse.json(company);
   } catch (error) {
-    console.error('Error fetching company:', error);
+    logger.error('Error fetching company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -99,7 +100,7 @@ export async function PUT(
 
     return NextResponse.json(company);
   } catch (error) {
-    console.error('Error updating company:', error);
+    logger.error('Error updating company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -128,7 +129,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Company deleted successfully' });
   } catch (error) {
-    console.error('Error deleting company:', error);
+    logger.error('Error deleting company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

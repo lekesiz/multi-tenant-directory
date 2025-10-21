@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripeService } from '@/lib/stripe-config';
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+      logger.error('Webhook signature verification failed:', err);
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 400 }
@@ -78,13 +79,13 @@ export async function POST(request: Request) {
         break;
         
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        logger.info(`Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
 
   } catch (error) {
-    console.error('Webhook handler error:', error);
+    logger.error('Webhook handler error:', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -97,7 +98,7 @@ async function handleCheckoutSessionCompleted(session: any) {
   const planId = session.metadata?.planId;
 
   if (!businessOwnerId) {
-    console.error('No businessOwnerId in checkout session metadata');
+    logger.error('No businessOwnerId in checkout session metadata');
     return;
   }
 
@@ -119,15 +120,15 @@ async function handleCheckoutSessionCompleted(session: any) {
     // Track referral conversion if user was referred
     try {
       await trackReferralConversion(businessOwnerId);
-      console.log('✅ Referral conversion tracked for business owner:', businessOwnerId);
+      logger.info('✅ Referral conversion tracked for business owner:', businessOwnerId);
     } catch (error) {
-      console.error('⚠️ Error tracking referral conversion:', error);
+      logger.error('⚠️ Error tracking referral conversion:', error);
       // Don't fail the webhook if referral tracking fails
     }
 
-    console.log(`Checkout completed for business owner: ${businessOwnerId}`);
+    logger.info(`Checkout completed for business owner: ${businessOwnerId}`);
   } catch (error) {
-    console.error('Error updating business owner after checkout:', error);
+    logger.error('Error updating business owner after checkout:', error);
   }
 }
 
@@ -140,7 +141,7 @@ async function handleSubscriptionCreated(subscription: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
@@ -155,9 +156,9 @@ async function handleSubscriptionCreated(subscription: any) {
       },
     });
 
-    console.log(`Subscription created for business owner: ${businessOwner.id}`);
+    logger.info(`Subscription created for business owner: ${businessOwner.id}`);
   } catch (error) {
-    console.error('Error handling subscription created:', error);
+    logger.error('Error handling subscription created:', error);
   }
 }
 
@@ -170,7 +171,7 @@ async function handleSubscriptionUpdated(subscription: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
@@ -184,9 +185,9 @@ async function handleSubscriptionUpdated(subscription: any) {
       },
     });
 
-    console.log(`Subscription updated for business owner: ${businessOwner.id}`);
+    logger.info(`Subscription updated for business owner: ${businessOwner.id}`);
   } catch (error) {
-    console.error('Error handling subscription updated:', error);
+    logger.error('Error handling subscription updated:', error);
   }
 }
 
@@ -199,7 +200,7 @@ async function handleSubscriptionDeleted(subscription: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
@@ -214,9 +215,9 @@ async function handleSubscriptionDeleted(subscription: any) {
       },
     });
 
-    console.log(`Subscription canceled for business owner: ${businessOwner.id}`);
+    logger.info(`Subscription canceled for business owner: ${businessOwner.id}`);
   } catch (error) {
-    console.error('Error handling subscription deleted:', error);
+    logger.error('Error handling subscription deleted:', error);
   }
 }
 
@@ -229,7 +230,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
@@ -255,9 +256,9 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
       },
     });
 
-    console.log(`Payment succeeded for business owner: ${businessOwner.id}`);
+    logger.info(`Payment succeeded for business owner: ${businessOwner.id}`);
   } catch (error) {
-    console.error('Error handling invoice payment succeeded:', error);
+    logger.error('Error handling invoice payment succeeded:', error);
   }
 }
 
@@ -270,7 +271,7 @@ async function handleInvoicePaymentFailed(invoice: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
@@ -282,9 +283,9 @@ async function handleInvoicePaymentFailed(invoice: any) {
       },
     });
 
-    console.log(`Payment failed for business owner: ${businessOwner.id}`);
+    logger.info(`Payment failed for business owner: ${businessOwner.id}`);
   } catch (error) {
-    console.error('Error handling invoice payment failed:', error);
+    logger.error('Error handling invoice payment failed:', error);
   }
 }
 
@@ -316,7 +317,7 @@ async function logStripeEvent(event: any) {
       },
     });
   } catch (error) {
-    console.error('Error logging Stripe event:', error);
+    logger.error('Error logging Stripe event:', error);
   }
 }
 
@@ -330,13 +331,13 @@ async function handleTrialWillEnd(subscription: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
     // Send trial ending notification email
     // This would integrate with your email service
-    console.log(`Trial ending soon for business owner: ${businessOwner.id}`);
+    logger.info(`Trial ending soon for business owner: ${businessOwner.id}`);
     
     // Record in subscription history
     await prisma.subscriptionHistory.create({
@@ -349,7 +350,7 @@ async function handleTrialWillEnd(subscription: any) {
     });
 
   } catch (error) {
-    console.error('Error handling trial will end:', error);
+    logger.error('Error handling trial will end:', error);
   }
 }
 
@@ -363,7 +364,7 @@ async function handleInvoiceCreated(invoice: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
@@ -386,10 +387,10 @@ async function handleInvoiceCreated(invoice: any) {
       },
     });
 
-    console.log(`Invoice created for business owner: ${businessOwner.id}`);
+    logger.info(`Invoice created for business owner: ${businessOwner.id}`);
 
   } catch (error) {
-    console.error('Error handling invoice created:', error);
+    logger.error('Error handling invoice created:', error);
   }
 }
 
@@ -403,7 +404,7 @@ async function handleInvoicePaymentActionRequired(invoice: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
@@ -417,10 +418,10 @@ async function handleInvoicePaymentActionRequired(invoice: any) {
     });
 
     // Send payment action required notification
-    console.log(`Payment action required for business owner: ${businessOwner.id}`);
+    logger.info(`Payment action required for business owner: ${businessOwner.id}`);
 
   } catch (error) {
-    console.error('Error handling payment action required:', error);
+    logger.error('Error handling payment action required:', error);
   }
 }
 
@@ -434,11 +435,11 @@ async function handlePaymentMethodAttached(paymentMethod: any) {
     });
 
     if (!businessOwner) {
-      console.error(`Business owner not found for customer: ${customerId}`);
+      logger.error(`Business owner not found for customer: ${customerId}`);
       return;
     }
 
-    console.log(`Payment method attached for business owner: ${businessOwner.id}`);
+    logger.info(`Payment method attached for business owner: ${businessOwner.id}`);
     
     // Record in subscription history
     await prisma.subscriptionHistory.create({
@@ -451,6 +452,6 @@ async function handlePaymentMethodAttached(paymentMethod: any) {
     });
 
   } catch (error) {
-    console.error('Error handling payment method attached:', error);
+    logger.error('Error handling payment method attached:', error);
   }
 }

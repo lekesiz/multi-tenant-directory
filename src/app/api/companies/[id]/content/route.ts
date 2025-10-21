@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -19,7 +20,7 @@ export async function GET(
 
     return NextResponse.json(contents);
   } catch (error) {
-    console.error('Error fetching company content:', error);
+    logger.error('Error fetching company content:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -85,7 +86,7 @@ export async function POST(
 
     return NextResponse.json(content);
   } catch (error) {
-    console.error('Error creating/updating company content:', error);
+    logger.error('Error creating/updating company content:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

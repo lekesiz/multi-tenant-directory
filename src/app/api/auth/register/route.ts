@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
       email: owner.email,
       unsubscribeToken: owner.unsubscribeToken,
     }).catch((error) => {
-      console.error('[Register] Failed to send welcome email:', error);
+      logger.error('[Register] Failed to send welcome email:', error);
       // Don't fail registration if email fails
     });
 
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('Registration error:', error);
     return NextResponse.json(
       { error: 'Une erreur est survenue lors de l\'inscription' },
       { status: 500 }

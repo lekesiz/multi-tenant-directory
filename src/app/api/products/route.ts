@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Get products API error:', error);
+    logger.error('Get products API error:', error);
     return NextResponse.json(
       { error: 'Failed to get products' },
       { status: 500 }
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Create product API error:', error);
+    logger.error('Create product API error:', error);
     return NextResponse.json(
       { error: 'Failed to create product' },
       { status: 500 }

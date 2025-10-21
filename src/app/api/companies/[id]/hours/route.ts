@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -66,7 +67,7 @@ export async function GET(
 
     return NextResponse.json(businessHours);
   } catch (error) {
-    console.error('Error fetching business hours:', error);
+    logger.error('Error fetching business hours:', error);
     return NextResponse.json(
       { error: 'Failed to fetch business hours' },
       { status: 500 }
@@ -161,7 +162,7 @@ export async function PUT(
       data: businessHours,
     });
   } catch (error) {
-    console.error('Error updating business hours:', error);
+    logger.error('Error updating business hours:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

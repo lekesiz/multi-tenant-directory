@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveTenant, getDomainId } from '@/lib/api-guard';
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(companies);
   } catch (error) {
-    console.error('Error fetching companies:', error);
+    logger.error('Error fetching companies:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(company, { status: 201 });
   } catch (error) {
-    console.error('Error creating company:', error);
+    logger.error('Error creating company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

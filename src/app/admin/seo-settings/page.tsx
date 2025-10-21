@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Suspense } from 'react';
 import { prisma } from '@/lib/prisma';
 import SEOSettingsForm from '@/components/admin/SEOSettingsForm';
@@ -15,7 +16,7 @@ async function getDomains() {
     });
     return domains;
   } catch (error) {
-    console.error('Error fetching domains:', error);
+    logger.error('Error fetching domains:', error);
     return [];
   }
 }

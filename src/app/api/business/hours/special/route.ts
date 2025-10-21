@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ specialHour: newSpecialHour });
   } catch (error) {
-    console.error('Error adding special hour:', error);
+    logger.error('Error adding special hour:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

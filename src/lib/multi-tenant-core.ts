@@ -3,6 +3,7 @@
  * Advanced tenant isolation, performance optimization, and security
  */
 
+import { logger } from '@/lib/logger';
 import { prisma } from './prisma';
 import { NextRequest } from 'next/server';
 import { cache } from 'react';
@@ -402,7 +403,7 @@ export class TenantIsolation {
 
       return hasAccess;
     } catch (error) {
-      console.error('Tenant access validation error:', error);
+      logger.error('Tenant access validation error:', error);
       return false;
     }
   }
@@ -442,7 +443,7 @@ export class TenantPerformance {
         await prisma.$executeRawUnsafe(query);
       } catch (error) {
         // Index might already exist, continue
-        console.warn(`Index creation warning for tenant ${tenantId}:`, error);
+        logger.warn(`Index creation warning for tenant ${tenantId}:`, error);
       }
     }
   }
@@ -526,7 +527,7 @@ export class TenantSecurity {
   static async logTenantAction(tenantId: string, action: string, details: any, userId?: string) {
     // AuditLog model not implemented in this schema
     // Log to console for now
-    console.log('[AUDIT]', {
+    logger.info('[AUDIT]', {
       tenantId,
       action,
       details,

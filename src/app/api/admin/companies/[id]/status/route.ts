@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -49,7 +50,7 @@ export async function PATCH(
       message: isActive ? 'Entreprise activée' : 'Entreprise désactivée',
     });
   } catch (error) {
-    console.error('Error updating company status:', error);
+    logger.error('Error updating company status:', error);
     return NextResponse.json(
       { error: 'Failed to update company status' },
       { status: 500 }

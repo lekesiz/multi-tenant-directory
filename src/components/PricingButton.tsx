@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -49,7 +50,7 @@ export default function PricingButton({
         `/dashboard/subscription/checkout?plan=${planSlug}&period=${period}&companyId=${data.company.id}`
       );
     } catch (error) {
-      console.error('Error handling pricing button click:', error);
+      logger.error('Error handling pricing button click:', error);
       alert('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setLoading(false);

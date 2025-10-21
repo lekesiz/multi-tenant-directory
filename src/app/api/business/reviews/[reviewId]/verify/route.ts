@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
@@ -70,7 +71,7 @@ export async function PATCH(
       },
     });
   } catch (error) {
-    console.error('Verify review error:', error);
+    logger.error('Verify review error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la vérification' },
       { status: 500 }

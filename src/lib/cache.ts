@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { unstable_cache } from 'next/cache';
 
 // Cache durations in seconds
@@ -99,7 +100,7 @@ export async function getCachedData<T>(
     memoryCache.set(key, data, ttlSeconds);
     return data;
   } catch (error) {
-    console.error('Cache fetch error:', error);
+    logger.error('Cache fetch error:', error);
     throw error;
   }
 }

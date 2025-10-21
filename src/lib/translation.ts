@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import Anthropic from '@anthropic-ai/sdk';
 
 const client = new Anthropic();
@@ -24,7 +25,7 @@ export async function detectLanguage(text: string): Promise<string> {
     }
     return 'en'; // Default to English
   } catch (error) {
-    console.error('Error detecting language:', error);
+    logger.error('Error detecting language:', error);
     return 'en'; // Default to English on error
   }
 }
@@ -63,7 +64,7 @@ export async function translateToFrench(text: string, sourceLanguage: string = '
     }
     return text; // Return original if translation fails
   } catch (error) {
-    console.error('Error translating text:', error);
+    logger.error('Error translating text:', error);
     return text; // Return original on error
   }
 }
@@ -145,7 +146,7 @@ Respond with ONLY the French description, no markdown or explanations.`,
     }
     return '';
   } catch (error) {
-    console.error('Error generating business description:', error);
+    logger.error('Error generating business description:', error);
     return '';
   }
 }

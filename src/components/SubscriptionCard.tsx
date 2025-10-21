@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -68,7 +69,7 @@ export default function SubscriptionCard({ businessOwner, onSuccess }: Subscript
       }
 
     } catch (error) {
-      console.error('Error creating checkout session:', error);
+      logger.error('Error creating checkout session:', error);
       toast.error('Erreur lors de la redirection vers le paiement');
     } finally {
       setLoading(null);

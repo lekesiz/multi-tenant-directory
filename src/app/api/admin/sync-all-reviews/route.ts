@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       companiesProcessed: result.companiesProcessed,
     });
   } catch (error) {
-    console.error('Sync all reviews error:', error);
+    logger.error('Sync all reviews error:', error);
     return NextResponse.json(
       { error: 'Failed to sync reviews' },
       { status: 500 }
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       lastSyncTime: process.env.GOOGLE_SYNC_LAST_RUN || null,
     });
   } catch (error) {
-    console.error('Get sync status error:', error);
+    logger.error('Get sync status error:', error);
     return NextResponse.json(
       { error: 'Failed to get sync status' },
       { status: 500 }

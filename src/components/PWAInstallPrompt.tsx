@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
@@ -51,7 +52,7 @@ export default function PWAInstallPrompt() {
     window.addEventListener('appinstalled', () => {
       setIsInstalled(true);
       setShowPrompt(false);
-      console.log('[PWA] App installed successfully');
+      logger.info('[PWA] App installed successfully');
     });
 
     return () => {
@@ -70,7 +71,7 @@ export default function PWAInstallPrompt() {
     // Wait for the user's response
     const { outcome } = await deferredPrompt.userChoice;
 
-    console.log(`[PWA] User response: ${outcome}`);
+    logger.info(`[PWA] User response: ${outcome}`);
 
     if (outcome === 'accepted') {
       setShowPrompt(false);

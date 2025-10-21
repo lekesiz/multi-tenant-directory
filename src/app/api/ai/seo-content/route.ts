@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { generateSEOContent } from '@/lib/ai';
 
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('AI SEO Content API error:', error);
+    logger.error('AI SEO Content API error:', error);
     
     return NextResponse.json(
       { error: 'Erreur lors de la génération du contenu SEO' },

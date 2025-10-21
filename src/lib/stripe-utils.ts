@@ -2,6 +2,7 @@
  * Stripe Payment Utility Functions
  */
 
+import { logger } from '@/lib/logger';
 import Stripe from 'stripe';
 import { prisma } from './prisma';
 import {
@@ -168,7 +169,7 @@ export async function handleSubscriptionUpdate(payload: SubscriptionUpdatePayloa
   });
 
   if (!company) {
-    console.warn(`Company not found for customer ${customerId}`);
+    logger.warn(`Company not found for customer ${customerId}`);
     return;
   }
 
@@ -226,7 +227,7 @@ export async function handleInvoicePayment(payload: InvoicePayload) {
   });
 
   if (!company) {
-    console.warn(`Company not found for customer ${customerId}`);
+    logger.warn(`Company not found for customer ${customerId}`);
     return;
   }
 

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -54,7 +55,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting special hour:', error);
+    logger.error('Error deleting special hour:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

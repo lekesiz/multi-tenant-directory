@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
@@ -107,7 +108,7 @@ async function getDashboardStats() {
       domainStats,
     };
   } catch (error) {
-    console.error('Dashboard stats error:', error);
+    logger.error('Dashboard stats error:', error);
     return {
       totalCompanies: 0,
       totalDomains: 0,

@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -50,7 +51,7 @@ export default function AIDescriptionGenerator({
         throw new Error('No content generated');
       }
     } catch (error) {
-      console.error('Error generating description:', error);
+      logger.error('Error generating description:', error);
       toast.error('❌ Erreur lors de la génération de la description');
     } finally {
       setGenerating(false);

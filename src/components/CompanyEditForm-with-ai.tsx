@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -143,7 +144,7 @@ export default function CompanyEditForm({
 
       toast.success('Description générée avec succès!');
     } catch (error) {
-      console.error('Error generating description:', error);
+      logger.error('Error generating description:', error);
       toast.error('Erreur lors de la génération de la description');
     } finally {
       setGeneratingAI(null);

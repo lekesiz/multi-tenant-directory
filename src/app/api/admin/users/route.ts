@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating user:', error);
+    logger.error('Error creating user:', error);
     return NextResponse.json(
       { error: 'Une erreur est survenue lors de la création de l\'utilisateur' },
       { status: 500 }

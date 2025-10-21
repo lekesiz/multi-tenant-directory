@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, AlertCircle } from 'lucide-react';
@@ -32,7 +33,7 @@ function SuccessContent() {
           router.push('/dashboard/subscription');
         }, 5000);
       } catch (err) {
-        console.error('Error:', err);
+        logger.error('Error:', err);
         setStatus('error');
         setMessage('An error occurred');
       }

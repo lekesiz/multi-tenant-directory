@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -47,7 +48,7 @@ export default function AIContentGenerator({
       toast.success('Contenu généré avec succès');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la génération');
-      console.error('Error generating content:', error);
+      logger.error('Error generating content:', error);
     } finally {
       setIsGenerating(false);
     }

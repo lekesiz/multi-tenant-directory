@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -83,7 +84,7 @@ export default function ProductManagement({ companyId }: ProductManagementProps)
         toast.error('Failed to load products');
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      logger.error('Error fetching products:', error);
       toast.error('Failed to load products');
     } finally {
       setLoading(false);
@@ -131,7 +132,7 @@ export default function ProductManagement({ companyId }: ProductManagementProps)
         toast.error(data.error || 'Failed to save product');
       }
     } catch (error) {
-      console.error('Error saving product:', error);
+      logger.error('Error saving product:', error);
       toast.error('Failed to save product');
     } finally {
       setLoading(false);
@@ -156,7 +157,7 @@ export default function ProductManagement({ companyId }: ProductManagementProps)
         toast.error(data.error || 'Failed to delete product');
       }
     } catch (error) {
-      console.error('Error deleting product:', error);
+      logger.error('Error deleting product:', error);
       toast.error('Failed to delete product');
     }
   };

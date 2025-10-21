@@ -3,6 +3,7 @@
  * Handles all email sending using Resend
  */
 
+import { logger } from '@/lib/logger';
 import { Resend } from 'resend';
 
 // Initialize Resend
@@ -37,10 +38,10 @@ export async function sendEmail(options: EmailOptions) {
       bcc: options.bcc,
     });
 
-    console.log('[Email] Sent successfully:', { id: result.data?.id, to: options.to });
+    logger.info('[Email] Sent successfully:', { id: result.data?.id, to: options.to });
     return result;
   } catch (error) {
-    console.error('[Email] Failed to send:', error);
+    logger.error('[Email] Failed to send:', error);
     throw error;
   }
 }
@@ -57,11 +58,11 @@ export async function sendBulkEmails(emails: EmailOptions[]) {
     const succeeded = results.filter((r) => r.status === 'fulfilled').length;
     const failed = results.filter((r) => r.status === 'rejected').length;
 
-    console.log(`[Email] Bulk send: ${succeeded} succeeded, ${failed} failed`);
+    logger.info(`[Email] Bulk send: ${succeeded} succeeded, ${failed} failed`);
 
     return results;
   } catch (error) {
-    console.error('[Email] Bulk send failed:', error);
+    logger.error('[Email] Bulk send failed:', error);
     throw error;
   }
 }

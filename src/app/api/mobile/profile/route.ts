@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticateMobileUser } from '@/lib/mobile-auth';
@@ -92,7 +93,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Get mobile profile error:', error);
+    logger.error('Get mobile profile error:', error);
     return NextResponse.json(
       { error: 'Erreur lors du chargement du profil' },
       { status: 500 }
@@ -192,7 +193,7 @@ export async function PUT(request: Request) {
     });
 
   } catch (error) {
-    console.error('Update mobile profile error:', error);
+    logger.error('Update mobile profile error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

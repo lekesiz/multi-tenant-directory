@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { ReviewReply } from './ReviewReply';
@@ -65,7 +66,7 @@ export default function CompanyReviewsEnhanced({
         setReviews(data.reviews || []);
       }
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      logger.error('Error fetching reviews:', error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,7 @@ export default function CompanyReviewsEnhanced({
         alert(`❌ Erreur: ${error.error}`);
       }
     } catch (error) {
-      console.error('Error syncing reviews:', error);
+      logger.error('Error syncing reviews:', error);
       alert('❌ Erreur lors de la synchronisation');
     } finally {
       setSyncing(false);
@@ -177,7 +178,7 @@ export default function CompanyReviewsEnhanced({
         alert(`❌ Erreur: ${error.error}`);
       }
     } catch (error) {
-      console.error('Error verifying review:', error);
+      logger.error('Error verifying review:', error);
       alert('❌ Erreur lors de la vérification');
     }
   };

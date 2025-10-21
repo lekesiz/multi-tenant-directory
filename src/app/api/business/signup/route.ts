@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       companyId: company.id,
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('Registration error:', error);
     return NextResponse.json(
       {
         error: 'Une erreur est survenue lors de la création du compte',

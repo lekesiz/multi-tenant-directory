@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticateMobileUser } from '@/lib/mobile-auth';
@@ -152,7 +153,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Mobile analytics error:', error);
+    logger.error('Mobile analytics error:', error);
     return NextResponse.json(
       { error: 'Erreur lors du chargement des analytics' },
       { status: 500 }

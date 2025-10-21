@@ -4,6 +4,7 @@
  * POST: Create subscription plan
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ subscriptions });
   } catch (error: any) {
-    console.error('❌ Get subscriptions error:', error.message);
+    logger.error('❌ Get subscriptions error:', error.message);
     return NextResponse.json(
       { error: 'Failed to fetch subscriptions' },
       { status: 500 }
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log(`✅ Subscription plan created: ${plan.slug}`);
+    logger.info(`✅ Subscription plan created: ${plan.slug}`);
 
     return NextResponse.json(
       {
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('❌ Create plan error:', error.message);
+    logger.error('❌ Create plan error:', error.message);
     return NextResponse.json(
       { error: error.message || 'Failed to create subscription plan' },
       { status: 500 }

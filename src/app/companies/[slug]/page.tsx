@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { headers } from 'next/headers';
 import ReviewCard from "@/components/ReviewCard";
 import { prisma } from '@/lib/prisma';
@@ -120,7 +121,7 @@ export async function generateMetadata({
       },
     };
   } catch (error) {
-    console.error('Error generating metadata:', error);
+    logger.error('Error generating metadata:', error);
     return {
       title: 'Entreprise',
     };

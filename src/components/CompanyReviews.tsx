@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 
@@ -49,7 +50,7 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
         setReviews(data.reviews || []);
       }
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      logger.error('Error fetching reviews:', error);
     } finally {
       setLoading(false);
     }
@@ -70,7 +71,7 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
         alert(`❌ Erreur: ${error.error}`);
       }
     } catch (error) {
-      console.error('Error syncing reviews:', error);
+      logger.error('Error syncing reviews:', error);
       alert('❌ Erreur lors de la synchronisation');
     } finally {
       setSyncing(false);

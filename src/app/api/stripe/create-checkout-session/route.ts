@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { stripeService, SUBSCRIPTION_PLANS, ANNUAL_PLANS } from '@/lib/stripe-config';
 import { prisma } from '@/lib/prisma';
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Stripe checkout session creation failed:', error);
+    logger.error('Stripe checkout session creation failed:', error);
     
     return NextResponse.json(
       { error: 'Erreur lors de la création de la session de paiement' },

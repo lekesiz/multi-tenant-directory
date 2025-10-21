@@ -5,6 +5,7 @@
  * Uses AI orchestration to create compelling, keyword-rich content
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { isN8nAvailable } from '@/lib/ai/n8n-client';
 import { getAIOrchestrator } from '@/lib/ai/orchestrator';
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('AI SEO content generation error:', error);
+    logger.error('AI SEO content generation error:', error);
 
     return NextResponse.json(
       {

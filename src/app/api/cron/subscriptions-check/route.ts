@@ -9,6 +9,7 @@
  * Every 6 hours is recommended
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 // TODO: Add email notifications in Phase 3.2
@@ -20,7 +21,7 @@ function verifyCronSecret(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    console.warn('⚠️ CRON_SECRET not configured');
+    logger.warn('⚠️ CRON_SECRET not configured');
     return false;
   }
 
@@ -55,11 +56,11 @@ async function checkExpiredSubscriptions(): Promise<number> {
   });
 
   if (expiredSubscriptions.length === 0) {
-    console.log('✅ No expired subscriptions found');
+    logger.info('✅ No expired subscriptions found');
     return 0;
   }
 
-  console.log(`🔄 Found ${expiredSubscriptions.length} expired subscriptions`);
+  logger.info(`🔄 Found ${expiredSubscriptions.length} expired subscriptions`);
 
   let deactivatedCount = 0;
 
@@ -85,7 +86,7 @@ async function checkExpiredSubscriptions(): Promise<number> {
     // }
 
     deactivatedCount++;
-    console.log(`✅ Deactivated company ${subscription.companyId}`);
+    logger.info(`✅ Deactivated company ${subscription.companyId}`);
   }
 
   return deactivatedCount;
@@ -144,11 +145,11 @@ async function sendRenewalReminders(): Promise<number> {
     //   await sendEmailNotification({ ... });
     //   remindersSent++;
     // } catch (error) {
-    //   console.error(...);
+    //   logger.error(...);
     // }
 
     // For now, just log that a reminder would be sent
-    console.log(
+    logger.info(
       `ℹ️ Reminder: Would send ${daysUntilExpiry}-day renewal reminder to ${company.email}`
     );
   }
@@ -191,7 +192,7 @@ async function checkForReactivation(): Promise<number> {
       });
 
       reactivatedCount++;
-      console.log(`✅ Reactivated company ${company.id}`);
+      logger.info(`✅ Reactivated company ${company.id}`);
     }
   }
 
@@ -202,14 +203,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Verify cron secret
     if (!verifyCronSecret(request)) {
-      console.warn('⚠️ Invalid or missing cron secret');
+      logger.warn('⚠️ Invalid or missing cron secret');
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    console.log('🚀 Starting subscription lifecycle check...');
+    logger.info('🚀 Starting subscription lifecycle check...');
 
     const results: SubscriptionCheck = {
       expiredCount: 0,
@@ -223,7 +224,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     results.renewalRemindersSent = await sendRenewalReminders();
     results.reactivatedCount = await checkForReactivation();
 
-    console.log('✅ Subscription lifecycle check completed:', results);
+    logger.info('✅ Subscription lifecycle check completed:', results);
 
     return NextResponse.json(
       {
@@ -234,7 +235,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Cron job error:', error.message);
+    logger.error('❌ Cron job error:', error.message);
 
     return NextResponse.json(
       {

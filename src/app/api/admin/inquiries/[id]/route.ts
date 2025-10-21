@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -27,7 +28,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, inquiry });
   } catch (error) {
-    console.error('Error updating inquiry:', error);
+    logger.error('Error updating inquiry:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour' },
       { status: 500 }
@@ -49,7 +50,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting inquiry:', error);
+    logger.error('Error deleting inquiry:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la suppression' },
       { status: 500 }

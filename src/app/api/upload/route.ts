@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
       publicId: (result as any).public_id,
     });
   } catch (error) {
-    console.error('Upload error:', error);
+    logger.error('Upload error:', error);
     return NextResponse.json(
       { error: 'Upload failed' },
       { status: 500 }
@@ -71,7 +72,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete error:', error);
+    logger.error('Delete error:', error);
     return NextResponse.json(
       { error: 'Delete failed' },
       { status: 500 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -89,7 +90,7 @@ export default function AIChatbot({ isOpen, onClose }: AIChatbotProps) {
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       toast.error('Erreur lors de l\'envoi du message');
       
       const errorMessage: Message = {

@@ -3,6 +3,7 @@
  * Handles JWT token authentication for React Native app
  */
 
+import { logger } from '@/lib/logger';
 import jwt from 'jsonwebtoken';
 import { prisma } from './prisma';
 
@@ -73,7 +74,7 @@ export async function authenticateMobileUser(request: Request): Promise<MobileAu
     };
 
   } catch (error) {
-    console.error('Mobile auth error:', error);
+    logger.error('Mobile auth error:', error);
     
     if (error instanceof jwt.JsonWebTokenError) {
       return {

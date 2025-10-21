@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -47,7 +48,7 @@ export async function GET() {
     // No company found
     return NextResponse.json({ company: null });
   } catch (error) {
-    console.error('Error fetching user company:', error);
+    logger.error('Error fetching user company:', error);
     return NextResponse.json(
       { error: 'Failed to fetch company' },
       { status: 500 }

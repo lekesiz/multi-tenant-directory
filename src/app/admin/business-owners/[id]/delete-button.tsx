@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -27,7 +28,7 @@ export default function DeleteBusinessOwnerButton({ ownerId }: DeleteBusinessOwn
         alert(data.error || 'Erreur lors de la suppression');
       }
     } catch (error) {
-      console.error('Error deleting business owner:', error);
+      logger.error('Error deleting business owner:', error);
       alert('Erreur lors de la suppression');
     } finally {
       setIsDeleting(false);

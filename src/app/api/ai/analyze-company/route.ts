@@ -5,6 +5,7 @@
  * Uses AI orchestration (Claude + Gemini + GPT-4)
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { isN8nAvailable } from '@/lib/ai/n8n-client';
 import { getAIOrchestrator } from '@/lib/ai/orchestrator';
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('AI analysis error:', error);
+    logger.error('AI analysis error:', error);
 
     return NextResponse.json(
       {

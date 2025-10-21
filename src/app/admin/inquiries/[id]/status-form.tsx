@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -33,7 +34,7 @@ export default function InquiryStatusForm({ inquiryId, currentStatus }: InquiryS
         alert('Erreur lors de la mise à jour du statut');
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      logger.error('Error updating status:', error);
       alert('Erreur lors de la mise à jour du statut');
     } finally {
       setIsLoading(false);

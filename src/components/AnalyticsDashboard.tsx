@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { 
   LineChart, 
@@ -66,7 +67,7 @@ export default function AnalyticsDashboard({ companyId, timeRange = '30d' }: Ana
         const analyticsData = await response.json();
         setData(analyticsData);
       } catch (error) {
-        console.error('Error fetching analytics:', error);
+        logger.error('Error fetching analytics:', error);
         // Set mock data for development
         setData(generateMockData());
       } finally {

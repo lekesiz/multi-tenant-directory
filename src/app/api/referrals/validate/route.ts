@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { validateReferralCode, trackReferralClick } from '@/lib/referral';
 
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Validate referral API error:', error);
+    logger.error('Validate referral API error:', error);
     
     return NextResponse.json(
       { error: 'Erreur lors de la validation du code de parrainage' },

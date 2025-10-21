@@ -63,7 +63,7 @@ export default async function NotFound() {
               Catégories Populaires
             </h2>
             <div className="flex flex-wrap gap-3 justify-center">
-              {
+              {[
                 { name: 'Restaurant', icon: '🍽️', href: '/categories/Restaurant' },
                 { name: 'Boulangerie', icon: '🥖', href: '/categories/Boulangerie' },
                 { name: 'Pâtisserie', icon: '🍰', href: '/categories/Pâtisserie' },
@@ -78,7 +78,7 @@ export default async function NotFound() {
                   <span className="mr-2">{category.icon}</span>
                   {category.name}
                 </Link>
-              ))
+              ))}
             </div>
           </div>
 

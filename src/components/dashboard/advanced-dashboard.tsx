@@ -5,6 +5,7 @@
 
 'use client';
 
+import { logger } from '@/lib/logger';
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -111,7 +112,7 @@ export function AdvancedDashboard({
         w.id === widgetId ? { ...w, data } : w
       ));
     } catch (error) {
-      console.error('Failed to refresh widget data:', error);
+      logger.error('Failed to refresh widget data:', error);
     }
   };
 
@@ -140,7 +141,7 @@ export function AdvancedDashboard({
         }),
       });
     } catch (error) {
-      console.error('Failed to save dashboard layout:', error);
+      logger.error('Failed to save dashboard layout:', error);
     }
   };
 

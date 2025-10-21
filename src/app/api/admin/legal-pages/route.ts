@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth-guard';
@@ -16,7 +17,7 @@ export async function GET() {
 
     return NextResponse.json(pages);
   } catch (error) {
-    console.error('Error fetching legal pages:', error);
+    logger.error('Error fetching legal pages:', error);
     return NextResponse.json(
       { error: 'Failed to fetch legal pages' },
       { status: 500 }
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(page);
   } catch (error) {
-    console.error('Error creating legal page:', error);
+    logger.error('Error creating legal page:', error);
     return NextResponse.json(
       { error: 'Failed to create legal page' },
       { status: 500 }

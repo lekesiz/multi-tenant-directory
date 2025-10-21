@@ -241,7 +241,7 @@ export async function sendEmailNotification(params: {
   const { to, subject, html, text } = params;
 
   // TODO: Implement with SendGrid or your email service
-  console.log(`📧 Email notification queued:`, {
+  logger.info(`📧 Email notification queued:`, {
     to,
     subject,
     htmlLength: html.length,

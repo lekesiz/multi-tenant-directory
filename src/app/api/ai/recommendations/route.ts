@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { suggestBusinessImprovements } from '@/lib/ai';
 
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('AI Recommendations API error:', error);
+    logger.error('AI Recommendations API error:', error);
     
     return NextResponse.json(
       { error: 'Erreur lors de la génération des recommandations' },

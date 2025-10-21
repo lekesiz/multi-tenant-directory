@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 
@@ -119,7 +120,7 @@ Disallow: /business/dashboard/
       },
     });
   } catch (error) {
-    console.error('Error generating ai.txt:', error);
+    logger.error('Error generating ai.txt:', error);
 
     return new NextResponse(
       `# Error generating AI policy

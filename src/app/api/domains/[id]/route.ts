@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
@@ -27,7 +28,7 @@ export async function GET(
 
     return NextResponse.json(domain);
   } catch (error) {
-    console.error('Error fetching domain:', error);
+    logger.error('Error fetching domain:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -70,7 +71,7 @@ export async function PUT(
 
     return NextResponse.json(domain);
   } catch (error) {
-    console.error('Error updating domain:', error);
+    logger.error('Error updating domain:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

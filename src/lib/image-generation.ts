@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import Anthropic from '@anthropic-ai/sdk';
 
 const client = new Anthropic();
@@ -77,7 +78,7 @@ Avoid: people, faces, logos, text overlays.`;
 export async function generateCoverImage(params: ImageGenerationParams): Promise<string | null> {
   try {
     if (!REPLICATE_API_TOKEN) {
-      console.warn('Replicate API token not configured, skipping image generation');
+      logger.warn('Replicate API token not configured, skipping image generation');
       return null;
     }
 
@@ -103,7 +104,7 @@ export async function generateCoverImage(params: ImageGenerationParams): Promise
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Replicate API error:', error);
+      logger.error('Replicate API error:', error);
       return null;
     }
 
@@ -124,7 +125,7 @@ export async function generateCoverImage(params: ImageGenerationParams): Promise
       });
 
       if (!pollResponse.ok) {
-        console.error('Failed to poll prediction');
+        logger.error('Failed to poll prediction');
         return null;
       }
 
@@ -133,20 +134,20 @@ export async function generateCoverImage(params: ImageGenerationParams): Promise
     }
 
     if (prediction.status !== 'succeeded') {
-      console.error('Image generation failed:', prediction.error);
+      logger.error('Image generation failed:', prediction.error);
       return null;
     }
 
     // Extract the image URL from the output
     const imageUrl = prediction.output?.[0];
     if (!imageUrl) {
-      console.error('No image URL in response:', prediction);
+      logger.error('No image URL in response:', prediction);
       return null;
     }
 
     return imageUrl;
   } catch (error) {
-    console.error('Error generating cover image:', error);
+    logger.error('Error generating cover image:', error);
     return null;
   }
 }
@@ -188,7 +189,7 @@ export async function generateCoverImageFallback(params: ImageGenerationParams):
     const accessKey = process.env.UNSPLASH_ACCESS_KEY;
 
     if (!accessKey) {
-      console.warn('Unsplash API key not configured');
+      logger.warn('Unsplash API key not configured');
       return null;
     }
 
@@ -197,14 +198,14 @@ export async function generateCoverImageFallback(params: ImageGenerationParams):
     );
 
     if (!response.ok) {
-      console.error('Unsplash API error:', response.status);
+      logger.error('Unsplash API error:', response.status);
       return null;
     }
 
     const data: any = await response.json();
     return data.urls?.full || data.urls?.regular || null;
   } catch (error) {
-    console.error('Error generating fallback cover image:', error);
+    logger.error('Error generating fallback cover image:', error);
     return null;
   }
 }
@@ -238,7 +239,7 @@ Format your response as a concise visual prompt suitable for DALL-E or Midjourne
     }
     return generateImagePrompt(params);
   } catch (error) {
-    console.error('Error generating image prompt description:', error);
+    logger.error('Error generating image prompt description:', error);
     return generateImagePrompt(params);
   }
 }

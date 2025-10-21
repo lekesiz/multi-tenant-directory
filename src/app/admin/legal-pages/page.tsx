@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -28,7 +29,7 @@ export default function AdminLegalPagesPage() {
         setPages(data);
       }
     } catch (error) {
-      console.error('Error fetching legal pages:', error);
+      logger.error('Error fetching legal pages:', error);
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export default function AdminLegalPagesPage() {
         fetchPages();
       }
     } catch (error) {
-      console.error('Error toggling page status:', error);
+      logger.error('Error toggling page status:', error);
     }
   };
 

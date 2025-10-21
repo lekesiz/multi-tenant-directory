@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
       specialHours: businessHours.specialHours || [],
     });
   } catch (error) {
-    console.error('Error fetching hours:', error);
+    logger.error('Error fetching hours:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
@@ -115,7 +116,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating hours:', error);
+    logger.error('Error updating hours:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

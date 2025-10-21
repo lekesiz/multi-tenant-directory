@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { Star, Check } from 'lucide-react';
 
@@ -84,7 +85,7 @@ export default function FeaturedListingUpgrade({
         window.location.href = data.checkoutUrl;
       }
     } catch (error) {
-      console.error('Error:', error);
+      logger.error('Error:', error);
     }
   };
 

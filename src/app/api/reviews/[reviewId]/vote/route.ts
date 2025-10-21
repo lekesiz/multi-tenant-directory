@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -118,7 +119,7 @@ export async function POST(
       helpfulCount: helpfulVotes,
     });
   } catch (error) {
-    console.error('Vote error:', error);
+    logger.error('Vote error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -174,7 +175,7 @@ export async function GET(
       helpfulCount: review?.helpfulCount || 0,
     });
   } catch (error) {
-    console.error('Get vote error:', error);
+    logger.error('Get vote error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la récupération du vote' },
       { status: 500 }

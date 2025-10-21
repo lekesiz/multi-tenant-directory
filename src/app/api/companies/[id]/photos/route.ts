@@ -44,7 +44,7 @@ export async function GET(
       count: photos.length,
     });
   } catch (error) {
-    console.error('Error fetching photos:', error);
+    logger.error('Error fetching photos:', error);
     return NextResponse.json(
       { error: 'Failed to fetch photos' },
       { status: 500 }
@@ -158,7 +158,7 @@ export async function POST(
       photo,
     });
   } catch (error) {
-    console.error('Error uploading photo:', error);
+    logger.error('Error uploading photo:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -289,7 +289,7 @@ export async function DELETE(
       message: 'Photo deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting photo:', error);
+    logger.error('Error deleting photo:', error);
     return NextResponse.json(
       { error: 'Failed to delete photo' },
       { status: 500 }
@@ -380,7 +380,7 @@ export async function PATCH(
       photo,
     });
   } catch (error) {
-    console.error('Error updating photo:', error);
+    logger.error('Error updating photo:', error);
     return NextResponse.json(
       { error: 'Failed to update photo' },
       { status: 500 }

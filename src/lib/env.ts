@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 /**
@@ -97,7 +98,7 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
   );
 
   if (parsed.success === false) {
-    console.error(
+    logger.error(
       '❌ Invalid environment variables:',
       parsed.error.flatten().fieldErrors,
     );

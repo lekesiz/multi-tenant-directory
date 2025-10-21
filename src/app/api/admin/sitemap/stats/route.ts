@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -26,7 +27,7 @@ export async function GET() {
       try {
         return await getSitemapStats(domain.name);
       } catch (error) {
-        console.error(`Error getting stats for ${domain.name}:`, error);
+        logger.error(`Error getting stats for ${domain.name}:`, error);
         return null;
       }
     });
@@ -37,7 +38,7 @@ export async function GET() {
     return NextResponse.json(stats);
 
   } catch (error) {
-    console.error('Error fetching sitemap stats:', error);
+    logger.error('Error fetching sitemap stats:', error);
     return NextResponse.json(
       { error: 'Failed to fetch sitemap statistics' },
       { status: 500 }

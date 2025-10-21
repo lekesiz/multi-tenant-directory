@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.error('[Webhook] STRIPE_WEBHOOK_SECRET not configured');
+      logger.error('[Webhook] STRIPE_WEBHOOK_SECRET not configured');
       return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
     }
 
@@ -53,12 +53,12 @@ export async function POST(req: NextRequest) {
         break;
 
       default:
-        console.log(`[Webhook] Unhandled event type: ${event.type}`);
+        logger.info(`[Webhook] Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('[Webhook] Error:', error);
+    logger.error('[Webhook] Error:', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -74,7 +74,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   const planId = session.metadata?.planId;
 
   if (!businessOwnerId) {
-    console.error('[Webhook] Missing businessOwnerId in session metadata');
+    logger.error('[Webhook] Missing businessOwnerId in session metadata');
     return;
   }
 
@@ -91,7 +91,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     },
   });
 
-  console.log(`[Webhook] Checkout completed for business owner: ${businessOwnerId}`);
+  logger.info(`[Webhook] Checkout completed for business owner: ${businessOwnerId}`);
 }
 
 /**
@@ -103,7 +103,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   });
 
   if (!businessOwner) {
-    console.error(`[Webhook] Business owner not found for subscription: ${subscription.id}`);
+    logger.error(`[Webhook] Business owner not found for subscription: ${subscription.id}`);
     return;
   }
 
@@ -134,7 +134,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     },
   });
 
-  console.log(`[Webhook] Subscription updated for business owner: ${businessOwner.id}`);
+  logger.info(`[Webhook] Subscription updated for business owner: ${businessOwner.id}`);
 }
 
 /**
@@ -158,7 +158,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     },
   });
 
-  console.log(`[Webhook] Subscription canceled for business owner: ${businessOwner.id}`);
+  logger.info(`[Webhook] Subscription canceled for business owner: ${businessOwner.id}`);
 }
 
 /**

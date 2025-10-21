@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 
@@ -38,7 +39,7 @@ export default function CompanyQRCode({
 
         setIsGenerating(false);
       } catch (err) {
-        console.error('Error generating QR code:', err);
+        logger.error('Error generating QR code:', err);
         setError('Erreur lors de la génération du QR code');
         setIsGenerating(false);
       }
@@ -67,7 +68,7 @@ export default function CompanyQRCode({
         });
       } catch (err) {
         // User cancelled or share failed
-        console.log('Share cancelled or failed:', err);
+        logger.info('Share cancelled or failed:', err);
       }
     } else {
       // Fallback: copy URL to clipboard
@@ -75,7 +76,7 @@ export default function CompanyQRCode({
         await navigator.clipboard.writeText(url);
         alert('Lien copié dans le presse-papiers !');
       } catch (err) {
-        console.error('Failed to copy URL:', err);
+        logger.error('Failed to copy URL:', err);
       }
     }
   };

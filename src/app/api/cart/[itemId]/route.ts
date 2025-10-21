@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { CartService } from '@/lib/ecommerce';
 import { cookies } from 'next/headers';
@@ -34,7 +35,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Remove from cart API error:', error);
+    logger.error('Remove from cart API error:', error);
     return NextResponse.json(
       { error: 'Failed to remove item from cart' },
       { status: 500 }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateMetaTags } from '@/lib/seo';
@@ -568,7 +569,7 @@ export default async function Home() {
     </>
     );
   } catch (error) {
-    console.error('Homepage error:', error);
+    logger.error('Homepage error:', error);
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

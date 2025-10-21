@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { HandThumbUpIcon, HandThumbDownIcon } from '@heroicons/react/24/outline';
 import { HandThumbUpIcon as HandThumbUpSolidIcon, HandThumbDownIcon as HandThumbDownSolidIcon } from '@heroicons/react/24/solid';
@@ -27,7 +28,7 @@ export function ReviewVoteButtons({ reviewId, initialHelpfulCount = 0 }: ReviewV
           setHelpfulCount(data.helpfulCount);
         }
       } catch (error) {
-        console.error('Error checking vote status:', error);
+        logger.error('Error checking vote status:', error);
       }
     };
 
@@ -52,10 +53,10 @@ export function ReviewVoteButtons({ reviewId, initialHelpfulCount = 0 }: ReviewV
         setIsHelpful(helpful);
       } else {
         const error = await response.json();
-        console.error('Vote error:', error.error);
+        logger.error('Vote error:', error.error);
       }
     } catch (error) {
-      console.error('Error voting:', error);
+      logger.error('Error voting:', error);
     } finally {
       setLoading(false);
     }

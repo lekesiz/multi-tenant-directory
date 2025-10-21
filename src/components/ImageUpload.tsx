@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
@@ -59,7 +60,7 @@ export default function ImageUpload({
       onChange(data.url);
       toast.success('Image téléchargée avec succès');
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Upload error:', error);
       toast.error('Échec du téléchargement de l\'image');
     } finally {
       setUploading(false);

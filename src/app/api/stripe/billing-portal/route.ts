@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { stripeService } from '@/lib/stripe-config';
 import { prisma } from '@/lib/prisma';
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Billing portal session creation failed:', error);
+    logger.error('Billing portal session creation failed:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { SUBSCRIPTION_PLANS, ANNUAL_PLANS, getPlansWithPricing } from '@/lib/stripe-config';
 import { toast } from 'react-hot-toast';
@@ -53,7 +54,7 @@ export default function PricingPlans({
         }
       }
     } catch (error) {
-      console.error('Error selecting plan:', error);
+      logger.error('Error selecting plan:', error);
       toast.error('Erreur lors de la sélection du plan');
     } finally {
       setLoading(null);

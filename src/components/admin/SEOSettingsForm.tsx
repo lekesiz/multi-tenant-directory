@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -64,7 +65,7 @@ export default function SEOSettingsForm({ domains }: SEOSettingsFormProps) {
       setMessage({ type: 'success', text: 'SEO ayarları başarıyla kaydedildi!' });
       router.refresh();
     } catch (error) {
-      console.error('Error saving SEO settings:', error);
+      logger.error('Error saving SEO settings:', error);
       setMessage({ type: 'error', text: 'Bir hata oluştu. Lütfen tekrar deneyin.' });
     } finally {
       setLoading(false);
