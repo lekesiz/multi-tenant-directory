@@ -41,9 +41,14 @@ input[type="date"],
 input[type="time"],
 input[type="datetime-local"],
 textarea,
-select {
+select,
+input,
+.form-input,
+.form-control,
+[class*="input"] {
   color: #111827 !important; /* gray-900 - Extremely dark for maximum readability */
   font-weight: 500 !important; /* Medium weight for better visibility */
+  -webkit-text-fill-color: #111827 !important; /* Force color in webkit browsers */
 }
 
 /* Button Text - Ensure High Contrast */
