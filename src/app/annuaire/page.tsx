@@ -10,6 +10,8 @@ export const revalidate = 300;
 interface SearchParams {
   category?: string;
   search?: string;
+  q?: string; // Query from homepage search
+  location?: string; // Location from homepage search
   page?: string;
 }
 
@@ -61,6 +63,9 @@ export default async function AnnuairePage({
   const itemsPerPage = 24;
   const skip = (currentPage - 1) * itemsPerPage;
 
+  // Get search query from either 'search' or 'q' parameter
+  const searchQuery = params.search || params.q;
+
   // Build where clause
   const whereClause: any = {
     isActive: true, // Only show active companies
@@ -78,9 +83,10 @@ export default async function AnnuairePage({
     };
   }
 
-  if (params.search) {
+  if (searchQuery) {
     whereClause.OR = [
-      { name: { contains: params.search, mode: 'insensitive' } },
+      { name: { contains: searchQuery, mode: 'insensitive' } },
+      { categories: { has: searchQuery } },
     ];
   }
 
@@ -179,7 +185,7 @@ export default async function AnnuairePage({
               <input
                 type="text"
                 name="search"
-                defaultValue={params.search}
+                defaultValue={searchQuery}
                 placeholder="Rechercher une entreprise..."
                 className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
               />
@@ -238,11 +244,11 @@ export default async function AnnuairePage({
 
           {/* Main Content - Companies Grid */}
           <main className="flex-1">
-            {params.search && (
+            {searchQuery && (
               <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-blue-800">
                   <strong>{totalCount}</strong> résultat(s) pour &quot;
-                  <strong>{params.search}</strong>&quot;
+                  <strong>{searchQuery}</strong>&quot;
                   <Link
                     href="/annuaire"
                     className="ml-4 text-blue-600 hover:underline"
