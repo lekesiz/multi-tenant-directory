@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
+import { cacheWrapper, CacheKeys } from '@/lib/redis';
 
 /**
  * Default select options for company queries
@@ -46,18 +47,25 @@ export const defaultCompanySelect = {
  * @param domainId - Domain ID for multi-tenant filtering
  */
 export async function getCompanyBySlug(slug: string, domainId: number) {
-  return prisma.company.findFirst({
-    where: {
-      slug,
-      content: {
-        some: {
-          domainId,
-          isVisible: true,
+  // Use Redis cache wrapper with 1 hour TTL
+  return cacheWrapper(
+    CacheKeys.company(slug),
+    async () => {
+      return prisma.company.findFirst({
+        where: {
+          slug,
+          content: {
+            some: {
+              domainId,
+              isVisible: true,
+            },
+          },
         },
-      },
+        select: defaultCompanySelect,
+      });
     },
-    select: defaultCompanySelect,
-  });
+    { ttl: 3600 } // 1 hour cache
+  );
 }
 
 /**
