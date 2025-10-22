@@ -11,7 +11,6 @@ import AnalyticsScripts from "@/components/AnalyticsScripts";
 import BodyScripts from "@/components/BodyScripts";
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import type { Metadata } from 'next';
 
 // Revalidate every 5 minutes for better performance
 export const revalidate = 300;
