@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
             isActive: true,
             createdAt: { gte: oneWeekAgo },
             // Only companies visible on this domain
-            companyContent: {
+            content: {
               some: {
                 domainId: domain.id,
                 isVisible: true,
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
             categories: true,
             rating: true,
             logoUrl: true,
-            companyContent: {
+            content: {
               where: {
                 domainId: domain.id,
               },
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
           where: {
             isActive: true,
             rating: { gte: 4.5 },
-            companyContent: {
+            content: {
               some: {
                 domainId: domain.id,
                 isVisible: true,
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
             categories: true,
             rating: true,
             logoUrl: true,
-            companyContent: {
+            content: {
               where: {
                 domainId: domain.id,
               },
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
           rating: c.rating,
           reviewCount: c._count.reviews,
           logoUrl: c.logoUrl,
-          customDescription: c.companyContent[0]?.customDescription,
+          customDescription: c.content[0]?.customDescription,
         }));
 
         const newCompaniesFormatted = formatCompanies(newCompanies);
@@ -253,7 +253,7 @@ export async function GET(request: NextRequest) {
                 type: 'digest',
                 subject: `📬 Votre résumé hebdomadaire - Semaine ${weekNumber} | ${domain.name}`,
                 status: 'failed',
-                error: error instanceof Error ? error.message : 'Unknown error',
+                errorMessage: error instanceof Error ? error.message : 'Unknown error',
                 metadata: {
                   domainId: domain.id,
                   domainName: domain.name,
