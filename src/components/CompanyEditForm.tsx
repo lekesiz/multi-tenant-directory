@@ -498,9 +498,106 @@ export default function CompanyEditForm({
                   </div>
                 </div>
               </div>
+
+              {/* Categories Section */}
+              <div className="md:col-span-2">
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-purple-900 mb-2 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Kategoriler
+                  </h3>
+                  <p className="text-xs text-purple-700 mb-3">
+                    Şirketin kategorilerini yönetin. Kategori eklemek veya çıkartmak için aşağıdaki alanları kullanın.
+                  </p>
+                  
+                  {/* Current Categories */}
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Mevcut Kategoriler
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.categories.length === 0 ? (
+                        <span className="text-sm text-gray-500 italic">Henüz kategori eklenmemiş</span>
+                      ) : (
+                        formData.categories.map((category, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800"
+                          >
+                            {category}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCategories = formData.categories.filter((_, i) => i !== index);
+                                setFormData({ ...formData, categories: newCategories });
+                              }}
+                              className="ml-2 text-purple-600 hover:text-purple-900"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Add New Category */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Yeni Kategori Ekle
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        id="newCategory"
+                        placeholder="Kategori adı girin (örn: restaurant, bakery)"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const input = e.currentTarget;
+                            const value = input.value.trim();
+                            if (value && !formData.categories.includes(value)) {
+                              setFormData({
+                                ...formData,
+                                categories: [...formData.categories, value],
+                              });
+                              input.value = '';
+                            }
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const input = document.getElementById('newCategory') as HTMLInputElement;
+                          const value = input.value.trim();
+                          if (value && !formData.categories.includes(value)) {
+                            setFormData({
+                              ...formData,
+                              categories: [...formData.categories, value],
+                            });
+                            input.value = '';
+                          }
+                        }}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        Ekle
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter tuşuna basarak veya "Ekle" butonuna tıklayarak kategori ekleyebilirsiniz.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-end">
+            <buttonassName="flex justify-end">
               <button
                 type="submit"
                 disabled={loading}
