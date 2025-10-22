@@ -19,10 +19,14 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search');
     const category = searchParams.get('category');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const skip = (page - 1) * limit;
 
-    // Şirketleri getir
+    // Şirketleri getir (optimized with pagination and selective fields)
     const companies = await prisma.company.findMany({
       where: {
+        isActive: true,
         content: {
           some: {
             domainId: getDomainId(tenant),
@@ -42,22 +46,90 @@ export async function GET(request: NextRequest) {
           },
         }),
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        address: true,
+        city: true,
+        postalCode: true,
+        phone: true,
+        email: true,
+        website: true,
+        latitude: true,
+        longitude: true,
+        categories: true,
+        logoUrl: true,
+        coverImageUrl: true,
+        rating: true,
+        reviewCount: true,
+        isFeatured: true,
         content: {
           where: {
             domainId: getDomainId(tenant),
           },
-        },
-        reviews: {
-          orderBy: {
-            reviewDate: 'desc',
+          select: {
+            id: true,
+            customDescription: true,
+            customImages: true,
+            promotions: true,
+            priority: true,
+            specialOffers: true,
           },
-          take: 5,
         },
+        _count: {
+          select: {
+            reviews: {
+              where: {
+                isApproved: true,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [
+        { isFeatured: 'desc' },
+        { rating: 'desc' },
+      ],
+      take: limit,
+      skip: skip,
+    });
+
+    // Get total count for pagination
+    const total = await prisma.company.count({
+      where: {
+        isActive: true,
+        content: {
+          some: {
+            domainId: getDomainId(tenant),
+            isVisible: true,
+          },
+        },
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { address: { contains: search, mode: 'insensitive' } },
+            { city: { contains: search, mode: 'insensitive' } },
+          ],
+        }),
+        ...(category && {
+          categories: {
+            has: category,
+          },
+        }),
       },
     });
 
-    return NextResponse.json(companies);
+    return NextResponse.json({
+      data: companies,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     logger.error('Error fetching companies:', error);
     return NextResponse.json(
