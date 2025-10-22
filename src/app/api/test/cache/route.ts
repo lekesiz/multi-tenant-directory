@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { redis, cache, cacheKeys, cacheTTL } from '@/lib/redis';
+import { getCache, setCache, deleteCache, CacheKeys } from '@/lib/redis';
 
 export const runtime = 'edge';
 
@@ -20,14 +20,14 @@ export async function GET(request: Request) {
       const testData = { message: 'Hello Redis!', timestamp: Date.now() };
       
       const setStart = Date.now();
-      await cache.set(testKey, testData, 60);
+      await setCache(testKey, testData, { ttl: 60 });
       const setTime = Date.now() - setStart;
 
       const getStart = Date.now();
-      const getData = await cache.get(testKey);
+      const getData = await getCache(testKey);
       const getTime = Date.now() - getStart;
 
-      await cache.del(testKey);
+      await deleteCache(testKey);
 
       results.tests.push({
         name: 'Basic SET/GET',
@@ -38,40 +38,8 @@ export async function GET(request: Request) {
       });
     }
 
-    if (action === 'counter' || action === 'all') {
-      // Test 2: Counter
-      const counterKey = `counter:test:${Date.now()}`;
-      
-      const count1 = await cache.incr(counterKey);
-      const count2 = await cache.incr(counterKey);
-      const count3 = await cache.incr(counterKey);
-
-      await cache.del(counterKey);
-
-      results.tests.push({
-        name: 'Counter (INCR)',
-        status: count3 === 3 ? 'PASS' : 'FAIL',
-        values: [count1, count2, count3],
-      });
-    }
-
-    if (action === 'ttl' || action === 'all') {
-      // Test 3: TTL
-      const ttlKey = `ttl:test:${Date.now()}`;
-      await cache.set(ttlKey, { test: true }, 300);
-      
-      const exists = await cache.exists(ttlKey);
-      await cache.del(ttlKey);
-
-      results.tests.push({
-        name: 'TTL/Expiration',
-        status: exists ? 'PASS' : 'FAIL',
-        ttl: '300s',
-      });
-    }
-
     if (action === 'performance' || action === 'all') {
-      // Test 4: Performance test
+      // Test 2: Performance test with large data
       const perfKey = `perf:test:${Date.now()}`;
       const largeData = {
         id: 123,
@@ -86,14 +54,14 @@ export async function GET(request: Request) {
       };
 
       const perfSetStart = Date.now();
-      await cache.set(perfKey, largeData, 60);
+      await setCache(perfKey, largeData, { ttl: 60 });
       const perfSetTime = Date.now() - perfSetStart;
 
       const perfGetStart = Date.now();
-      const perfData = await cache.get(perfKey);
+      const perfData = await getCache(perfKey);
       const perfGetTime = Date.now() - perfGetStart;
 
-      await cache.del(perfKey);
+      await deleteCache(perfKey);
 
       results.tests.push({
         name: 'Performance (Large Data)',
@@ -105,16 +73,16 @@ export async function GET(request: Request) {
     }
 
     if (action === 'keys' || action === 'all') {
-      // Test 5: Cache key generators
+      // Test 3: Cache key generators
       results.tests.push({
         name: 'Cache Key Generators',
         status: 'PASS',
         examples: {
-          company: cacheKeys.company('test-company'),
-          companies: cacheKeys.companies('haguenau.pro', 1),
-          category: cacheKeys.category('restaurant'),
-          reviews: cacheKeys.reviews(123),
-          domainSettings: cacheKeys.domainSettings('haguenau.pro'),
+          company: CacheKeys.company('test-company'),
+          companies: CacheKeys.companies(1, 'restaurant'),
+          categories: CacheKeys.categories(),
+          reviews: CacheKeys.reviews('123', 1),
+          stats: CacheKeys.stats('123'),
         },
       });
     }
@@ -137,6 +105,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       status: 'ERROR',
       message: error.message,
+      stack: error.stack,
       timestamp: new Date().toISOString(),
     }, { status: 500 });
   }
