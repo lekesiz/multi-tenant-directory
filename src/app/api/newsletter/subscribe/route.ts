@@ -104,8 +104,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send welcome email
-    // await sendWelcomeEmail(subscriber);
+    // Send welcome email
+    try {
+      const { sendNewsletterWelcomeEmail } = await import('@/lib/emails/send');
+      await sendNewsletterWelcomeEmail({
+        email: subscriber.email,
+        firstName: subscriber.firstName || undefined,
+        domainName,
+        domainUrl: `https://${domainName}`,
+      });
+    } catch (emailError) {
+      logger.error('Failed to send welcome email:', emailError);
+      // Don't fail the subscription if email fails
+    }
 
     // Log email
     await prisma.emailLog.create({
@@ -114,7 +125,7 @@ export async function POST(request: NextRequest) {
         email: subscriber.email,
         type: 'welcome',
         subject: `Bienvenue sur ${domainName}`,
-        status: 'pending',
+        status: 'sent',
         metadata: {
           domainId: domain.id,
           domainName,
