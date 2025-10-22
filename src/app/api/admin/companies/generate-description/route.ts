@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { generateBusinessDescription } from '@/lib/translation';
+import { generateAICacheKey, getOrGenerateAI } from '@/lib/ai-cache';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,13 +28,23 @@ export async function POST(request: NextRequest) {
 
     logger.info(`🤖 Generating SEO content for: ${name} (${category})`);
 
-    // Generate content using Claude
-    const generatedContent = await generateBusinessDescription({
-      name,
+    // Generate cache key
+    const cacheKey = generateAICacheKey('description', companyId || name, {
       category,
-      description,
-      location,
+      location: location || 'unknown',
     });
+
+    // Generate content using Claude with caching
+    const generatedContent = await getOrGenerateAI(
+      cacheKey,
+      () => generateBusinessDescription({
+        name,
+        category,
+        description,
+        location,
+      }),
+      30 * 24 * 60 * 60 // 30 days TTL
+    );
 
     if (!generatedContent) {
       return NextResponse.json(
