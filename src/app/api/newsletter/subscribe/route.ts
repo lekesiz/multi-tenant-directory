@@ -95,11 +95,11 @@ export async function POST(request: NextRequest) {
         domainId: domain.id,
         status: 'active',
         source: 'website',
-        preferences: preferences || {
+        preferences: (preferences || {
           weeklyDigest: true,
           newBusinesses: true,
           specialOffers: false,
-        },
+        }) as any,
         confirmedAt: new Date(),
       },
     });
