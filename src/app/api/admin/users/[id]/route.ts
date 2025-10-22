@@ -101,7 +101,7 @@ export async function DELETE(
     }
 
     // Prevent self-deletion
-    if (userId === session.user.id) {
+    if (userId === parseInt(session.user.id.toString())) {
       return NextResponse.json(
         { error: 'Vous ne pouvez pas supprimer votre propre compte' },
         { status: 403 }
