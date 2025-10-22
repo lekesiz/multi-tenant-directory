@@ -29,6 +29,7 @@ export default function AIDescriptionGenerator({
       const response = await fetch('/api/admin/companies/generate-description', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           companyId,
           name: companyName,
