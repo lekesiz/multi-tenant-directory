@@ -117,6 +117,14 @@ export async function getCompaniesByDomain(
     order = 'asc',
   } = options || {};
 
+  // Calculate page number for cache key
+  const page = Math.floor(offset / limit) + 1;
+  
+  // Use cache wrapper for list queries
+  return cacheWrapper(
+    CacheKeys.companies(page, category),
+    async () => {
+
   const where: Prisma.CompanyWhereInput = {
     content: {
       some: {
@@ -158,13 +166,16 @@ export async function getCompaniesByDomain(
     prismaOrderBy = { name: order };
   }
 
-  return prisma.company.findMany({
-    where,
-    select: defaultCompanySelect,
-    orderBy: prismaOrderBy,
-    take: limit,
-    skip: offset,
-  });
+      return prisma.company.findMany({
+        where,
+        select: defaultCompanySelect,
+        orderBy: prismaOrderBy,
+        take: limit,
+        skip: offset,
+      });
+    },
+    { ttl: 1800 } // 30 minutes cache
+  );
 }
 
 /**
@@ -174,7 +185,11 @@ export async function getCompaniesByDomain(
  * @param limit - Maximum number of companies to return
  */
 export async function getFeaturedCompanies(domainId: number, limit = 6) {
-  return prisma.company.findMany({
+  // Use cache for featured companies
+  return cacheWrapper(
+    `featured:${domainId}:${limit}`,
+    async () => {
+      return prisma.company.findMany({
     where: {
       content: {
         some: {
@@ -220,11 +235,14 @@ export async function getFeaturedCompanies(domainId: number, limit = 6) {
         },
       },
     },
-    orderBy: {
-      rating: 'desc',
+        orderBy: {
+          rating: 'desc',
+        },
+        take: limit,
+      });
     },
-    take: limit,
-  });
+    { ttl: 1800 } // 30 minutes cache
+  );
 }
 
 /**
