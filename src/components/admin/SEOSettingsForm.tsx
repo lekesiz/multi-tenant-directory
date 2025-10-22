@@ -16,6 +16,7 @@ interface SEOSettingsFormProps {
 
 interface SEOSettings {
   googleAnalyticsId?: string;
+  googleTagManagerId?: string;
   googleSearchConsoleVerification?: string;
   googleAdsId?: string;
   facebookPixelId?: string;
@@ -25,6 +26,7 @@ interface SEOSettings {
   hotjarId?: string;
   clarityId?: string;
   customScripts?: string;
+  customBodyScripts?: string;
 }
 
 export default function SEOSettingsForm({ domains }: SEOSettingsFormProps) {
@@ -116,6 +118,20 @@ export default function SEOSettingsForm({ domains }: SEOSettingsFormProps) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500">Örnek: G-XXXXXXXXXX</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Google Tag Manager ID
+            </label>
+            <input
+              type="text"
+              placeholder="GTM-XXXXXXX"
+              value={formData.googleTagManagerId || ''}
+              onChange={(e) => setFormData({ ...formData, googleTagManagerId: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">Örnek: GTM-XXXXXXX - Otomatik olarak head ve body'ye eklenir</p>
           </div>
 
           <div>
@@ -240,20 +256,38 @@ export default function SEOSettingsForm({ domains }: SEOSettingsFormProps) {
       {/* Custom Scripts */}
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4">Özel Scriptler</h2>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Custom Scripts (Head)
-          </label>
-          <textarea
-            rows={6}
-            placeholder="<script>...</script>"
-            value={formData.customScripts || ''}
-            onChange={(e) => setFormData({ ...formData, customScripts: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            HTML head içine eklenecek özel script kodları
-          </p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Custom Scripts (Head)
+            </label>
+            <textarea
+              rows={6}
+              placeholder="<script>...</script>"
+              value={formData.customScripts || ''}
+              onChange={(e) => setFormData({ ...formData, customScripts: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              HTML head içine eklenecek özel script kodları
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Custom Scripts (Body)
+            </label>
+            <textarea
+              rows={6}
+              placeholder="<noscript>...</noscript>"
+              value={formData.customBodyScripts || ''}
+              onChange={(e) => setFormData({ ...formData, customBodyScripts: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              HTML body başlangıcına eklenecek özel script kodları (örn: GTM noscript)
+            </p>
+          </div>
         </div>
       </div>
 

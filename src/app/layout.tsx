@@ -7,6 +7,8 @@ import CookieBanner from "@/components/CookieBanner";
 import { WebVitals } from "@/components/WebVitals";
 import { PerformanceMonitor } from "@/components/PerformanceMonitor";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import AnalyticsScripts from "@/components/AnalyticsScripts";
+import BodyScripts from "@/components/BodyScripts";
 
 // Revalidate every 5 minutes for better performance
 export const revalidate = 300;
@@ -59,10 +61,12 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//res.cloudinary.com" />
         <meta name="theme-color" content="#3B82F6" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <AnalyticsScripts />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <BodyScripts />
         <Providers>
           <ServiceWorkerRegistration />
           <WebVitals />
