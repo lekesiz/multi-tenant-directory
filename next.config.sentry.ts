@@ -26,8 +26,6 @@ const nextConfig: NextConfig = {
       '@headlessui/react',
       'recharts',
     ],
-    // Enable instrumentation for Sentry
-    instrumentationHook: true,
   },
 
   // Compiler optimizations
