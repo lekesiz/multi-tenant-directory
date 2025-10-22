@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Vercel Credentials
+VERCEL_CREDENTIALS.md
+NEON_DATABASE_CREDENTIALS.md
+CREDENTIALS_MASTER.md
+PROJE_DURUM_RAPORU.md

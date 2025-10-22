@@ -714,22 +714,65 @@ export default function CompanyEditForm({
               {company.reviews.map((review) => (
                 <div
                   key={review.id}
-                  className="border border-gray-200 rounded-lg p-4"
+                  className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-semibold text-gray-900">
-                      {review.authorName}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-semibold text-gray-900">
+                          {review.authorName}
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-yellow-500 mr-1">★</span>
+                          <span className="font-semibold">{review.rating}</span>
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p className="text-gray-700 text-sm mb-2">{review.comment}</p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-gray-500">
+                          {new Date(review.reviewDate).toLocaleDateString('tr-TR')}
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          review.isApproved 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {review.isApproved ? 'Onaylı' : 'Beklemede'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <span className="text-yellow-500 mr-1">★</span>
-                      <span className="font-semibold">{review.rating}</span>
-                    </div>
-                  </div>
-                  {review.comment && (
-                    <p className="text-gray-700 text-sm mb-2">{review.comment}</p>
-                  )}
-                  <div className="text-xs text-gray-500">
-                    {new Date(review.reviewDate).toLocaleDateString('tr-TR')}
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`"${review.authorName}" kullanıcısının yorumunu silmek istediğinizden emin misiniz?`)) {
+                          return;
+                        }
+                        
+                        try {
+                          const response = await fetch(`/api/admin/reviews/${review.id}`, {
+                            method: 'DELETE',
+                          });
+                          
+                          if (response.ok) {
+                            alert('✅ Yorum başarıyla silindi');
+                            router.refresh();
+                          } else {
+                            const error = await response.json();
+                            alert(`❌ Hata: ${error.error || 'Yorum silinemedi'}`);
+                          }
+                        } catch (error) {
+                          console.error('Error deleting review:', error);
+                          alert('❌ Yorum silinirken bir hata oluştu');
+                        }
+                      }}
+                      className="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Yorumu sil"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               ))}
