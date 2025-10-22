@@ -3,9 +3,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
-export default function SentryExamplePage() {
+export default function SentryTestPage() {
   useEffect(() => {
-    // This will be captured by Sentry on page load
     Sentry.captureMessage("Sentry test page loaded successfully!", "info");
   }, []);
 
@@ -81,4 +80,3 @@ export default function SentryExamplePage() {
     </div>
   );
 }
-
