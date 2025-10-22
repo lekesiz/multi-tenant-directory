@@ -20,6 +20,8 @@ model Domain {
   updatedAt       DateTime         @updatedAt
   content         CompanyContent[] @relation("DomainContent")
   legalPages      LegalPage[]
+  newsletterSubscribers NewsletterSubscriber[]
+  emailCampaigns  EmailCampaign[]
 
   @@index([name, isActive])
   @@index([isActive])
@@ -1170,5 +1172,86 @@ model ContactInquiry {
   @@index([createdAt(sort: Desc)])
   @@index([email])
   @@map("contact_inquiries")
+}
+
+
+
+// Newsletter & Email Marketing
+model NewsletterSubscriber {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  firstName         String?
+  lastName          String?
+  domainId          Int?
+  domain            Domain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  status            String    @default("active") // active, unsubscribed, bounced
+  source            String?   // website, api, import
+  preferences       Json?     // { weeklyDigest: true, newBusinesses: true, specialOffers: false }
+  confirmedAt       DateTime?
+  unsubscribedAt    DateTime?
+  unsubscribeReason String?
+  lastEmailSentAt   DateTime?
+  emailsSentCount   Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([domainId])
+  @@index([createdAt(sort: Desc)])
+  @@map("newsletter_subscribers")
+}
+
+model EmailCampaign {
+  id              String    @id @default(cuid())
+  name            String
+  subject         String
+  previewText     String?
+  htmlContent     String    @db.Text
+  textContent     String?   @db.Text
+  domainId        Int?
+  domain          Domain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  status          String    @default("draft") // draft, scheduled, sending, sent, failed
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  recipientCount  Int       @default(0)
+  openedCount     Int       @default(0)
+  clickedCount    Int       @default(0)
+  bouncedCount    Int       @default(0)
+  unsubscribedCount Int     @default(0)
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status])
+  @@index([domainId])
+  @@index([scheduledAt])
+  @@index([createdAt(sort: Desc)])
+  @@map("email_campaigns")
+}
+
+model EmailLog {
+  id              String    @id @default(cuid())
+  subscriberId    String?
+  email           String
+  campaignId      String?
+  type            String    // welcome, digest, reminder, campaign, transactional
+  subject         String
+  status          String    @default("pending") // pending, sent, delivered, opened, clicked, bounced, failed
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  bouncedAt       DateTime?
+  errorMessage    String?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([subscriberId])
+  @@index([email])
+  @@index([campaignId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("email_logs")
 }
 
