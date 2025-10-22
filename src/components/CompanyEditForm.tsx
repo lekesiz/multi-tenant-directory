@@ -597,7 +597,7 @@ export default function CompanyEditForm({
               </div>
             </div>
 
-            <buttonassName="flex justify-end">
+            <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={loading}
