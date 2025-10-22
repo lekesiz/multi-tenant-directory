@@ -1,8 +1,10 @@
+'use client';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { Star, MapPin, Phone, ExternalLink, Building2 } from 'lucide-react';
+import { getCategoryFrenchName } from '@/lib/categories';
 
 // ISR: Revalidate every 5 minutes
 export const revalidate = 300;
@@ -145,27 +147,45 @@ export default async function AnnuairePage({
     });
   });
 
-  // Convert to array and sort by count
-  const categories = Array.from(categoryMap.entries())
+  // Convert to array and sort by count, then get French names
+  const categoriesWithCounts = Array.from(categoryMap.entries())
     .map(([category, count]) => ({
-      category,
-      _count: { category: count },
+      slug: category,
+      count: count,
     }))
-    .sort((a, b) => b._count.category - a._count.category);
+    .sort((a, b) => b.count - a.count);
+  
+  // Get French names for categories
+  const categories = await Promise.all(
+    categoriesWithCounts.map(async (cat) => ({
+      slug: cat.slug,
+      name: await getCategoryFrenchName(cat.slug),
+      _count: { category: cat.count },
+    }))
+  );
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  // Calculate average rating for each company
-  const companiesWithRating = companies.map((company) => {
-    const avgRating = company.reviews.length > 0
-      ? company.reviews.reduce((sum, r) => sum + r.rating, 0) / company.reviews.length
-      : 0;
-    return {
-      ...company,
-      avgRating,
-      reviewCount: company.reviews.length,
-    };
-  });
+  // Calculate average rating and get French category names for each company
+  const companiesWithRating = await Promise.all(
+    companies.map(async (company) => {
+      const avgRating = company.reviews.length > 0
+        ? company.reviews.reduce((sum, r) => sum + r.rating, 0) / company.reviews.length
+        : 0;
+      
+      // Get French names for categories
+      const frenchCategories = await Promise.all(
+        company.categories.map(cat => getCategoryFrenchName(cat))
+      );
+      
+      return {
+        ...company,
+        categories: frenchCategories,
+        avgRating,
+        reviewCount: company.reviews.length,
+      };
+    })
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -224,16 +244,16 @@ export default async function AnnuairePage({
                 </Link>
                 {categories.map((cat) => (
                   <Link
-                    key={cat.category}
-                    href={`/annuaire?category=${encodeURIComponent(cat.category)}`}
+                    key={cat.slug}
+                    href={`/annuaire?category=${encodeURIComponent(cat.slug)}`}
                     className={`block px-3 py-2 rounded-lg transition ${
-                      params.category === cat.category
+                      params.category === cat.slug
                         ? 'bg-blue-50 text-blue-600 font-semibold'
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <span className="flex items-center justify-between">
-                      <span className="truncate">{cat.category}</span>
+                      <span className="truncate">{cat.name}</span>
                       <span className="text-sm ml-2">{cat._count.category}</span>
                     </span>
                   </Link>

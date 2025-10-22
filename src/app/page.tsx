@@ -22,6 +22,7 @@ import {
   getReviewsCountByDomain,
   getAverageRatingByDomain
 } from '@/lib/queries/review';
+import { getCategoryFrenchName } from '@/lib/categories';
 
 // ISR: Revalidate every 5 minutes for better performance
 export const revalidate = 300;
@@ -44,11 +45,22 @@ async function getStats(domainId: number) {
 }
 
 /**
- * Get popular categories for a domain
+ * Get popular categories for a domain with French names
  */
 async function getPopularCategories(domainId: number) {
   const categories = await getCompaniesByCategoryCount(domainId);
-  return categories.slice(0, 8);
+  const topCategories = categories.slice(0, 8);
+  
+  // Get French names for each category
+  const categoriesWithFrenchNames = await Promise.all(
+    topCategories.map(async (cat) => ({
+      slug: cat.name,
+      name: await getCategoryFrenchName(cat.name),
+      count: cat.count,
+    }))
+  );
+  
+  return categoriesWithFrenchNames;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -175,17 +187,17 @@ export default async function Home() {
 
       {/* Featured Businesses Carousel */}
       {featuredCompanies.length > 0 && (
-        <FeaturedBusinessesCarousel businesses={featuredCompanies.map(c => ({
+        <FeaturedBusinessesCarousel businesses={await Promise.all(featuredCompanies.map(async c => ({
           id: c.id,
           name: c.name,
           slug: c.slug,
           address: c.address || '',
           city: c.city || '',
-          categories: c.categories || [],
+          categories: await Promise.all((c.categories || []).map(cat => getCategoryFrenchName(cat))),
           rating: c.rating || 0,
           reviewCount: c.reviewCount || 0,
           logoUrl: c.logoUrl,
-        }))} />
+        })))} />
       )}
 
       {/* Pricing Section */}
@@ -224,39 +236,44 @@ export default async function Home() {
             Entreprises Mises en Avant
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredCompanies.map((company) => (
-              <Link
-                key={company.id}
-                href={`/companies/${company.slug}`}
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1"
-              >
-                <h4 className="font-bold text-lg text-gray-900 mb-2">
-                  {company.name}
-                </h4>
-                <p className="text-sm text-gray-600 mb-3">
-                  {company.address}, {company.city}
-                </p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {company.categories.slice(0, 3).map((cat) => (
-                    <span
-                      key={cat}
-                      className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
-                    >
-                      {cat}
-                    </span>
-                  ))}
-                </div>
-                {company.rating && (
-                  <div className="flex items-center">
-                    <span className="text-yellow-500">⭐</span>
-                    <span className="ml-1 font-semibold">{company.rating.toFixed(1)}</span>
-                    <span className="ml-1 text-sm text-gray-500">
-                      ({company.reviewCount} avis)
-                    </span>
+            {await Promise.all(featuredCompanies.map(async (company) => {
+              const frenchCategories = await Promise.all(
+                company.categories.slice(0, 3).map(cat => getCategoryFrenchName(cat))
+              );
+              return (
+                <Link
+                  key={company.id}
+                  href={`/companies/${company.slug}`}
+                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1"
+                >
+                  <h4 className="font-bold text-lg text-gray-900 mb-2">
+                    {company.name}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {company.address}, {company.city}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {frenchCategories.map((cat, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
+                      >
+                        {cat}
+                      </span>
+                    ))}
                   </div>
-                )}
-              </Link>
-            ))}
+                  {company.rating && (
+                    <div className="flex items-center">
+                      <span className="text-yellow-500">⭐</span>
+                      <span className="ml-1 font-semibold">{company.rating.toFixed(1)}</span>
+                      <span className="ml-1 text-sm text-gray-500">
+                        ({company.reviewCount} avis)
+                      </span>
+                    </div>
+                  )}
+                </Link>
+              );
+            }))}
           </div>
         </section>
       )}
@@ -269,8 +286,8 @@ export default async function Home() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {popularCategories.map((category) => (
             <Link
-              key={category.name}
-              href={`/categories/${encodeURIComponent(category.name)}`}
+              key={category.slug}
+              href={`/categories/${encodeURIComponent(category.slug)}`}
               className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1 cursor-pointer"
             >
               <div className="text-4xl mb-3">{getCategoryIcon(category.name)}</div>
