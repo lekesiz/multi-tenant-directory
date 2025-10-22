@@ -66,10 +66,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, subject, content, domainId, scheduledAt } = body;
+    const { name, subject, htmlContent, domainId, scheduledAt } = body;
 
     // Validation
-    if (!name || !subject || !content || !domainId) {
+    if (!name || !subject || !htmlContent || !domainId) {
       return NextResponse.json(
         { success: false, message: 'Champs requis manquants' },
         { status: 400 }
@@ -93,13 +93,11 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         subject,
-        content,
+        htmlContent,
         domainId,
         status: 'draft',
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-        metadata: {
-          createdBy: session.user.email,
-        } as any,
+        createdBy: session.user.email,
       },
     });
 
