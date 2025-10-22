@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
             status: 'active',
             firstName: firstName || existing.firstName,
             lastName: lastName || existing.lastName,
-            preferences: preferences || existing.preferences,
+            preferences: (preferences || existing.preferences) as any,
             domainId: domain.id,
             unsubscribedAt: null,
             unsubscribeReason: null,
