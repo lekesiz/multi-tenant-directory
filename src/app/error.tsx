@@ -7,6 +7,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import * as Sentry from '@sentry/nextjs';
 
 export default function Error({
   error,
@@ -21,8 +22,18 @@ export default function Error({
       console.error('Error boundary caught:', error);
     }
     
-    // TODO: Log to error tracking service (Sentry)
-    // logErrorToService(error);
+    // Log to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        errorBoundary: 'global',
+      },
+      contexts: {
+        errorInfo: {
+          digest: error.digest,
+          message: error.message,
+        },
+      },
+    });
   }, [error]);
 
   return (
