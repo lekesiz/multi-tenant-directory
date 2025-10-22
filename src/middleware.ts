@@ -49,6 +49,7 @@ const EXCLUDED_PATHS = [
   'politique-de-confidentialite',
   'unsubscribe',
   'annuaire',
+  'sentry-test',
   '_next',
   'static',
   'favicon.ico',
