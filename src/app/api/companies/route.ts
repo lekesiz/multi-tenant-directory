@@ -166,6 +166,17 @@ export async function POST(request: NextRequest) {
       coverImageUrl,
     } = body;
 
+    // Resolve tenant from request
+    const tenant = await resolveTenant(request);
+    if (!tenant) {
+      return NextResponse.json(
+        { error: 'Invalid tenant domain' },
+        { status: 400 }
+      );
+    }
+
+    const domainId = getDomainId(tenant);
+
     // Şirket oluştur
     const company = await prisma.company.create({
       data: {
@@ -183,6 +194,16 @@ export async function POST(request: NextRequest) {
         categories: categories || [],
         logoUrl,
         coverImageUrl,
+      },
+    });
+
+    // CompanyContent oluştur (şirketin domain'de görünmesi için)
+    await prisma.companyContent.create({
+      data: {
+        companyId: company.id,
+        domainId: domainId,
+        isVisible: true,
+        priority: 0,
       },
     });
 
