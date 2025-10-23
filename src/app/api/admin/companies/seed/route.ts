@@ -151,11 +151,10 @@ export async function POST(request: Request) {
           .replace(/^-|-$/g, '');
         
         try {
-          await prisma.company.create({
+          const company = await prisma.company.create({
             data: {
               name: template.name.replace('{city}', site.city),
               slug: slug,
-              description: template.description,
               categories: template.categories,
               phone: template.phone,
               address: template.name.includes('Boulangerie') ? `1 Place de la Mairie, ${site.city}` :
@@ -164,12 +163,20 @@ export async function POST(request: Request) {
                        `${Math.floor(Math.random() * 50) + 1} Rue ${['de la Gare', 'du Marché', 'Principale', 'de l\'Église'][Math.floor(Math.random() * 4)]}, ${site.city}`,
               city: site.city,
               postalCode: '67500',
-              country: 'France',
               rating: parseFloat((4.0 + Math.random() * 1.0).toFixed(1)),
               reviewCount: Math.floor(Math.random() * 50) + 10,
               isActive: true,
-              isFeatured: false,
-              domainId: domain.id
+              isFeatured: false
+            }
+          });
+          
+          // CompanyContent oluştur
+          await prisma.companyContent.create({
+            data: {
+              companyId: company.id,
+              domainId: domain.id,
+              isVisible: true,
+              customDescription: template.description
             }
           });
           cityCount++;
@@ -181,11 +188,10 @@ export async function POST(request: Request) {
       // NETZ Informatique'i ekle
       const netzSlug = `netz-informatique-${site.name}`;
       try {
-        await prisma.company.create({
+        const netzCompany = await prisma.company.create({
           data: {
             name: netzInformatique.name,
             slug: netzSlug,
-            description: netzInformatique.description,
             categories: netzInformatique.categories,
             phone: netzInformatique.phone,
             email: netzInformatique.email,
@@ -193,12 +199,20 @@ export async function POST(request: Request) {
             address: `${netzInformatique.address}, ${site.city}`,
             city: site.city,
             postalCode: '67500',
-            country: 'France',
             rating: netzInformatique.rating,
             reviewCount: 127,
             isActive: true,
-            isFeatured: true,
-            domainId: domain.id
+            isFeatured: true
+          }
+        });
+        
+        // CompanyContent oluştur
+        await prisma.companyContent.create({
+          data: {
+            companyId: netzCompany.id,
+            domainId: domain.id,
+            isVisible: true,
+            customDescription: netzInformatique.description
           }
         });
         cityCount++;
