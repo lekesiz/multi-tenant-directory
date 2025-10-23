@@ -177,11 +177,19 @@ export async function POST(request: NextRequest) {
 
     const domainId = getDomainId(tenant);
 
+    // Slug'ın unique olduğundan emin ol
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (await prisma.company.findUnique({ where: { slug: uniqueSlug } })) {
+      counter++;
+      uniqueSlug = `${slug}-${counter}`;
+    }
+
     // Şirket oluştur
     const company = await prisma.company.create({
       data: {
         name,
-        slug,
+        slug: uniqueSlug,
         googlePlaceId,
         address,
         city,
