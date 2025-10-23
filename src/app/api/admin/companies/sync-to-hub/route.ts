@@ -72,9 +72,9 @@ export async function POST(request: Request) {
           companyId: company.id,
           domainId: hubDomain.id,
           isVisible: true,
-          customDescription: originalContent?.customDescription || null,
-          customImages: originalContent?.customImages || null,
-          promotions: originalContent?.promotions || null
+          customDescription: originalContent?.customDescription ?? undefined,
+          customImages: originalContent?.customImages ?? undefined,
+          promotions: originalContent?.promotions ?? undefined
         }
       });
       
