@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { getCurrentDomainInfo } from '@/lib/queries/domain';
+import { resolveTenant, getDomainId } from '@/lib/api-guard';
+import { logger } from '@/lib/logger';
+import { env } from '@/lib/env';
 
 const createLeadSchema = z.object({
   categoryId: z.number().optional(),
@@ -37,44 +39,22 @@ function getCategoryInfo(categoryId: number) {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 Lead creation request started');
+    logger.info('🚀 Lead creation request started');
     const body = await request.json();
-    console.log('📝 Request body:', body);
+    logger.info('📝 Request body:', body);
     
     const validatedData = createLeadSchema.parse(body);
-    console.log('✅ Validation successful:', validatedData);
+    logger.info('✅ Validation successful:', validatedData);
 
-    // Check if DATABASE_URL is available
-    if (!process.env.DATABASE_URL) {
-      // Mock response when database is not available
-      console.log('⚠️ DATABASE_URL not available, using mock response');
-      console.log('Mock lead creation:', validatedData);
-      return NextResponse.json({
-        success: true,
-        leadId: `mock-${Date.now()}`,
-        message: 'Demande créée avec succès. Nous vous contacterons bientôt.'
-      });
-    }
-
-    console.log('✅ DATABASE_URL available, proceeding with real database');
-
-    // Get tenant from request
-    console.log('🔍 Getting domain info...');
-    const { domainData } = await getCurrentDomainInfo();
-    console.log('🏢 Domain data:', domainData);
-    
-    if (!domainData) {
-      console.log('❌ No domain data found');
-      return NextResponse.json(
-        { error: 'Invalid domain' },
-        { status: 400 }
-      );
-    }
+    // Resolve tenant using existing pattern
+    const tenant = await resolveTenant(request);
+    const domainId = getDomainId(tenant);
+    logger.info('🏢 Tenant resolved:', { domainId, domainName: tenant.domain.name });
 
     // Check for duplicate phone number in same tenant (last 24 hours)
     const existingLead = await prisma.lead.findFirst({
       where: {
-        tenantId: domainData.id,
+        tenantId: domainId,
         phone: validatedData.phone,
         createdAt: {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
@@ -83,6 +63,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingLead) {
+      logger.warn('Duplicate lead attempt:', { phone: validatedData.phone, domainId });
       return NextResponse.json(
         { error: 'Une demande avec ce numéro de téléphone a déjà été soumise aujourd\'hui' },
         { status: 409 }
@@ -92,7 +73,7 @@ export async function POST(request: NextRequest) {
     // Create lead
     const lead = await prisma.lead.create({
       data: {
-        tenantId: domainData.id,
+        tenantId: domainId,
         categoryId: validatedData.categoryId,
         postalCode: validatedData.postalCode,
         phone: validatedData.phone,
@@ -106,6 +87,8 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    logger.info('✅ Lead created successfully:', { leadId: lead.id, domainId });
+
     // Log consent
     await prisma.consentLog.create({
       data: {
@@ -118,6 +101,8 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    logger.info('✅ Consent logged successfully');
+
     // Trigger AI matching (async) - will be implemented
     // await triggerAIMatching(lead.id);
 
@@ -129,19 +114,16 @@ export async function POST(request: NextRequest) {
 
 
   } catch (error) {
-    console.error('❌ Lead creation error:', error);
-    console.error('❌ Error type:', typeof error);
-    console.error('❌ Error message:', error instanceof Error ? error.message : 'Unknown error');
+    logger.error('❌ Lead creation error:', error);
     
     if (error instanceof z.ZodError) {
-      console.log('❌ Validation error:', error.issues);
+      logger.error('❌ Validation error:', error.issues);
       return NextResponse.json(
         { error: 'Données invalides', details: error.issues },
         { status: 400 }
       );
     }
     
-    console.log('❌ Generic error, returning 500');
     return NextResponse.json(
       { error: 'Erreur lors de la création de la demande' },
       { status: 500 }
@@ -151,112 +133,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if DATABASE_URL is available
-    if (!process.env.DATABASE_URL) {
-      // Return mock data when database is not available
-      const { searchParams } = new URL(request.url);
-      const status = searchParams.get('status') || 'new';
-      const page = parseInt(searchParams.get('page') || '1');
-      const limit = parseInt(searchParams.get('limit') || '20');
-
-      // Static mock data
-      const mockLeads = [
-        {
-          id: 'mock-lead-1',
-          tenantId: 1,
-          categoryId: 2, // Électricien
-          category: {
-            id: 2,
-            frenchName: 'Électricien',
-            googleCategory: 'electrician'
-          },
-          postalCode: '67500',
-          phone: '0663907527',
-          email: 'mikaillekesiz@gmail.com',
-          note: 'je cherche peintre.',
-          budgetBand: null,
-          timeWindow: null,
-          attachments: [],
-          consentFlags: {
-            marketing: false,
-            sharing: true,
-            calls: true,
-            dataProcessing: true
-          },
-          source: 'web',
-          status: 'new',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          assignments: []
-        },
-        {
-          id: 'mock-lead-2',
-          tenantId: 1,
-          categoryId: 1, // Plombier
-          category: {
-            id: 1,
-            frenchName: 'Plombier',
-            googleCategory: 'plumber'
-          },
-          postalCode: '67000',
-          phone: '0612345678',
-          email: 'test@example.com',
-          note: 'Je cherche un plombier pour réparer une fuite.',
-          budgetBand: null,
-          timeWindow: null,
-          attachments: [],
-          consentFlags: {
-            marketing: true,
-            sharing: true,
-            calls: true,
-            dataProcessing: true
-          },
-          source: 'web',
-          status: 'assigned',
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-          assignments: [
-            {
-              id: 'mock-assignment-1',
-              leadId: 'mock-lead-2',
-              companyId: 1,
-              score: 85,
-              rank: 1,
-              status: 'sent',
-              createdAt: new Date().toISOString(),
-              company: {
-                id: 1,
-                name: 'Plomberie Martin',
-                phone: '0612345678',
-                email: 'contact@plomberie-martin.fr'
-              }
-            }
-          ]
-        }
-      ];
-
-      // Filter by status
-      const filteredLeads = mockLeads.filter(lead => lead.status === status);
-
-      return NextResponse.json({
-        leads: filteredLeads,
-        pagination: {
-          page,
-          limit,
-          total: filteredLeads.length,
-          pages: Math.ceil(filteredLeads.length / limit)
-        }
-      });
-    }
-
-    // Admin only - get leads for tenant
-    const { domainData } = await getCurrentDomainInfo();
-    if (!domainData) {
-      return NextResponse.json(
-        { error: 'Invalid domain' },
-        { status: 400 }
-      );
-    }
+    // Resolve tenant using existing pattern
+    const tenant = await resolveTenant(request);
+    const domainId = getDomainId(tenant);
+    logger.info('🔍 Getting leads for domain:', { domainId, domainName: tenant.domain.name });
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'new';
@@ -265,7 +145,7 @@ export async function GET(request: NextRequest) {
 
     const leads = await prisma.lead.findMany({
       where: {
-        tenantId: domainData.id,
+        tenantId: domainId,
         status
       },
       include: {
@@ -291,10 +171,12 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.lead.count({
       where: {
-        tenantId: domainData.id,
+        tenantId: domainId,
         status
       }
     });
+
+    logger.info('✅ Leads retrieved:', { count: leads.length, total, status });
 
     return NextResponse.json({
       leads,
@@ -308,7 +190,7 @@ export async function GET(request: NextRequest) {
 
 
   } catch (error) {
-    console.error('Get leads error:', error);
+    logger.error('❌ Get leads error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des demandes' },
       { status: 500 }
