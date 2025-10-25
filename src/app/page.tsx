@@ -227,19 +227,114 @@ export default async function Home() {
       {/* Pricing Section */}
       <PricingHomepageSection />
 
-      {/* Lead Form Section */}
+      {/* Lead Form Section - Client-side only */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <LeadForm 
-          categories={popularCategories.map(cat => ({
-            id: cat.id,
-            frenchName: cat.name,
-            icon: getCategoryIcon(cat.name)
-          }))}
-          onSubmit={(data) => {
-            // Optional: Track form submission
-            console.log('Lead form submitted:', data);
-          }}
-        />
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+            Trouvez le bon professionnel pour votre projet
+          </h2>
+          <p className="text-gray-600 mb-8 text-center">
+            Décrivez votre besoin en quelques clics, nous vous mettons en relation avec les meilleurs experts locaux.
+          </p>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Type de service
+              </label>
+              <select className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Sélectionnez une catégorie (optionnel)</option>
+                <option value="plombier">🔧 Plombier</option>
+                <option value="electricien">⚡ Électricien</option>
+                <option value="chauffagiste">🔥 Chauffagiste</option>
+                <option value="menuisier">🔨 Menuisier</option>
+                <option value="peintre">🎨 Peintre</option>
+                <option value="carreleur">🧱 Carreleur</option>
+                <option value="jardinier">🌱 Jardinier</option>
+                <option value="nettoyage">🧽 Nettoyage</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Code Postal <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: 67000"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Téléphone <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                placeholder="Ex: 0612345678"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email (optionnel)
+              </label>
+              <input
+                type="email"
+                placeholder="Ex: votre.email@example.com"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Décrivez votre besoin (optionnel)
+              </label>
+              <textarea
+                rows={4}
+                placeholder="Ex: Je cherche un plombier pour réparer une fuite d'eau dans ma salle de bain."
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              ></textarea>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  type="checkbox"
+                  className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label className="font-medium text-gray-700">
+                  J'accepte que ma demande soit partagée avec les professionnels sélectionnés et que je sois recontacté(e). <span className="text-red-500">*</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  type="checkbox"
+                  className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                />
+              </div>
+              <div className="ml-3 text-sm">
+                <label className="font-medium text-gray-700">
+                  J'accepte de recevoir des communications marketing de la part de la plateforme (optionnel).
+                </label>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Envoyer Ma Demande
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Stats Section */}
