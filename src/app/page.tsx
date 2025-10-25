@@ -227,7 +227,7 @@ export default async function Home() {
       {/* Pricing Section */}
       <PricingHomepageSection />
 
-      {/* Lead Form Section - Client-side only */}
+      {/* Lead Form Section - Client Component with React handlers */}
       <LeadFormClient categories={popularCategories} />
 
       {/* Stats Section */}
