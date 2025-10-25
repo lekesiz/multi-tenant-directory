@@ -173,7 +173,12 @@ export default async function Home() {
     ]);
 
     // Get popular categories for LeadForm (with error handling)
-    let popularCategories = [];
+    let popularCategories: Array<{
+      id: number;
+      slug: string;
+      name: string;
+      count: number;
+    }> = [];
     try {
       popularCategories = await getPopularCategories(domainData.id);
     } catch (error) {
