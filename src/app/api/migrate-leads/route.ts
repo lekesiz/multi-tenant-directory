@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
     await prisma.$disconnect();
     return NextResponse.json({
       error: 'Migration failed',
-      details: error.message
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
