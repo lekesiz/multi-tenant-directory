@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getCurrentDomainInfo } from '@/lib/queries/domain';
 
+// Extend global type for mock leads
+declare global {
+  var mockLeads: any[];
+}
+
 const createLeadSchema = z.object({
   categoryId: z.number().optional(),
   postalCode: z.string().min(1, 'Postal code is required'),
