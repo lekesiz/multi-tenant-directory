@@ -52,9 +52,28 @@ export async function POST(request: NextRequest) {
     logger.info('✅ Validation successful:', validatedData);
 
     // Resolve tenant using existing pattern
-    const tenant = await resolveTenant(request);
-    const domainId = getDomainId(tenant);
-    logger.info('🏢 Tenant resolved:', { domainId, domainName: tenant.domain.name });
+    let tenant;
+    let domainId;
+    
+    try {
+      tenant = await resolveTenant(request);
+      domainId = getDomainId(tenant);
+      logger.info('🏢 Tenant resolved:', { domainId, domainName: tenant.domain.name });
+    } catch (error) {
+      logger.warn('⚠️ Tenant resolution failed, using fallback:', error);
+      // Use first active domain as fallback
+      const fallbackDomain = await prisma.domain.findFirst({
+        where: { isActive: true },
+        select: { id: true, name: true }
+      });
+      
+      if (!fallbackDomain) {
+        throw new Error('No active domain found');
+      }
+      
+      domainId = fallbackDomain.id;
+      logger.info('🔄 Using fallback domain:', { domainId, domainName: fallbackDomain.name });
+    }
 
     // Check for duplicate phone number in same tenant (last 24 hours)
     const existingLead = await prisma.lead.findFirst({
