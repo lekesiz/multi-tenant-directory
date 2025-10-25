@@ -20,6 +20,21 @@ const createLeadSchema = z.object({
   })
 });
 
+// Helper function to get category info
+function getCategoryInfo(categoryId: number) {
+  const categories = {
+    1: { id: 1, frenchName: 'Plombier', googleCategory: 'plumber' },
+    2: { id: 2, frenchName: 'Électricien', googleCategory: 'electrician' },
+    3: { id: 3, frenchName: 'Chauffagiste', googleCategory: 'heating' },
+    4: { id: 4, frenchName: 'Menuisier', googleCategory: 'carpenter' },
+    5: { id: 5, frenchName: 'Peintre', googleCategory: 'painter' },
+    6: { id: 6, frenchName: 'Carreleur', googleCategory: 'tiler' },
+    7: { id: 7, frenchName: 'Jardinier', googleCategory: 'gardener' },
+    8: { id: 8, frenchName: 'Nettoyage', googleCategory: 'cleaning' }
+  };
+  return categories[categoryId as keyof typeof categories] || null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -27,9 +42,37 @@ export async function POST(request: NextRequest) {
 
     // Always return mock response for now (database not ready)
     console.log('Mock lead creation:', validatedData);
+    
+    // Create a new mock lead with the submitted data
+    const newLead = {
+      id: `mock-${Date.now()}`,
+      tenantId: 1,
+      categoryId: validatedData.categoryId,
+      category: validatedData.categoryId ? getCategoryInfo(validatedData.categoryId) : null,
+      postalCode: validatedData.postalCode,
+      phone: validatedData.phone,
+      email: validatedData.email,
+      note: validatedData.note,
+      budgetBand: validatedData.budgetBand,
+      timeWindow: validatedData.timeWindow,
+      attachments: validatedData.attachments || [],
+      consentFlags: validatedData.consentFlags,
+      source: 'web',
+      status: 'new',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      assignments: []
+    };
+    
+    // Store in a simple in-memory array (will reset on server restart)
+    if (!global.mockLeads) {
+      global.mockLeads = [];
+    }
+    global.mockLeads.unshift(newLead); // Add to beginning
+    
     return NextResponse.json({
       success: true,
-      leadId: `mock-${Date.now()}`,
+      leadId: newLead.id,
       message: 'Demande créée avec succès. Nous vous contacterons bientôt.'
     });
 
@@ -135,8 +178,9 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    // Mock leads data
-    const mockLeads = [
+    // Initialize global mock leads if not exists
+    if (!global.mockLeads) {
+      global.mockLeads = [
       {
         id: 'mock-lead-1',
         tenantId: 1,
@@ -209,10 +253,11 @@ export async function GET(request: NextRequest) {
           }
         ]
       }
-    ];
+      ];
+    }
 
     // Filter by status
-    const filteredLeads = mockLeads.filter(lead => lead.status === status);
+    const filteredLeads = global.mockLeads.filter(lead => lead.status === status);
 
     return NextResponse.json({
       leads: filteredLeads,
