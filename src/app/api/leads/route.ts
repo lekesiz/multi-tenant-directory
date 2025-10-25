@@ -9,7 +9,10 @@ const createLeadSchema = z.object({
   categoryId: z.number().optional(),
   postalCode: z.string().min(1, 'Postal code is required'),
   phone: z.string().min(10, 'Phone number is required'),
-  email: z.string().email().optional().or(z.literal('')),
+  email: z.preprocess(
+    (val) => (val === '' || val === null ? undefined : val),
+    z.string().email().optional()
+  ),
   note: z.string().optional(),
   budgetBand: z.enum(['low', 'medium', 'high', 'custom']).optional(),
   timeWindow: z.enum(['urgent', 'this_week', 'this_month', 'flexible']).optional(),
