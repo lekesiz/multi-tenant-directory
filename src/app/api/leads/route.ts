@@ -25,6 +25,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createLeadSchema.parse(body);
 
+    // Always return mock response for now (database not ready)
+    console.log('Mock lead creation:', validatedData);
+    return NextResponse.json({
+      success: true,
+      leadId: `mock-${Date.now()}`,
+      message: 'Demande créée avec succès. Nous vous contacterons bientôt.'
+    });
+
+    // TODO: Uncomment when database is ready
+    /*
     // Check if DATABASE_URL is available
     if (!process.env.DATABASE_URL) {
       // Mock response when database is not available
@@ -100,6 +110,7 @@ export async function POST(request: NextRequest) {
       leadId: lead.id,
       message: 'Demande créée avec succès. Nous vous contacterons bientôt.'
     });
+    */
 
   } catch (error) {
     console.error('Lead creation error:', error);
