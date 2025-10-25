@@ -3,11 +3,6 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getCurrentDomainInfo } from '@/lib/queries/domain';
 
-// Extend global type for mock leads
-declare global {
-  var mockLeads: any[];
-}
-
 const createLeadSchema = z.object({
   categoryId: z.number().optional(),
   postalCode: z.string().min(1, 'Postal code is required'),
@@ -48,36 +43,9 @@ export async function POST(request: NextRequest) {
     // Always return mock response for now (database not ready)
     console.log('Mock lead creation:', validatedData);
     
-    // Create a new mock lead with the submitted data
-    const newLead = {
-      id: `mock-${Date.now()}`,
-      tenantId: 1,
-      categoryId: validatedData.categoryId,
-      category: validatedData.categoryId ? getCategoryInfo(validatedData.categoryId) : null,
-      postalCode: validatedData.postalCode,
-      phone: validatedData.phone,
-      email: validatedData.email,
-      note: validatedData.note,
-      budgetBand: validatedData.budgetBand,
-      timeWindow: validatedData.timeWindow,
-      attachments: validatedData.attachments || [],
-      consentFlags: validatedData.consentFlags,
-      source: 'web',
-      status: 'new',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      assignments: []
-    };
-    
-    // Store in a simple in-memory array (will reset on server restart)
-    if (!global.mockLeads) {
-      global.mockLeads = [];
-    }
-    global.mockLeads.unshift(newLead); // Add to beginning
-    
     return NextResponse.json({
       success: true,
-      leadId: newLead.id,
+      leadId: `mock-${Date.now()}`,
       message: 'Demande créée avec succès. Nous vous contacterons bientôt.'
     });
 
@@ -183,9 +151,8 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    // Initialize global mock leads if not exists
-    if (!global.mockLeads) {
-      global.mockLeads = [
+    // Static mock data (will be replaced with real database later)
+    const mockLeads = [
       {
         id: 'mock-lead-1',
         tenantId: 1,
@@ -258,11 +225,10 @@ export async function GET(request: NextRequest) {
           }
         ]
       }
-      ];
-    }
+    ];
 
     // Filter by status
-    const filteredLeads = global.mockLeads.filter(lead => lead.status === status);
+    const filteredLeads = mockLeads.filter(lead => lead.status === status);
 
     return NextResponse.json({
       leads: filteredLeads,
