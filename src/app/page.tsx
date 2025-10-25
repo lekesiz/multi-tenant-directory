@@ -10,6 +10,8 @@ import HowItWorksSection from '@/components/HowItWorksSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import FeaturedBusinessesCarousel from '@/components/FeaturedBusinessesCarousel';
 import PricingHomepageSection from '@/components/PricingHomepageSection';
+import LeadForm from '@/components/LeadForm';
+import { prisma } from '@/lib/prisma';
 
 // Query utilities
 import { getCurrentDomainInfo } from '@/lib/queries/domain';
@@ -53,11 +55,19 @@ async function getPopularCategories(domainId: number) {
   
   // Get French names for each category
   const categoriesWithFrenchNames = await Promise.all(
-    topCategories.map(async (cat) => ({
-      slug: cat.name,
-      name: await getCategoryFrenchName(cat.name),
-      count: cat.count,
-    }))
+    topCategories.map(async (cat) => {
+      // Get category ID from database
+      const categoryRecord = await prisma.businessCategory.findFirst({
+        where: { googleCategory: cat.name }
+      });
+      
+      return {
+        id: categoryRecord?.id || 0,
+        slug: cat.name,
+        name: await getCategoryFrenchName(cat.name),
+        count: cat.count,
+      };
+    })
   );
   
   return categoriesWithFrenchNames;
@@ -202,6 +212,21 @@ export default async function Home() {
 
       {/* Pricing Section */}
       <PricingHomepageSection />
+
+      {/* Lead Form Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <LeadForm 
+          categories={popularCategories.map(cat => ({
+            id: cat.id,
+            frenchName: cat.name,
+            icon: getCategoryIcon(cat.name)
+          }))}
+          onSubmit={(data) => {
+            // Optional: Track form submission
+            console.log('Lead form submitted:', data);
+          }}
+        />
+      </section>
 
       {/* Stats Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
