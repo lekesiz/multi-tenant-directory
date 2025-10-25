@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       domainId = getDomainId(tenant);
       logger.info('🏢 Tenant resolved:', { domainId, domainName: tenant.domain.name });
     } catch (error) {
-      logger.warn('⚠️ Tenant resolution failed, using fallback:', error);
+      logger.warn('⚠️ Tenant resolution failed, using fallback:', { error: String(error) });
       // Use first active domain as fallback
       const fallbackDomain = await prisma.domain.findFirst({
         where: { isActive: true },
