@@ -44,7 +44,8 @@ export default function AdminLeadsPage() {
 
   const fetchLeads = async () => {
     try {
-      const response = await fetch(`/api/leads?status=${filter === 'all' ? 'new' : filter}`);
+      const url = filter === 'all' ? '/api/leads' : `/api/leads?status=${filter}`;
+      const response = await fetch(url);
       const data = await response.json();
       
       if (response.ok) {

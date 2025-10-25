@@ -397,7 +397,9 @@ export default async function Home() {
                     note: document.getElementById('note').value,
                     consentFlags: {
                       sharing: document.getElementById('consentSharing').checked,
-                      marketing: document.getElementById('consentMarketing').checked
+                      marketing: document.getElementById('consentMarketing').checked,
+                      calls: true, // Default true for lead generation
+                      dataProcessing: true // Default true for GDPR compliance
                     }
                   };
 
@@ -415,11 +417,17 @@ export default async function Home() {
                     successMessage.classList.remove('hidden');
                     form.reset();
                   } else {
-                    // Show error message
+                    // Get error details from response
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    
+                    // Show error message with details
+                    errorMessage.textContent = errorData.error || 'Une erreur est survenue. Veuillez réessayer.';
                     errorMessage.classList.remove('hidden');
                   }
                 } catch (error) {
-                  console.error('Error:', error);
+                  console.error('Network Error:', error);
+                  errorMessage.textContent = 'Erreur de connexion. Vérifiez votre connexion internet.';
                   errorMessage.classList.remove('hidden');
                 } finally {
                   // Reset button state

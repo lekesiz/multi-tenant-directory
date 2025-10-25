@@ -43,6 +43,30 @@ export async function resolveTenant(request: NextRequest): Promise<TenantContext
     });
 
     if (!domain) {
+      // If domain not found, try to find localhost as fallback for development
+      if (domainName === 'localhost') {
+        logger.warn(`Domain not found: ${domainName}, trying localhost fallback`);
+        const localhostDomain = await prisma.domain.findFirst({
+          where: { 
+            name: { contains: 'localhost' },
+            isActive: true 
+          },
+          select: {
+            id: true,
+            name: true,
+            isActive: true,
+            siteTitle: true,
+            siteDescription: true,
+            settings: true,
+          },
+        });
+        
+        if (localhostDomain) {
+          logger.info(`Using localhost fallback domain: ${localhostDomain.name}`);
+          return { domain: localhostDomain };
+        }
+      }
+      
       throw new Error(`Domain not found: ${domainName}`);
     }
 

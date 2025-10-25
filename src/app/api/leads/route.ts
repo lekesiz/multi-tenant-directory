@@ -40,6 +40,11 @@ function getCategoryInfo(categoryId: number) {
 export async function POST(request: NextRequest) {
   try {
     logger.info('🚀 Lead creation request started');
+    
+    // Get host info for debugging
+    const host = request.headers.get('host');
+    logger.info('🌐 Request host:', host);
+    
     const body = await request.json();
     logger.info('📝 Request body:', body);
     
@@ -119,7 +124,22 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       logger.error('❌ Validation error:', error.issues);
       return NextResponse.json(
-        { error: 'Données invalides', details: error.issues },
+        { 
+          error: 'Données invalides', 
+          details: error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Check if it's a tenant resolution error
+    if (error instanceof Error && error.message.includes('Domain')) {
+      logger.error('❌ Tenant resolution error:', error.message);
+      return NextResponse.json(
+        { error: 'Configuration du domaine invalide' },
         { status: 400 }
       );
     }
@@ -143,11 +163,18 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
+    // Build where clause based on status filter
+    const whereClause: any = {
+      tenantId: domainId
+    };
+    
+    // Only add status filter if not requesting all leads
+    if (status !== 'all') {
+      whereClause.status = status;
+    }
+
     const leads = await prisma.lead.findMany({
-      where: {
-        tenantId: domainId,
-        status
-      },
+      where: whereClause,
       include: {
         category: true,
         assignments: {
@@ -170,10 +197,7 @@ export async function GET(request: NextRequest) {
     });
 
     const total = await prisma.lead.count({
-      where: {
-        tenantId: domainId,
-        status
-      }
+      where: whereClause
     });
 
     logger.info('✅ Leads retrieved:', { count: leads.length, total, status });
