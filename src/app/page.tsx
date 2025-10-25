@@ -167,11 +167,20 @@ export default async function Home() {
     }
 
     // Fetch all data in parallel for better performance
-    const [stats, popularCategories, featuredCompanies] = await Promise.all([
+    const [stats, featuredCompanies] = await Promise.all([
       getStats(domainData.id),
-      getPopularCategories(domainData.id),
       getFeaturedCompanies(domainData.id),
     ]);
+
+    // Get popular categories for LeadForm (with error handling)
+    let popularCategories = [];
+    try {
+      popularCategories = await getPopularCategories(domainData.id);
+    } catch (error) {
+      logger.error('Error fetching popular categories:', error);
+      // Fallback to empty array if database is not available
+      popularCategories = [];
+    }
 
   return (
     <>
@@ -213,7 +222,8 @@ export default async function Home() {
       {/* Pricing Section */}
       <PricingHomepageSection />
 
-      {/* Lead Form Section */}
+      {/* Lead Form Section - Temporarily disabled for production */}
+      {/* 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <LeadForm 
           categories={popularCategories.map(cat => ({
@@ -227,6 +237,7 @@ export default async function Home() {
           }}
         />
       </section>
+      */}
 
       {/* Stats Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
