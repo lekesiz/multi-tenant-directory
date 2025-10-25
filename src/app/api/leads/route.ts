@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     
     // Get host info for debugging
     const host = request.headers.get('host');
-    logger.info('🌐 Request host:', host);
+    logger.info('🌐 Request host:', host || 'unknown');
     
     const body = await request.json();
     logger.info('📝 Request body:', body);
