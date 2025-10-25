@@ -19,7 +19,7 @@ async function getDashboardStats() {
       id: number;
       name: string;
       slug: string;
-      city: string;
+      city: string | null;
       categories: string[];
       createdAt: Date;
     }>,
@@ -154,7 +154,9 @@ async function getDashboardStats() {
       newLeads: stats.newLeads,
     });
   } catch (error) {
-    logger.warn('⚠️ Leads stats not available (tables may not exist yet):', error);
+    logger.warn('⚠️ Leads stats not available (tables may not exist yet)', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     // Leads stats remain at default values (0)
   }
 
