@@ -40,17 +40,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createLeadSchema.parse(body);
 
-    // Always return mock response for now (database not ready)
-    console.log('Mock lead creation:', validatedData);
-    
-    return NextResponse.json({
-      success: true,
-      leadId: `mock-${Date.now()}`,
-      message: 'Demande créée avec succès. Nous vous contacterons bientôt.'
-    });
-
-    // TODO: Uncomment when database is ready
-    /*
     // Check if DATABASE_URL is available
     if (!process.env.DATABASE_URL) {
       // Mock response when database is not available
@@ -126,7 +115,7 @@ export async function POST(request: NextRequest) {
       leadId: lead.id,
       message: 'Demande créée avec succès. Nous vous contacterons bientôt.'
     });
-    */
+
 
   } catch (error) {
     console.error('Lead creation error:', error);
@@ -145,103 +134,104 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Always return mock data for now (database not ready)
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'new';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    // Check if DATABASE_URL is available
+    if (!process.env.DATABASE_URL) {
+      // Return mock data when database is not available
+      const { searchParams } = new URL(request.url);
+      const status = searchParams.get('status') || 'new';
+      const page = parseInt(searchParams.get('page') || '1');
+      const limit = parseInt(searchParams.get('limit') || '20');
 
-    // Static mock data (will be replaced with real database later)
-    const mockLeads = [
-      {
-        id: 'mock-lead-1',
-        tenantId: 1,
-        categoryId: 2, // Électricien
-        category: {
-          id: 2,
-          frenchName: 'Électricien',
-          googleCategory: 'electrician'
+      // Static mock data
+      const mockLeads = [
+        {
+          id: 'mock-lead-1',
+          tenantId: 1,
+          categoryId: 2, // Électricien
+          category: {
+            id: 2,
+            frenchName: 'Électricien',
+            googleCategory: 'electrician'
+          },
+          postalCode: '67500',
+          phone: '0663907527',
+          email: 'mikaillekesiz@gmail.com',
+          note: 'je cherche peintre.',
+          budgetBand: null,
+          timeWindow: null,
+          attachments: [],
+          consentFlags: {
+            marketing: false,
+            sharing: true,
+            calls: true,
+            dataProcessing: true
+          },
+          source: 'web',
+          status: 'new',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          assignments: []
         },
-        postalCode: '67500',
-        phone: '0663907527',
-        email: 'mikaillekesiz@gmail.com',
-        note: 'je cherche peintre.',
-        budgetBand: null,
-        timeWindow: null,
-        attachments: [],
-        consentFlags: {
-          marketing: false,
-          sharing: true,
-          calls: true,
-          dataProcessing: true
-        },
-        source: 'web',
-        status: 'new',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        assignments: []
-      },
-      {
-        id: 'mock-lead-2',
-        tenantId: 1,
-        categoryId: 1, // Plombier
-        category: {
-          id: 1,
-          frenchName: 'Plombier',
-          googleCategory: 'plumber'
-        },
-        postalCode: '67000',
-        phone: '0612345678',
-        email: 'test@example.com',
-        note: 'Je cherche un plombier pour réparer une fuite.',
-        budgetBand: null,
-        timeWindow: null,
-        attachments: [],
-        consentFlags: {
-          marketing: true,
-          sharing: true,
-          calls: true,
-          dataProcessing: true
-        },
-        source: 'web',
-        status: 'assigned',
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        assignments: [
-          {
-            id: 'mock-assignment-1',
-            leadId: 'mock-lead-2',
-            companyId: 1,
-            score: 85,
-            rank: 1,
-            status: 'sent',
-            createdAt: new Date().toISOString(),
-            company: {
-              id: 1,
-              name: 'Plomberie Martin',
-              phone: '0612345678',
-              email: 'contact@plomberie-martin.fr'
+        {
+          id: 'mock-lead-2',
+          tenantId: 1,
+          categoryId: 1, // Plombier
+          category: {
+            id: 1,
+            frenchName: 'Plombier',
+            googleCategory: 'plumber'
+          },
+          postalCode: '67000',
+          phone: '0612345678',
+          email: 'test@example.com',
+          note: 'Je cherche un plombier pour réparer une fuite.',
+          budgetBand: null,
+          timeWindow: null,
+          attachments: [],
+          consentFlags: {
+            marketing: true,
+            sharing: true,
+            calls: true,
+            dataProcessing: true
+          },
+          source: 'web',
+          status: 'assigned',
+          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          assignments: [
+            {
+              id: 'mock-assignment-1',
+              leadId: 'mock-lead-2',
+              companyId: 1,
+              score: 85,
+              rank: 1,
+              status: 'sent',
+              createdAt: new Date().toISOString(),
+              company: {
+                id: 1,
+                name: 'Plomberie Martin',
+                phone: '0612345678',
+                email: 'contact@plomberie-martin.fr'
+              }
             }
-          }
-        ]
-      }
-    ];
+          ]
+        }
+      ];
 
-    // Filter by status
-    const filteredLeads = mockLeads.filter(lead => lead.status === status);
+      // Filter by status
+      const filteredLeads = mockLeads.filter(lead => lead.status === status);
 
-    return NextResponse.json({
-      leads: filteredLeads,
-      pagination: {
-        page,
-        limit,
-        total: filteredLeads.length,
-        pages: Math.ceil(filteredLeads.length / limit)
-      }
-    });
+      return NextResponse.json({
+        leads: filteredLeads,
+        pagination: {
+          page,
+          limit,
+          total: filteredLeads.length,
+          pages: Math.ceil(filteredLeads.length / limit)
+        }
+      });
+    }
 
-    // TODO: Uncomment when database is ready
-    /*
     // Admin only - get leads for tenant
     const { domainData } = await getCurrentDomainInfo();
     if (!domainData) {
@@ -298,7 +288,7 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit)
       }
     });
-    */
+
 
   } catch (error) {
     console.error('Get leads error:', error);
