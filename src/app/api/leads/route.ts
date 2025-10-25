@@ -37,12 +37,17 @@ function getCategoryInfo(categoryId: number) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚀 Lead creation request started');
     const body = await request.json();
+    console.log('📝 Request body:', body);
+    
     const validatedData = createLeadSchema.parse(body);
+    console.log('✅ Validation successful:', validatedData);
 
     // Check if DATABASE_URL is available
     if (!process.env.DATABASE_URL) {
       // Mock response when database is not available
+      console.log('⚠️ DATABASE_URL not available, using mock response');
       console.log('Mock lead creation:', validatedData);
       return NextResponse.json({
         success: true,
@@ -51,9 +56,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    console.log('✅ DATABASE_URL available, proceeding with real database');
+
     // Get tenant from request
+    console.log('🔍 Getting domain info...');
     const { domainData } = await getCurrentDomainInfo();
+    console.log('🏢 Domain data:', domainData);
+    
     if (!domainData) {
+      console.log('❌ No domain data found');
       return NextResponse.json(
         { error: 'Invalid domain' },
         { status: 400 }
@@ -118,13 +129,19 @@ export async function POST(request: NextRequest) {
 
 
   } catch (error) {
-    console.error('Lead creation error:', error);
+    console.error('❌ Lead creation error:', error);
+    console.error('❌ Error type:', typeof error);
+    console.error('❌ Error message:', error instanceof Error ? error.message : 'Unknown error');
+    
     if (error instanceof z.ZodError) {
+      console.log('❌ Validation error:', error.issues);
       return NextResponse.json(
         { error: 'Données invalides', details: error.issues },
         { status: 400 }
       );
     }
+    
+    console.log('❌ Generic error, returning 500');
     return NextResponse.json(
       { error: 'Erreur lors de la création de la demande' },
       { status: 500 }
