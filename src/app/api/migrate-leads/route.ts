@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ Database connection successful');
 
     // Check if leads table already exists
-    const existingTables = await prisma.$queryRaw`
+    const existingTables = await prisma.$queryRaw<Array<{ table_name: string }>>`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
