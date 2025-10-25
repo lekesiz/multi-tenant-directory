@@ -376,13 +376,14 @@ export default async function Home() {
                 try {
                   // Get form data
                   const formData = {
-                    category: document.getElementById('category').value,
                     postalCode: document.getElementById('postalCode').value,
                     phone: document.getElementById('phone').value,
                     email: document.getElementById('email').value,
                     note: document.getElementById('note').value,
-                    consentSharing: document.getElementById('consentSharing').checked,
-                    consentMarketing: document.getElementById('consentMarketing').checked
+                    consentFlags: {
+                      sharing: document.getElementById('consentSharing').checked,
+                      marketing: document.getElementById('consentMarketing').checked
+                    }
                   };
 
                   // Send to API
