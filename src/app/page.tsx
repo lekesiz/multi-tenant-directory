@@ -356,21 +356,6 @@ export default async function Home() {
 
         <script dangerouslySetInnerHTML={{
           __html: `
-            // Category mapping function
-            function getCategoryId(categoryValue) {
-              const categoryMap = {
-                'plombier': 1,
-                'electricien': 2,
-                'chauffagiste': 3,
-                'menuisier': 4,
-                'peintre': 5,
-                'carreleur': 6,
-                'jardinier': 7,
-                'nettoyage': 8
-              };
-              return categoryMap[categoryValue] || null;
-            }
-
             document.addEventListener('DOMContentLoaded', function() {
               const form = document.getElementById('leadForm');
               const submitBtn = document.getElementById('submitBtn');
@@ -391,8 +376,21 @@ export default async function Home() {
                 try {
                   // Get form data
                   const categoryValue = document.getElementById('category').value;
+                  
+                  // Category mapping inline
+                  const categoryMap = {
+                    'plombier': 1,
+                    'electricien': 2,
+                    'chauffagiste': 3,
+                    'menuisier': 4,
+                    'peintre': 5,
+                    'carreleur': 6,
+                    'jardinier': 7,
+                    'nettoyage': 8
+                  };
+                  
                   const formData = {
-                    categoryId: categoryValue ? getCategoryId(categoryValue) : null,
+                    categoryId: categoryValue ? categoryMap[categoryValue] || null : null,
                     postalCode: document.getElementById('postalCode').value,
                     phone: document.getElementById('phone').value,
                     email: document.getElementById('email').value,
