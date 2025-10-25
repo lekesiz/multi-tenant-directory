@@ -237,12 +237,12 @@ export default async function Home() {
             Décrivez votre besoin en quelques clics, nous vous mettons en relation avec les meilleurs experts locaux.
           </p>
           
-          <div className="space-y-6">
+          <form id="leadForm" className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Type de service
               </label>
-              <select className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+              <select id="category" className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                 <option value="">Sélectionnez une catégorie (optionnel)</option>
                 <option value="plombier">🔧 Plombier</option>
                 <option value="electricien">⚡ Électricien</option>
@@ -260,8 +260,10 @@ export default async function Home() {
                 Code Postal <span className="text-red-500">*</span>
               </label>
               <input
+                id="postalCode"
                 type="text"
                 placeholder="Ex: 67000"
+                required
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -271,8 +273,10 @@ export default async function Home() {
                 Téléphone <span className="text-red-500">*</span>
               </label>
               <input
+                id="phone"
                 type="tel"
                 placeholder="Ex: 0612345678"
+                required
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -282,6 +286,7 @@ export default async function Home() {
                 Email (optionnel)
               </label>
               <input
+                id="email"
                 type="email"
                 placeholder="Ex: votre.email@example.com"
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -293,6 +298,7 @@ export default async function Home() {
                 Décrivez votre besoin (optionnel)
               </label>
               <textarea
+                id="note"
                 rows={4}
                 placeholder="Ex: Je cherche un plombier pour réparer une fuite d'eau dans ma salle de bain."
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -302,7 +308,9 @@ export default async function Home() {
             <div className="flex items-start">
               <div className="flex items-center h-5">
                 <input
+                  id="consentSharing"
                   type="checkbox"
+                  required
                   className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
                 />
               </div>
@@ -316,6 +324,7 @@ export default async function Home() {
             <div className="flex items-start">
               <div className="flex items-center h-5">
                 <input
+                  id="consentMarketing"
                   type="checkbox"
                   className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
                 />
@@ -328,13 +337,83 @@ export default async function Home() {
             </div>
 
             <button
-              type="button"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              type="submit"
+              id="submitBtn"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Envoyer Ma Demande
             </button>
+          </form>
+
+          <div id="successMessage" className="hidden mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
+            ✅ Votre demande a été envoyée avec succès ! Nous vous contacterons bientôt.
+          </div>
+
+          <div id="errorMessage" className="hidden mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
+            ❌ Une erreur est survenue. Veuillez réessayer.
           </div>
         </div>
+
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            document.addEventListener('DOMContentLoaded', function() {
+              const form = document.getElementById('leadForm');
+              const submitBtn = document.getElementById('submitBtn');
+              const successMessage = document.getElementById('successMessage');
+              const errorMessage = document.getElementById('errorMessage');
+
+              form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Envoi en cours...';
+                
+                // Hide previous messages
+                successMessage.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+
+                try {
+                  // Get form data
+                  const formData = {
+                    category: document.getElementById('category').value,
+                    postalCode: document.getElementById('postalCode').value,
+                    phone: document.getElementById('phone').value,
+                    email: document.getElementById('email').value,
+                    note: document.getElementById('note').value,
+                    consentSharing: document.getElementById('consentSharing').checked,
+                    consentMarketing: document.getElementById('consentMarketing').checked
+                  };
+
+                  // Send to API
+                  const response = await fetch('/api/leads', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                  });
+
+                  if (response.ok) {
+                    // Show success message
+                    successMessage.classList.remove('hidden');
+                    form.reset();
+                  } else {
+                    // Show error message
+                    errorMessage.classList.remove('hidden');
+                  }
+                } catch (error) {
+                  console.error('Error:', error);
+                  errorMessage.classList.remove('hidden');
+                } finally {
+                  // Reset button state
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = 'Envoyer Ma Demande';
+                }
+              });
+            });
+          `
+        }} />
       </section>
 
       {/* Stats Section */}
