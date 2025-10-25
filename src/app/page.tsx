@@ -227,8 +227,7 @@ export default async function Home() {
       {/* Pricing Section */}
       <PricingHomepageSection />
 
-      {/* Lead Form Section - Temporarily disabled for production */}
-      {/* 
+      {/* Lead Form Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <LeadForm 
           categories={popularCategories.map(cat => ({
@@ -242,7 +241,6 @@ export default async function Home() {
           }}
         />
       </section>
-      */}
 
       {/* Stats Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
