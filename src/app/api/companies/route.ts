@@ -23,103 +23,82 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
 
-    // Şirketleri getir (optimized with pagination and selective fields)
-    const companies = await prisma.company.findMany({
-      where: {
-        isActive: true,
-        content: {
-          some: {
-            domainId: getDomainId(tenant),
-            isVisible: true,
-          },
+    const whereClause = {
+      isActive: true,
+      content: {
+        some: {
+          domainId: getDomainId(tenant),
+          isVisible: true,
         },
-        ...(search && {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { address: { contains: search, mode: 'insensitive' } },
-            { city: { contains: search, mode: 'insensitive' } },
-          ],
-        }),
-        ...(category && {
-          categories: {
-            has: category,
-          },
-        }),
       },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        address: true,
-        city: true,
-        postalCode: true,
-        phone: true,
-        email: true,
-        website: true,
-        latitude: true,
-        longitude: true,
-        categories: true,
-        logoUrl: true,
-        coverImageUrl: true,
-        rating: true,
-        reviewCount: true,
-        isFeatured: true,
-        content: {
-          where: {
-            domainId: getDomainId(tenant),
-          },
-          select: {
-            id: true,
-            customDescription: true,
-            customImages: true,
-            promotions: true,
-            priority: true,
-            specialOffers: true,
-          },
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { address: { contains: search, mode: 'insensitive' as const } },
+          { city: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }),
+      ...(category && {
+        categories: {
+          has: category,
         },
-        _count: {
-          select: {
-            reviews: {
-              where: {
-                isApproved: true,
-                isActive: true,
+      }),
+    };
+
+    const [companies, total] = await Promise.all([
+      prisma.company.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          address: true,
+          city: true,
+          postalCode: true,
+          phone: true,
+          email: true,
+          website: true,
+          latitude: true,
+          longitude: true,
+          categories: true,
+          logoUrl: true,
+          coverImageUrl: true,
+          rating: true,
+          reviewCount: true,
+          isFeatured: true,
+          content: {
+            where: {
+              domainId: getDomainId(tenant),
+            },
+            select: {
+              id: true,
+              customDescription: true,
+              customImages: true,
+              promotions: true,
+              priority: true,
+              specialOffers: true,
+            },
+          },
+          _count: {
+            select: {
+              reviews: {
+                where: {
+                  isApproved: true,
+                  isActive: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: [
-        { isFeatured: 'desc' },
-        { rating: 'desc' },
-      ],
-      take: limit,
-      skip: skip,
-    });
-
-    // Get total count for pagination
-    const total = await prisma.company.count({
-      where: {
-        isActive: true,
-        content: {
-          some: {
-            domainId: getDomainId(tenant),
-            isVisible: true,
-          },
-        },
-        ...(search && {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { address: { contains: search, mode: 'insensitive' } },
-            { city: { contains: search, mode: 'insensitive' } },
-          ],
-        }),
-        ...(category && {
-          categories: {
-            has: category,
-          },
-        }),
-      },
-    });
+        orderBy: [
+          { isFeatured: 'desc' },
+          { rating: 'desc' },
+        ],
+        take: limit,
+        skip: skip,
+      }),
+      prisma.company.count({ where: whereClause }),
+    ]);
 
     return NextResponse.json({
       data: companies,
