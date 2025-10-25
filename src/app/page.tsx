@@ -420,9 +420,13 @@ export default async function Home() {
                     // Get error details from response
                     const errorData = await response.json();
                     console.error('API Error:', errorData);
+                    console.error('Response status:', response.status);
+                    console.error('Response headers:', response.headers);
                     
                     // Show error message with details
-                    errorMessage.textContent = errorData.error || 'Une erreur est survenue. Veuillez réessayer.';
+                    const errorText = errorData.error || 'Une erreur est survenue. Veuillez réessayer.';
+                    console.error('Final error message:', errorText);
+                    errorMessage.textContent = errorText;
                     errorMessage.classList.remove('hidden');
                   }
                 } catch (error) {
