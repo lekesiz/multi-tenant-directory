@@ -140,8 +140,12 @@ export async function GET(request: NextRequest) {
       {
         id: 'mock-lead-1',
         tenantId: 1,
-        categoryId: null,
-        category: null,
+        categoryId: 2, // Électricien
+        category: {
+          id: 2,
+          frenchName: 'Électricien',
+          googleCategory: 'electrician'
+        },
         postalCode: '67500',
         phone: '0663907527',
         email: 'mikaillekesiz@gmail.com',
@@ -164,8 +168,12 @@ export async function GET(request: NextRequest) {
       {
         id: 'mock-lead-2',
         tenantId: 1,
-        categoryId: null,
-        category: null,
+        categoryId: 1, // Plombier
+        category: {
+          id: 1,
+          frenchName: 'Plombier',
+          googleCategory: 'plumber'
+        },
         postalCode: '67000',
         phone: '0612345678',
         email: 'test@example.com',
