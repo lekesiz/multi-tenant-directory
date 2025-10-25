@@ -1,14 +1,12 @@
 // Migration script for Vercel Functions
 // This will be deployed as a Vercel Function to run the migration
 
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+export async function POST(request: NextRequest) {
 
   try {
     console.log('🚀 Starting Lead Management System Migration...');
@@ -16,7 +14,7 @@ export default async function handler(req, res) {
     // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
       console.error('❌ Error: DATABASE_URL environment variable is not set');
-      return res.status(500).json({ error: 'DATABASE_URL not set' });
+      return NextResponse.json({ error: 'DATABASE_URL not set' }, { status: 500 });
     }
 
     console.log('✅ DATABASE_URL is set');
@@ -35,7 +33,7 @@ export default async function handler(req, res) {
 
     if (existingTables.length > 0) {
       console.log('✅ Lead management tables already exist');
-      return res.status(200).json({ 
+      return NextResponse.json({ 
         success: true, 
         message: 'Lead management tables already exist' 
       });
@@ -188,7 +186,7 @@ export default async function handler(req, res) {
 
     await prisma.$disconnect();
 
-    return res.status(200).json({
+    return NextResponse.json({
       success: true,
       message: 'Lead Management System migration completed successfully!',
       tables: ['leads', 'lead_assignments', 'consent_logs', 'company_scores', 'certificates', 'communication_logs']
@@ -197,9 +195,9 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('❌ Migration failed:', error);
     await prisma.$disconnect();
-    return res.status(500).json({
+    return NextResponse.json({
       error: 'Migration failed',
       details: error.message
-    });
+    }, { status: 500 });
   }
 }
