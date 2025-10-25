@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { env } from '@/lib/env';
 
 const createLeadSchema = z.object({
-  categoryId: z.number().optional(),
+  categoryId: z.number().nullable().optional(),
   postalCode: z.string().min(1, 'Postal code is required'),
   phone: z.string().min(10, 'Phone number is required'),
   email: z.preprocess(
