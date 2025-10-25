@@ -5,35 +5,66 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
 async function getDashboardStats() {
+  // Initialize with default values
+  const stats = {
+    totalCompanies: 0,
+    totalDomains: 0,
+    activeDomains: 0,
+    totalReviews: 0,
+    avgRating: 0,
+    totalLinks: 0,
+    visibleLinks: 0,
+    topCategories: [] as Array<{ category: string; count: number }>,
+    recentCompanies: [] as Array<{
+      id: number;
+      name: string;
+      slug: string;
+      city: string;
+      categories: string[];
+      createdAt: Date;
+    }>,
+    domainStats: [] as Array<{
+      id: number;
+      name: string;
+      isActive: boolean;
+      companyCount: number;
+    }>,
+    totalLeads: 0,
+    newLeads: 0,
+    assignedLeads: 0,
+    wonLeads: 0,
+  };
+
+  // Block 1: Base stats (always available)
   try {
     // Get total companies
-    const totalCompanies = await prisma.company.count();
+    stats.totalCompanies = await prisma.company.count();
 
     // Get total domains
-    const totalDomains = await prisma.domain.count();
+    stats.totalDomains = await prisma.domain.count();
 
     // Get active domains
-    const activeDomains = await prisma.domain.count({
+    stats.activeDomains = await prisma.domain.count({
       where: { isActive: true },
     });
 
     // Get total reviews
-    const totalReviews = await prisma.review.count();
+    stats.totalReviews = await prisma.review.count();
 
     // Get average rating
     const reviews = await prisma.review.findMany({
       select: { rating: true },
     });
-    const avgRating =
+    stats.avgRating =
       reviews.length > 0
         ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         : 0;
 
     // Get total company content links
-    const totalLinks = await prisma.companyContent.count();
+    stats.totalLinks = await prisma.companyContent.count();
 
     // Get visible company content
-    const visibleLinks = await prisma.companyContent.count({
+    stats.visibleLinks = await prisma.companyContent.count({
       where: { isVisible: true },
     });
 
@@ -49,13 +80,13 @@ async function getDashboardStats() {
       });
     });
 
-    const topCategories = Object.entries(categoryCount)
+    stats.topCategories = Object.entries(categoryCount)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([category, count]) => ({ category, count }));
 
     // Get recent companies
-    const recentCompanies = await prisma.company.findMany({
+    stats.recentCompanies = await prisma.company.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
       select: {
@@ -88,60 +119,46 @@ async function getDashboardStats() {
       },
     });
     
-    const domainStats = domains.map(domain => ({
+    stats.domainStats = domains.map(domain => ({
       id: domain.id,
       name: domain.name,
       isActive: domain.isActive,
       companyCount: domain.content.length,
     }));
 
-    // Get leads stats
-    const totalLeads = await prisma.lead.count();
-    const newLeads = await prisma.lead.count({
+    logger.info('✅ Base dashboard stats retrieved successfully', {
+      totalCompanies: stats.totalCompanies,
+      totalDomains: stats.totalDomains,
+      totalReviews: stats.totalReviews,
+    });
+  } catch (error) {
+    logger.error('❌ Error retrieving base dashboard stats:', error);
+    // Base stats remain at default values (0)
+  }
+
+  // Block 2: Leads stats (may fail if tables don't exist yet)
+  try {
+    stats.totalLeads = await prisma.lead.count();
+    stats.newLeads = await prisma.lead.count({
       where: { status: 'new' }
     });
-    const assignedLeads = await prisma.lead.count({
+    stats.assignedLeads = await prisma.lead.count({
       where: { status: 'assigned' }
     });
-    const wonLeads = await prisma.lead.count({
+    stats.wonLeads = await prisma.lead.count({
       where: { status: 'won' }
     });
 
-    return {
-      totalCompanies,
-      totalDomains,
-      activeDomains,
-      totalReviews,
-      avgRating,
-      totalLinks,
-      visibleLinks,
-      topCategories,
-      recentCompanies,
-      domainStats,
-      totalLeads,
-      newLeads,
-      assignedLeads,
-      wonLeads,
-    };
+    logger.info('✅ Leads stats retrieved successfully', {
+      totalLeads: stats.totalLeads,
+      newLeads: stats.newLeads,
+    });
   } catch (error) {
-    logger.error('Dashboard stats error:', error);
-    return {
-      totalCompanies: 0,
-      totalDomains: 0,
-      activeDomains: 0,
-      totalReviews: 0,
-      avgRating: 0,
-      totalLinks: 0,
-      visibleLinks: 0,
-      topCategories: [],
-      recentCompanies: [],
-      domainStats: [],
-      totalLeads: 0,
-      newLeads: 0,
-      assignedLeads: 0,
-      wonLeads: 0,
-    };
+    logger.warn('⚠️ Leads stats not available (tables may not exist yet):', error);
+    // Leads stats remain at default values (0)
   }
+
+  return stats;
 }
 
 export default async function AdminDashboard() {
