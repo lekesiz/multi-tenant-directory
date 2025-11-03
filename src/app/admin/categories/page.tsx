@@ -2,6 +2,10 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering to avoid build-time database queries
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function CategoriesList() {
   // Fetch categories with parent-child relationship
   const categories = await prisma.category.findMany({
