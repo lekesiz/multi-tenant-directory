@@ -68,7 +68,15 @@ export async function generateMetadata({
           },
         },
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        address: true,
+        city: true,
+        postalCode: true,
+        logoUrl: true,
+        categories: true, // Include categories array
         content: {
           where: {
             domainId: currentDomain.id,
@@ -80,7 +88,6 @@ export async function generateMetadata({
             isApproved: true,
           },
         },
-        hours: true,
       },
     });
 
@@ -163,7 +170,27 @@ export default async function CompanyDetailPage({
         },
       },
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      address: true,
+      city: true,
+      postalCode: true,
+      phone: true,
+      email: true,
+      website: true,
+      categories: true, // Include categories array
+      logoUrl: true,
+      coverImageUrl: true,
+      latitude: true,
+      longitude: true,
+      rating: true,
+      reviewCount: true,
+      googlePlaceId: true,
+      ratingDistribution: true,
+      lastSyncedAt: true,
+      isActive: true,
       content: {
         where: {
           domainId: currentDomain.id,
@@ -219,7 +246,7 @@ export default async function CompanyDetailPage({
         { id: { not: company.id } },
         {
           OR: [
-            { categories: { hasSome: company.categories } },
+            { categories: { hasSome: company.categories || [] } },
             { city: company.city },
           ],
         },
@@ -239,7 +266,7 @@ export default async function CompanyDetailPage({
       slug: true,
       city: true,
       logoUrl: true,
-      categories: true,
+      categories: true, // Include categories array
       rating: true,
       reviewCount: true,
     },
@@ -265,7 +292,7 @@ export default async function CompanyDetailPage({
         company={{
           ...company,
           _count: { reviews: company.reviews.length }
-        }}
+        } as any}
         breadcrumbs={[
           { name: 'Accueil', url: `https://${currentDomain.name}` },
           { name: 'Annuaire', url: `https://${currentDomain.name}/annuaire` },
