@@ -169,6 +169,72 @@ export default function CompanyEditForm({
     }
   };
 
+  const handleCopyToAllDomains = async (sourceDomainId: number) => {
+    const sourceSettings = domainSettings[sourceDomainId];
+
+    if (!sourceSettings || !sourceSettings.customDescription) {
+      setError('Bu site için henüz içerik yok. Önce içerik ekleyin.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    const confirmMessage = `Bu içeriği tüm aktif sitelere kopyalamak istediğinizden emin misiniz?\n\nKopyalanacak:\n- Özel Açıklama\n- Promosyonlar\n- Anahtar Kelimeler\n\nMevcut içerikler üzerine yazılacak!`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Update all domains with the source domain's content
+      const updatedDomainSettings = { ...domainSettings };
+      let copiedCount = 0;
+
+      for (const domain of domains) {
+        // Skip the source domain and inactive domains
+        if (domain.id === sourceDomainId || !domain.isActive) continue;
+
+        // Copy content from source domain
+        updatedDomainSettings[domain.id] = {
+          ...updatedDomainSettings[domain.id],
+          customDescription: sourceSettings.customDescription,
+          promotions: sourceSettings.promotions,
+          customTags: [...sourceSettings.customTags],
+          // Keep existing visibility and priority settings
+          isVisible: updatedDomainSettings[domain.id]?.isVisible || false,
+          priority: updatedDomainSettings[domain.id]?.priority || 0,
+          featuredUntil: updatedDomainSettings[domain.id]?.featuredUntil || '',
+        };
+
+        // Save to database
+        const response = await fetch(`/api/companies/${company.id}/content`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            domainId: domain.id,
+            ...updatedDomainSettings[domain.id],
+          }),
+        });
+
+        if (response.ok) {
+          copiedCount++;
+        }
+      }
+
+      // Update local state
+      setDomainSettings(updatedDomainSettings);
+      setSuccess(`✅ İçerik ${copiedCount} siteye başarıyla kopyalandı!`);
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err) {
+      setError('Kopyalama sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm('Bu şirketi silmek istediğinizden emin misiniz?')) {
       return;
@@ -684,13 +750,26 @@ export default function CompanyEditForm({
                       </span>
                     </label>
                   </div>
-                  <button
-                    onClick={() => handleDomainSettingsSave(domain.id)}
-                    disabled={loading}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
-                  >
-                    Kaydet
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCopyToAllDomains(domain.id)}
+                      disabled={loading || !settings.customDescription}
+                      className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      title="Bu sitedeki içeriği tüm diğer sitelere kopyala"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Tüm Sitelere Kopyala
+                    </button>
+                    <button
+                      onClick={() => handleDomainSettingsSave(domain.id)}
+                      disabled={loading}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
+                    >
+                      Kaydet
+                    </button>
+                  </div>
                 </div>
 
                 {settings.isVisible && (
