@@ -3,9 +3,32 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 
 async function CategoriesList() {
-  const categories = await prisma.businessCategory.findMany({
+  // Fetch categories with parent-child relationship
+  const categories = await prisma.category.findMany({
+    where: {
+      parentId: null, // Only get top-level categories
+    },
+    include: {
+      children: {
+        include: {
+          _count: {
+            select: {
+              companyCategories: true,
+            },
+          },
+        },
+        orderBy: {
+          order: 'asc',
+        },
+      },
+      _count: {
+        select: {
+          companyCategories: true,
+        },
+      },
+    },
     orderBy: {
-      frenchName: 'asc',
+      order: 'asc',
     },
   });
 
@@ -33,28 +56,57 @@ async function CategoriesList() {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {categories.map((category) => (
-            <tr key={category.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {category.googleCategory}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {category.frenchName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-2xl">
-                {category.icon || '🏪'}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                -
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <Link
-                  href={`/admin/categories/${category.id}`}
-                  className="text-indigo-600 hover:text-indigo-900 mr-4"
-                >
-                  Modifier
-                </Link>
-              </td>
-            </tr>
+            <>
+              {/* Parent Category */}
+              <tr key={category.id} className="bg-white">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {category.slug}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                  {category.nameFr || category.name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-2xl">
+                  {category.icon || '🏪'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {category._count.companyCategories}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <Link
+                    href={`/admin/categories/${category.id}`}
+                    className="text-indigo-600 hover:text-indigo-900 mr-4"
+                  >
+                    Modifier
+                  </Link>
+                </td>
+              </tr>
+
+              {/* Subcategories */}
+              {category.children.map((subcat) => (
+                <tr key={subcat.id} className="bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700 pl-12">
+                    ↳ {subcat.slug}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {subcat.nameFr || subcat.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-xl">
+                    {subcat.icon || '📁'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {subcat._count.companyCategories}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <Link
+                      href={`/admin/categories/${subcat.id}`}
+                      className="text-indigo-600 hover:text-indigo-900 mr-4"
+                    >
+                      Modifier
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </>
           ))}
         </tbody>
       </table>
