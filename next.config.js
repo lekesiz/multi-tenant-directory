@@ -6,6 +6,11 @@ const nextConfig = {
   // Performance optimizations
   poweredByHeader: false,
 
+  // Include Prisma engine binaries in deployment
+  outputFileTracingIncludes: {
+    '/': ['./node_modules/.prisma/client/**/*', './prisma/**/*'],
+  },
+
   // Optimize images
   images: {
     domains: [
@@ -23,6 +28,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@prisma/client'],
+    serverComponentsExternalPackages: ['@prisma/client', '@prisma/engines'],
   },
 
   // Compression
