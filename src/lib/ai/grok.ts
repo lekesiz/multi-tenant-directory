@@ -46,10 +46,9 @@ export class GrokAI {
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || env.XAI_API_KEY || '';
-    
-    if (!this.apiKey) {
-      throw new Error('XAI_API_KEY is not configured');
-    }
+
+    // Don't throw error at construction time for build compatibility
+    // Will throw when actually calling the API if key is missing
   }
 
   /**
@@ -59,6 +58,10 @@ export class GrokAI {
     messages: GrokMessage[],
     options: GrokCompletionOptions = {}
   ): Promise<GrokCompletionResponse> {
+    if (!this.apiKey) {
+      throw new Error('XAI_API_KEY is not configured');
+    }
+
     const {
       model = 'grok-beta',
       temperature = 0.7,

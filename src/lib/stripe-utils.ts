@@ -12,9 +12,20 @@ import {
   SubscriptionStatus,
 } from './payment-types';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-09-30.clover' as any,
-});
+// Lazy initialization to avoid build-time errors
+let stripe: Stripe | null = null;
+
+function getStripeClient(): Stripe {
+  if (!stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+    }
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-09-30.clover' as any,
+    });
+  }
+  return stripe;
+}
 
 /**
  * Create Stripe customer for company
@@ -33,7 +44,7 @@ export async function createStripeCustomer(companyId: number) {
     return company.stripeCustomerId;
   }
 
-  const customer = await stripe.customers.create({
+  const customer = await getStripeClient().customers.create({
     email: company.email || `company-${companyId}@haguenau.pro`,
     name: company.name,
     metadata: {
@@ -104,10 +115,10 @@ export async function createCheckoutSession(params: CreateCheckoutSessionParams)
 
   // Create product if doesn't exist
   const productId = `plan_${planSlug}`;
-  let product = await stripe.products.retrieve(productId).catch(() => null);
+  let product = await getStripeClient().products.retrieve(productId).catch(() => null);
 
   if (!product) {
-    product = await stripe.products.create({
+    product = await getStripeClient().products.create({
       id: productId,
       name: plan.name,
       description: plan.description,
@@ -117,10 +128,10 @@ export async function createCheckoutSession(params: CreateCheckoutSessionParams)
 
   // Create price if doesn't exist
   const priceId = `price_${planSlug}_${billingPeriod}`;
-  let stripPrice = await stripe.prices.retrieve(priceId).catch(() => null);
+  let stripPrice = await getStripeClient().prices.retrieve(priceId).catch(() => null);
 
   if (!stripPrice) {
-    stripPrice = await stripe.prices.create({
+    stripPrice = await getStripeClient().prices.create({
       product: product.id,
       unit_amount: price || 0,
       currency: 'eur',
@@ -136,7 +147,7 @@ export async function createCheckoutSession(params: CreateCheckoutSessionParams)
   }
 
   // Create checkout session
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripeClient().checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
     line_items: [
@@ -265,7 +276,7 @@ export async function handleInvoicePayment(payload: InvoicePayload) {
  * Get subscription details from Stripe
  */
 export async function getSubscriptionDetails(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscription = await getStripeClient().subscriptions.retrieve(subscriptionId);
   return subscription;
 }
 
@@ -273,7 +284,7 @@ export async function getSubscriptionDetails(subscriptionId: string) {
  * Cancel subscription at period end
  */
 export async function cancelSubscriptionAtPeriodEnd(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
+  const subscription = await getStripeClient().subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
   });
 
@@ -284,7 +295,7 @@ export async function cancelSubscriptionAtPeriodEnd(subscriptionId: string) {
  * Cancel subscription immediately
  */
 export async function cancelSubscriptionImmediate(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
+  const subscription = await getStripeClient().subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
   });
   return subscription;
@@ -294,7 +305,7 @@ export async function cancelSubscriptionImmediate(subscriptionId: string) {
  * Reactivate canceled subscription
  */
 export async function reactivateSubscription(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
+  const subscription = await getStripeClient().subscriptions.update(subscriptionId, {
     cancel_at_period_end: false,
   });
 
@@ -308,13 +319,13 @@ export async function updateSubscriptionPlan(
   subscriptionId: string,
   newPriceId: string
 ) {
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscription = await getStripeClient().subscriptions.retrieve(subscriptionId);
 
   if (!subscription.items.data[0]) {
     throw new Error('No items in subscription');
   }
 
-  const updated = await stripe.subscriptions.update(subscriptionId, {
+  const updated = await getStripeClient().subscriptions.update(subscriptionId, {
     items: [
       {
         id: subscription.items.data[0].id,
@@ -341,7 +352,7 @@ export async function createPaymentMethod(
     throw new Error(`Company ${companyId} not found`);
   }
 
-  const stripePaymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+  const stripePaymentMethod = await getStripeClient().paymentMethods.retrieve(paymentMethodId);
 
   let paymentRecord = await prisma.paymentMethod.create({
     data: {

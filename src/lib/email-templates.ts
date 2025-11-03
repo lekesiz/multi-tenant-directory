@@ -1,7 +1,18 @@
 import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+let resend: Resend | null = null;
+
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export interface LeadNotificationData {
   lead: {
@@ -35,11 +46,17 @@ export async function sendLeadNotificationEmail(
   leadData: LeadNotificationData
 ): Promise<boolean> {
   try {
+    const client = getResendClient();
+    if (!client) {
+      logger.warn('⚠️ RESEND_API_KEY not configured. Email not sent.');
+      return false;
+    }
+
     const { lead, company, assignment } = leadData;
 
     const emailContent = generateLeadNotificationEmail(leadData);
-    
-    const result = await resend.emails.send({
+
+    const result = await client.emails.send({
       from: 'Haguenau Pro <noreply@haguenau.pro>',
       to: [companyEmail],
       subject: `🎯 Nouveau prospect pour ${company.name} - Score: ${assignment.score}/100`,
@@ -197,13 +214,19 @@ export async function sendLeadResponseNotificationEmail(
   message?: string
 ): Promise<boolean> {
   try {
-    const subject = response === 'accepted' 
+    const client = getResendClient();
+    if (!client) {
+      logger.warn('⚠️ RESEND_API_KEY not configured. Email not sent.');
+      return false;
+    }
+
+    const subject = response === 'accepted'
       ? `✅ ${companyName} a accepté votre demande`
       : `❌ ${companyName} n'a pas pu traiter votre demande`;
 
     const emailContent = generateLeadResponseEmail(companyName, response, message);
-    
-    const result = await resend.emails.send({
+
+    const result = await client.emails.send({
       from: 'Haguenau Pro <noreply@haguenau.pro>',
       to: [leadEmail],
       subject,

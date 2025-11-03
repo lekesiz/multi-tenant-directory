@@ -12,9 +12,20 @@ import {
   handleInvoicePayment,
 } from '@/lib/stripe-utils';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-09-30.clover' as any,
-});
+// Lazy initialization to avoid build-time errors
+let stripe: Stripe | null = null;
+
+function getStripeClient(): Stripe {
+  if (!stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+    }
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-09-30.clover' as any,
+    });
+  }
+  return stripe;
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
@@ -29,7 +40,7 @@ async function verifyStripeWebhook(request: NextRequest) {
     throw new Error('Missing signature or webhook secret');
   }
 
-  const event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+  const event = getStripeClient().webhooks.constructEvent(body, sig, webhookSecret);
   return event;
 }
 

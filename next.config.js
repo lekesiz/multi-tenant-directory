@@ -4,7 +4,6 @@ const nextConfig = {
   reactStrictMode: true,
 
   // Performance optimizations
-  swcMinify: true,
   poweredByHeader: false,
 
   // Optimize images
@@ -28,59 +27,6 @@ const nextConfig = {
 
   // Compression
   compress: true,
-
-  // Output configuration for production
-  output: 'standalone',
-
-  // Webpack optimizations
-  webpack: (config, { dev, isServer }) => {
-    // Production optimizations
-    if (!dev) {
-      config.optimization = {
-        ...config.optimization,
-        moduleIds: 'deterministic',
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Vendor chunk
-            vendor: {
-              name: 'vendor',
-              chunks: 'all',
-              test: /node_modules/,
-              priority: 20,
-            },
-            // Common chunk
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 10,
-              reuseExistingChunk: true,
-              enforce: true,
-            },
-            // Prisma client (large library)
-            prisma: {
-              name: 'prisma',
-              test: /@prisma/,
-              chunks: 'all',
-              priority: 30,
-            },
-            // React libraries
-            react: {
-              name: 'react',
-              test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
-              chunks: 'all',
-              priority: 40,
-            },
-          },
-        },
-      };
-    }
-
-    return config;
-  },
 
   // Headers for security and caching
   async headers() {

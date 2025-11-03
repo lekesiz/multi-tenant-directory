@@ -5,13 +5,32 @@
 
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+// Lazy initialization to avoid build-time errors
+let stripeInstance: Stripe | null = null;
+
+function getStripeClient(): Stripe {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+  }
+  if (!stripeInstance) {
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-09-30.clover',
+      typescript: true,
+    });
+  }
+  return stripeInstance;
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-09-30.clover',
-  typescript: true,
+// Export a getter property for backwards compatibility
+export const stripe = new Proxy({} as Stripe, {
+  get(target, prop) {
+    const client = getStripeClient();
+    const value = (client as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  }
 });
 
 /**
@@ -26,7 +45,8 @@ export async function createStripeCustomer({
   name?: string;
   metadata?: Record<string, string>;
 }) {
-  const customer = await stripe.customers.create({
+  const stripeClient = getStripeClient();
+  const customer = await stripeClient.customers.create({
     email,
     name,
     metadata,
@@ -53,6 +73,7 @@ export async function createCheckoutSession({
   trialPeriodDays?: number;
   metadata?: Record<string, string>;
 }) {
+  const stripeClient = getStripeClient();
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: 'subscription',
     payment_method_types: ['card'],
@@ -77,7 +98,7 @@ export async function createCheckoutSession({
     };
   }
 
-  const session = await stripe.checkout.sessions.create(sessionParams);
+  const session = await stripeClient.checkout.sessions.create(sessionParams);
 
   return session;
 }
@@ -92,7 +113,8 @@ export async function createBillingPortalSession({
   customerId: string;
   returnUrl: string;
 }) {
-  const session = await stripe.billingPortal.sessions.create({
+  const stripeClient = getStripeClient();
+  const session = await stripeClient.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   });
@@ -104,7 +126,8 @@ export async function createBillingPortalSession({
  * Cancel subscription
  */
 export async function cancelSubscription(subscriptionId: string, cancelAtPeriodEnd = true) {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
+  const stripeClient = getStripeClient();
+  const subscription = await stripeClient.subscriptions.update(subscriptionId, {
     cancel_at_period_end: cancelAtPeriodEnd,
   });
 
@@ -115,7 +138,8 @@ export async function cancelSubscription(subscriptionId: string, cancelAtPeriodE
  * Resume canceled subscription
  */
 export async function resumeSubscription(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
+  const stripeClient = getStripeClient();
+  const subscription = await stripeClient.subscriptions.update(subscriptionId, {
     cancel_at_period_end: false,
   });
 
@@ -126,7 +150,8 @@ export async function resumeSubscription(subscriptionId: string) {
  * Get subscription details
  */
 export async function getSubscription(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const stripeClient = getStripeClient();
+  const subscription = await stripeClient.subscriptions.retrieve(subscriptionId);
   return subscription;
 }
 
@@ -140,7 +165,8 @@ export async function applyDiscount({
   subscriptionId: string;
   couponId: string;
 }) {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
+  const stripeClient = getStripeClient();
+  const subscription = await stripeClient.subscriptions.update(subscriptionId, {
     discounts: [{ coupon: couponId }],
   });
 
@@ -161,7 +187,8 @@ export async function createStripeCoupon({
   duration: 'once' | 'repeating' | 'forever';
   durationInMonths?: number;
 }) {
-  const coupon = await stripe.coupons.create({
+  const stripeClient = getStripeClient();
+  const coupon = await stripeClient.coupons.create({
     id,
     percent_off: percentOff,
     duration,
@@ -179,8 +206,9 @@ export function verifyWebhookSignature(
   signature: string,
   secret: string
 ) {
+  const stripeClient = getStripeClient();
   try {
-    const event = stripe.webhooks.constructEvent(payload, signature, secret);
+    const event = stripeClient.webhooks.constructEvent(payload, signature, secret);
     return event;
   } catch (err) {
     throw new Error(`Webhook signature verification failed: ${(err as Error).message}`);
@@ -277,7 +305,7 @@ export function getPlanDetails(tier: string) {
 // Helper function to check if user has access to feature
 export function hasFeatureAccess(tier: string, feature: string): boolean {
   const plan = getPlanDetails(tier);
-  
+
   switch (feature) {
     case 'unlimited_photos':
       return plan.limits.photos === -1;
@@ -297,7 +325,7 @@ export function hasFeatureAccess(tier: string, feature: string): boolean {
 // Helper function to format price
 export function formatPrice(price: number | null, currency: string = 'EUR'): string {
   if (price === null || price === 0) return 'Gratuit';
-  
+
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: currency.toUpperCase(),
@@ -307,7 +335,7 @@ export function formatPrice(price: number | null, currency: string = 'EUR'): str
 // Helper function to check if user is on trial
 export function isOnTrial(businessOwner: { trialStart?: Date | null; trialEnd?: Date | null }): boolean {
   if (!businessOwner.trialStart || !businessOwner.trialEnd) return false;
-  
+
   const now = new Date();
   return now >= businessOwner.trialStart && now <= businessOwner.trialEnd;
 }
@@ -315,11 +343,11 @@ export function isOnTrial(businessOwner: { trialStart?: Date | null; trialEnd?: 
 // Helper function to get days left in trial
 export function getTrialDaysLeft(businessOwner: { trialEnd?: Date | null }): number {
   if (!businessOwner.trialEnd) return 0;
-  
+
   const now = new Date();
   const diffTime = businessOwner.trialEnd.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   return Math.max(0, diffDays);
 }
 
@@ -330,6 +358,6 @@ export function isSubscriptionActive(businessOwner: {
 }): boolean {
   if (businessOwner.subscriptionStatus !== 'active') return false;
   if (!businessOwner.subscriptionEnd) return false;
-  
+
   return new Date() <= businessOwner.subscriptionEnd;
 }
