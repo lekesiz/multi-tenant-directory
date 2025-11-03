@@ -254,32 +254,27 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const successfulShares = shareResults.filter((r) => r.success).map((r) => r.platform);
 
     if (successfulShares.length > 0) {
-      const existingShares = activity.sharedOn || [];
-      const updatedShares = Array.from(new Set([...existingShares, ...successfulShares]));
+      const updateData: any = {
+        shareCount: { increment: successfulShares.length },
+      };
+
+      // Update platform-specific flags
+      if (successfulShares.includes('facebook')) {
+        updateData.sharedOnFacebook = true;
+      }
+      if (successfulShares.includes('twitter')) {
+        updateData.sharedOnTwitter = true;
+      }
+      if (successfulShares.includes('linkedin')) {
+        updateData.sharedOnLinkedIn = true;
+      }
+      if (successfulShares.includes('instagram')) {
+        updateData.sharedOnInstagram = true;
+      }
 
       await prisma.activity.update({
         where: { id },
-        data: {
-          sharedOn: updatedShares,
-          lastSharedAt: new Date(),
-          shareUrls: {
-            ...((activity.shareUrls as any) || {}),
-            ...shareResults.reduce((acc, r) => {
-              if (r.success && r.shareUrl) {
-                acc[r.platform] = r.shareUrl;
-              }
-              return acc;
-            }, {} as any),
-          },
-        },
-      });
-
-      // Increment shares counter
-      await prisma.activity.update({
-        where: { id },
-        data: {
-          shares: { increment: successfulShares.length },
-        },
+        data: updateData,
       });
     }
 

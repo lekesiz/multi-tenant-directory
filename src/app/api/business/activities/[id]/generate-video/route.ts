@@ -167,11 +167,10 @@ The video should be professional, engaging, and suitable for social media sharin
     await prisma.activity.update({
       where: { id },
       data: {
+        aiGeneratedVideoUrl: videoUrl,
         videoUrl,
-        videoThumbnail: thumbnailUrl,
-        aiGenerated: true,
+        isAiGenerated: true,
         aiModel: 'veo-3',
-        aiPrompt: videoPrompt,
       },
     });
 

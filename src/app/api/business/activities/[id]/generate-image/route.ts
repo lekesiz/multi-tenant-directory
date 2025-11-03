@@ -128,10 +128,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     await prisma.activity.update({
       where: { id },
       data: {
-        imageUrl,
-        aiGenerated: true,
-        aiModel: 'gemini',
-        aiPrompt: imagePrompt,
+        aiGeneratedImageUrl: imageUrl,
+        isAiGenerated: true,
+        aiModel: 'gemini-nano',
       },
     });
 

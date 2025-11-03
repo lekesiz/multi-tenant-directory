@@ -1465,45 +1465,39 @@ model Activity {
   content           String    @db.Text
   excerpt           String?
   type              String // announcement|event|offer|update|story|news
-  postType          String    @default("daily") // daily|weekly|monthly
   status            String    @default("draft") // draft|scheduled|published|archived
-  imageUrl          String?
-  imageCaption      String?
+  featuredImage     String?
+  images            String[]
   videoUrl          String?
-  videoThumbnail    String?
-  mediaUrls         String[] // Additional media URLs
   tags              String[]
-  category          String?
 
   // AI Generation flags
-  aiGenerated       Boolean   @default(false)
-  aiModel           String? // gemini|gpt-4|claude
-  aiPrompt          String?   @db.Text
+  isAiGenerated     Boolean   @default(false)
+  aiGeneratedContent String?  @db.Text
+  aiGeneratedImageUrl String?
+  aiGeneratedVideoUrl String?
+  aiModel           String? // gemini|gpt-4|claude|veo-3
 
   // Social Media
-  sharedOn          String[] // facebook|twitter|linkedin|instagram
-  shareUrls         Json? // Platform-specific share URLs
-  lastSharedAt      DateTime?
+  sharedOnFacebook  Boolean   @default(false)
+  sharedOnTwitter   Boolean   @default(false)
+  sharedOnLinkedIn  Boolean   @default(false)
+  sharedOnInstagram Boolean   @default(false)
 
   // Engagement metrics
-  views             Int       @default(0)
-  likes             Int       @default(0)
-  shares            Int       @default(0)
-  comments          Int       @default(0)
+  shareCount        Int       @default(0)
+  viewCount         Int       @default(0)
+  likeCount         Int       @default(0)
+  commentCount      Int       @default(0)
 
   // SEO
   metaTitle         String?
   metaDescription   String?
-  metaKeywords      String[]
+  keywords          String[]
 
   // Scheduling
   publishedAt       DateTime?
   scheduledFor      DateTime?
-  expiresAt         DateTime?
-
-  // Author
-  authorId          String
-  authorName        String?
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -1511,13 +1505,13 @@ model Activity {
   // Relations
   company           Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  @@unique([companyId, slug])
-  @@index([companyId, status])
-  @@index([companyId, publishedAt(sort: Desc)])
-  @@index([status, scheduledFor])
-  @@index([type, status])
+  @@unique([slug])
+  @@index([companyId])
   @@index([slug])
-  @@index([publishedAt(sort: Desc)])
-  @@index([views(sort: Desc)])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([type])
+  @@index([createdAt])
+  @@index([companyId, status, publishedAt])
   @@map("activities")
 }

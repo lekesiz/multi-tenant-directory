@@ -1,4 +1,7 @@
-import { Activity } from '@prisma/client';
+import { Activity as PrismaActivity } from '@prisma/client';
+
+// Re-export Prisma Activity type
+export type Activity = PrismaActivity;
 
 // Activity types
 export type ActivityType = 'announcement' | 'event' | 'offer' | 'update' | 'story' | 'news';
