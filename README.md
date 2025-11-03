@@ -39,6 +39,14 @@ hoerdt.pro, mutzig.pro, schiltigheim.pro, illkirch.pro, lingolsheim.pro, bischhe
 
 ### 👔 Business Management
 - ✅ **Business Owner Dashboard** - Comprehensive management panel
+- ✅ **Activity System** - Create and manage blog-style posts (NEW! v2.1.0)
+  - 📢 Announcements, 📅 Events, 🎁 Offers, 🔄 Updates, 📖 Stories, 📰 News
+  - AI-powered content generation with Gemini
+  - Image generation with Gemini Nano
+  - Video generation with Veo 3
+  - Social media sharing (Facebook, Twitter, LinkedIn, Instagram)
+  - Publishing and scheduling
+  - Engagement metrics tracking
 - ✅ **Review Management** - Reply, verify, and moderate reviews
 - ✅ **Analytics Dashboard** - Real-time business metrics
 - ✅ **Photo Gallery** - Multi-photo upload with primary selection
