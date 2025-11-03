@@ -32,10 +32,23 @@ model Domain {
 }
 
 model Company {
-  id                   Int                  @id @default(autoincrement())
-  name                 String
-  slug                 String               @unique
-  googlePlaceId        String?              @unique
+  id            Int     @id @default(autoincrement())
+  name          String
+  slug          String  @unique
+  googlePlaceId String? @unique
+
+  // Official French Government Data (Annuaire des Entreprises)
+  siren          String?   @unique // 9-digit company identifier
+  siret          String?   @unique // 14-digit establishment identifier (SIREN + 5 digits)
+  legalForm      String? // Legal form (SARL, SAS, etc.)
+  legalStatus    String? // Legal status
+  capital        Float? // Company capital
+  nafCode        String? // NAF/APE activity code
+  employeeCount  Int? // Number of employees
+  foundingDate   DateTime? // Company founding date
+  isVerified     Boolean   @default(false) // Verified via government data
+  lastVerifiedAt DateTime? // Last verification timestamp
+
   address              String?
   city                 String?
   postalCode           String?
@@ -99,6 +112,10 @@ model Company {
   @@index([googlePlaceId])
   @@index([subscriptionStatus, subscriptionEnd])
   @@index([isFeatured])
+  @@index([siren])
+  @@index([siret])
+  @@index([isVerified])
+  @@index([nafCode])
   @@map("companies")
 }
 
@@ -1458,52 +1475,52 @@ model CompanyCategory {
 
 // Activity/Blog System for Business Owners
 model Activity {
-  id                String    @id @default(cuid())
-  companyId         Int
-  title             String
-  slug              String
-  content           String    @db.Text
-  excerpt           String?
-  type              String // announcement|event|offer|update|story|news
-  status            String    @default("draft") // draft|scheduled|published|archived
-  featuredImage     String?
-  images            String[]
-  videoUrl          String?
-  tags              String[]
+  id            String   @id @default(cuid())
+  companyId     Int
+  title         String
+  slug          String
+  content       String   @db.Text
+  excerpt       String?
+  type          String // announcement|event|offer|update|story|news
+  status        String   @default("draft") // draft|scheduled|published|archived
+  featuredImage String?
+  images        String[]
+  videoUrl      String?
+  tags          String[]
 
   // AI Generation flags
-  isAiGenerated     Boolean   @default(false)
-  aiGeneratedContent String?  @db.Text
+  isAiGenerated       Boolean @default(false)
+  aiGeneratedContent  String? @db.Text
   aiGeneratedImageUrl String?
   aiGeneratedVideoUrl String?
-  aiModel           String? // gemini|gpt-4|claude|veo-3
+  aiModel             String? // gemini|gpt-4|claude|veo-3
 
   // Social Media
-  sharedOnFacebook  Boolean   @default(false)
-  sharedOnTwitter   Boolean   @default(false)
-  sharedOnLinkedIn  Boolean   @default(false)
-  sharedOnInstagram Boolean   @default(false)
+  sharedOnFacebook  Boolean @default(false)
+  sharedOnTwitter   Boolean @default(false)
+  sharedOnLinkedIn  Boolean @default(false)
+  sharedOnInstagram Boolean @default(false)
 
   // Engagement metrics
-  shareCount        Int       @default(0)
-  viewCount         Int       @default(0)
-  likeCount         Int       @default(0)
-  commentCount      Int       @default(0)
+  shareCount   Int @default(0)
+  viewCount    Int @default(0)
+  likeCount    Int @default(0)
+  commentCount Int @default(0)
 
   // SEO
-  metaTitle         String?
-  metaDescription   String?
-  keywords          String[]
+  metaTitle       String?
+  metaDescription String?
+  keywords        String[]
 
   // Scheduling
-  publishedAt       DateTime?
-  scheduledFor      DateTime?
+  publishedAt  DateTime?
+  scheduledFor DateTime?
 
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  company           Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([slug])
   @@index([companyId])

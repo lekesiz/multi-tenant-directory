@@ -230,8 +230,131 @@ Réponds avec un objet JSON:
   }
 }
 
+/**
+ * Generate professional company profile from SIRET data
+ * Uses Annuaire + Google data to create SEO-friendly description
+ */
+export async function generateCompanyProfile(params: {
+  name: string;
+  city: string;
+  address?: string;
+  categories: string[];
+  nafCode?: string;
+  legalForm?: string;
+  employeeCount?: number;
+  foundingDate?: Date;
+  googleRating?: number;
+  googleReviewCount?: number;
+}): Promise<{
+  description: string;
+  seoTitle: string;
+  seoDescription: string;
+  services: string[];
+  highlights: string[];
+}> {
+  if (!genAI) {
+    throw new Error('Gemini API not configured');
+  }
+
+  const {
+    name,
+    city,
+    address,
+    categories,
+    nafCode,
+    legalForm,
+    employeeCount,
+    foundingDate,
+    googleRating,
+    googleReviewCount,
+  } = params;
+
+  const systemPrompt = `Tu es un expert en rédaction de profils d'entreprises pour un annuaire professionnel français.
+
+Crée un profil professionnel et engageant pour cette entreprise vérifiée par les données officielles gouvernementales:
+
+**Informations officielles:**
+- Nom: ${name}
+- Ville: ${city}
+${address ? `- Adresse: ${address}` : ''}
+- Catégories: ${categories.join(', ')}
+${nafCode ? `- Code NAF: ${nafCode}` : ''}
+${legalForm ? `- Forme juridique: ${legalForm}` : ''}
+${employeeCount ? `- Effectif: ${employeeCount} salariés` : ''}
+${foundingDate ? `- Fondée en: ${new Date(foundingDate).getFullYear()}` : ''}
+${googleRating ? `- Note Google: ${googleRating}/5 (${googleReviewCount} avis)` : ''}
+
+**Ta mission:**
+Rédige un profil d'entreprise qui:
+1. Met en valeur l'entreprise de manière professionnelle
+2. Optimisé pour le référencement local (SEO)
+3. Attire les clients potentiels
+4. Reste factuel et crédible
+5. Est rédigé en français professionnel
+
+IMPORTANT: Réponds UNIQUEMENT avec un objet JSON valide dans ce format exact:
+{
+  "description": "Une description complète de l'entreprise (200-300 mots), professionnelle, engageante et optimisée SEO",
+  "seoTitle": "Titre SEO accrocheur (max 60 caractères) incluant le nom et la ville",
+  "seoDescription": "Meta description SEO (max 160 caractères) qui incite au clic",
+  "services": ["Service 1", "Service 2", "Service 3", "Service 4", "Service 5"],
+  "highlights": ["Point fort 1", "Point fort 2", "Point fort 3"]
+}
+
+La description doit:
+- Commencer par présenter l'entreprise et son expertise
+- Mentionner sa localisation (${city})
+- Décrire ses services principaux basés sur les catégories
+- Mentionner les points forts (si données disponibles: ancienneté, note Google, effectif)
+- Être naturelle et non robotique
+- Éviter les superlatifs exagérés`;
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash-exp',
+      safetySettings,
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2000,
+      },
+    });
+
+    const result = await model.generateContent(systemPrompt);
+    const response = result.response;
+    const text = response.text();
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in Gemini response');
+    }
+
+    const generated = JSON.parse(jsonMatch[0]);
+
+    logger.info('[Gemini] Company profile generated', {
+      name,
+      descriptionLength: generated.description?.length,
+      servicesCount: generated.services?.length,
+    });
+
+    return {
+      description: generated.description || '',
+      seoTitle: generated.seoTitle || `${name} - ${city}`,
+      seoDescription: generated.seoDescription || generated.description?.substring(0, 160) || '',
+      services: generated.services || [],
+      highlights: generated.highlights || [],
+    };
+  } catch (error) {
+    logger.error('[Gemini] Error generating company profile:', error);
+    throw error;
+  }
+}
+
 export default {
   generateActivityContent,
   generateImagePrompt,
   enhanceActivityContent,
+  generateCompanyProfile,
 };

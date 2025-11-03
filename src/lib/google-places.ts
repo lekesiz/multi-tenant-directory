@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import { PrismaClient } from '@prisma/client';
 import { translateToFrench, detectLanguage } from './translation';
+import { searchBySiret, extractCompanyData, type AnnuaireCompany } from './annuaire-api';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +11,7 @@ const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
  * Parse Google's weekday_text format to our BusinessHours format
  * Example: ["Monday: 9:00 AM – 6:00 PM", "Tuesday: Closed", ...]
  */
-function parseGoogleBusinessHours(weekdayText: string[]) {
+export function parseGoogleBusinessHours(weekdayText: string[]) {
   const daysMap: Record<string, string> = {
     'Monday': 'monday',
     'Tuesday': 'tuesday',
@@ -451,5 +452,120 @@ function calculateRatingDistribution(reviews: GoogleReview[]): RatingDistributio
   });
 
   return distribution;
+}
+
+/**
+ * Create company profile from SIRET number
+ * Combines Annuaire des Entreprises + Google Places data
+ *
+ * Flow:
+ * 1. Fetch official data from Annuaire (government)
+ * 2. Search Google Maps using company name + address
+ * 3. Fetch Google Place details (reviews, hours, photos)
+ * 4. Return combined data ready for AI enhancement
+ */
+export async function createCompanyFromSiret(siret: string): Promise<{
+  success: boolean;
+  message: string;
+  data?: {
+    annuaire: ReturnType<typeof extractCompanyData>;
+    google?: PlaceDetails;
+    googlePlaceId?: string;
+  };
+}> {
+  try {
+    logger.info('Creating company from SIRET', { siret });
+
+    // Step 1: Fetch from Annuaire des Entreprises
+    const annuaireCompany = await searchBySiret(siret);
+
+    if (!annuaireCompany) {
+      return {
+        success: false,
+        message: 'Aucune entreprise trouvée avec ce SIRET dans l\'Annuaire des Entreprises',
+      };
+    }
+
+    // Extract and format Annuaire data
+    const annuaireData = extractCompanyData(annuaireCompany);
+    logger.info('Annuaire data extracted', {
+      siren: annuaireData.siren,
+      siret: annuaireData.siret,
+      name: annuaireData.name,
+      city: annuaireData.city,
+    });
+
+    // Step 2: Search Google Maps using company name + address
+    const searchQuery = annuaireData.address
+      ? `${annuaireData.name}, ${annuaireData.address}`
+      : `${annuaireData.name}, ${annuaireData.city}`;
+
+    logger.info('Searching Google Maps', { query: searchQuery });
+
+    const googleSearch = await searchPlace(
+      annuaireData.name,
+      annuaireData.address || undefined
+    );
+
+    if (!googleSearch) {
+      // No Google Place found - return Annuaire data only
+      logger.warn('No Google Place found for company', {
+        name: annuaireData.name,
+        address: annuaireData.address
+      });
+
+      return {
+        success: true,
+        message: 'Entreprise trouvée dans l\'Annuaire mais pas sur Google Maps',
+        data: {
+          annuaire: annuaireData,
+        },
+      };
+    }
+
+    logger.info('Google Place found', {
+      placeId: googleSearch.place_id,
+      name: googleSearch.name
+    });
+
+    // Step 3: Fetch Google Place details
+    const googleDetails = await getPlaceDetails(googleSearch.place_id);
+
+    if (!googleDetails) {
+      return {
+        success: true,
+        message: 'Entreprise trouvée mais impossible de récupérer les détails Google',
+        data: {
+          annuaire: annuaireData,
+          googlePlaceId: googleSearch.place_id,
+        },
+      };
+    }
+
+    logger.info('Google Place details fetched', {
+      placeId: googleDetails.place_id,
+      reviewCount: googleDetails.reviews?.length || 0,
+      hasPhotos: !!googleDetails.photos?.length,
+      hasHours: !!googleDetails.opening_hours,
+    });
+
+    // Return combined data
+    return {
+      success: true,
+      message: 'Entreprise trouvée avec succès dans l\'Annuaire et sur Google Maps',
+      data: {
+        annuaire: annuaireData,
+        google: googleDetails,
+        googlePlaceId: googleDetails.place_id,
+      },
+    };
+
+  } catch (error) {
+    logger.error('Error creating company from SIRET', { error, siret });
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Une erreur est survenue',
+    };
+  }
 }
 
