@@ -3,6 +3,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveTenant, getDomainId } from '@/lib/api-guard';
 import { requireAdmin } from '@/lib/auth-guard';
+import { z } from 'zod';
+
+// Validation schema for creating a company
+const createCompanySchema = z.object({
+  name: z.string().min(2, 'Company name must be at least 2 characters'),
+  slug: z.string().min(2, 'Slug must be at least 2 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
+  googlePlaceId: z.string().optional().nullable(),
+  address: z.string().min(3, 'Address must be at least 3 characters').optional().nullable(),
+  city: z.string().min(2, 'City must be at least 2 characters').optional().nullable(),
+  postalCode: z.string().regex(/^\d{5}$/, 'Postal code must be exactly 5 digits').optional().nullable(),
+  phone: z.string().min(10, 'Phone must be at least 10 characters').optional().nullable(),
+  email: z.string().email('Invalid email address').optional().nullable(),
+  website: z.string().url('Invalid website URL').optional().nullable().or(z.literal('')),
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
+  categories: z.array(z.string()).optional().nullable(),
+  logoUrl: z.string().url('Invalid logo URL').optional().nullable().or(z.literal('')),
+  coverImageUrl: z.string().url('Invalid cover image URL').optional().nullable().or(z.literal('')),
+  businessHours: z.array(z.string()).optional().nullable(),
+});
 
 /**
  * Parse Google's weekday_text format to our BusinessHours format
@@ -222,6 +242,22 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+
+    // Validate input data
+    const validation = createCompanySchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Invalid input data',
+          details: validation.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        },
+        { status: 400 }
+      );
+    }
+
     const {
       name,
       slug,
@@ -238,7 +274,7 @@ export async function POST(request: NextRequest) {
       logoUrl,
       coverImageUrl,
       businessHours,
-    } = body;
+    } = validation.data;
 
     // Resolve tenant from request
     const tenant = await resolveTenant(request);
