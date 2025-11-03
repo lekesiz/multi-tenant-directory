@@ -47,6 +47,7 @@ export async function POST(
       metaDescription,
       priority,
       featuredUntil,
+      customTags,
     } = body;
 
     // Convert featuredUntil to Date if provided
@@ -69,6 +70,7 @@ export async function POST(
         metaDescription,
         priority: priority !== undefined ? priority : 0,
         featuredUntil: featuredUntilDate,
+        customTags: customTags || [],
       },
       create: {
         companyId,
@@ -81,6 +83,7 @@ export async function POST(
         metaDescription,
         priority: priority || 0,
         featuredUntil: featuredUntilDate,
+        customTags: customTags || [],
       },
     });
 

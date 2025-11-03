@@ -6,6 +6,7 @@ import Link from 'next/link';
 import BusinessHoursForm from './BusinessHoursForm';
 import AIDescriptionGenerator from './AIDescriptionGenerator';
 import RichTextEditor from './RichTextEditor';
+import KeywordSuggestions from './KeywordSuggestions';
 
 interface Company {
   id: number;
@@ -95,6 +96,7 @@ export default function CompanyEditForm({
         promotions: string;
         priority: number;
         featuredUntil: string;
+        customTags: string[];
       }
     >
   >(
@@ -106,6 +108,7 @@ export default function CompanyEditForm({
         promotions: content?.promotions || '',
         priority: content?.priority || 0,
         featuredUntil: content?.featuredUntil ? new Date(content.featuredUntil).toISOString().split('T')[0] : '',
+        customTags: (content as any)?.customTags || [],
       };
       return acc;
     }, {} as any)
@@ -712,6 +715,26 @@ export default function CompanyEditForm({
                         rows={3}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                         placeholder="Özel teklifler, indirimler..."
+                      />
+                    </div>
+
+                    {/* Keyword Suggestions */}
+                    <div>
+                      <KeywordSuggestions
+                        companyName={company.name}
+                        category={company.categories[0] || ''}
+                        city={company.city || ''}
+                        description={settings.customDescription}
+                        currentTags={settings.customTags}
+                        onTagsChange={(tags) =>
+                          setDomainSettings({
+                            ...domainSettings,
+                            [domain.id]: {
+                              ...settings,
+                              customTags: tags,
+                            },
+                          })
+                        }
                       />
                     </div>
 
