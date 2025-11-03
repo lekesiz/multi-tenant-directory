@@ -19,8 +19,9 @@ import SafeHTML from '@/components/SafeHTML';
 import CompanyActivities from '@/components/CompanyActivities';
 import { Metadata } from 'next';
 
-// ISR: Revalidate every 300 seconds (5 minutes)
-export const revalidate = 300;
+// Force dynamic rendering to avoid build-time database queries
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function getDomainFromHost(host: string) {
   let domain = host.split(':')[0];
