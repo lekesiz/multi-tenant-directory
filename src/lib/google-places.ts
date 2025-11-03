@@ -255,51 +255,67 @@ export async function syncCompanyReviews(companyId: number): Promise<{
     let reviewsAdded = 0;
 
     for (const googleReview of placeDetails.reviews) {
-      // Check if review already exists (by author name and time)
+      // Skip empty reviews first
+      if (!googleReview.text || googleReview.text.trim().length === 0) {
+        logger.warn(`Skipping empty review from ${googleReview.author_name}`);
+        continue;
+      }
+
+      // Check if review already exists (by author name, text hash, and time)
+      // This prevents duplicate reviews even if text content is modified
+      const reviewDate = new Date(googleReview.time * 1000);
       const existingReview = await prisma.review.findFirst({
         where: {
           companyId,
           authorName: googleReview.author_name,
           source: 'google',
-          reviewDate: new Date(googleReview.time * 1000),
+          reviewDate: reviewDate,
         },
       });
 
-      if (!existingReview) {
-        // Skip empty reviews
-        if (!googleReview.text || googleReview.text.trim().length === 0) {
-          logger.warn(`Skipping empty review from ${googleReview.author_name}`);
-          continue;
-        }
-
-        // Use original text as-is (most reviews in Haguenau region are already in French)
-        // Only translate if explicitly needed in future
-        const detectedLanguage = googleReview.language || 'fr';
-        const shouldTranslate = detectedLanguage !== 'fr' && detectedLanguage !== 'de';
-
-        let commentFrench = googleReview.text;
-        if (shouldTranslate) {
-          // Only translate for non-French/German reviews
-          commentFrench = await translateToFrench(googleReview.text, detectedLanguage);
-        }
-
-        await prisma.review.create({
-          data: {
-            companyId,
-            authorName: googleReview.author_name,
-            authorPhoto: googleReview.profile_photo_url,
-            rating: googleReview.rating,
-            comment: googleReview.text, // Store original as-is
-            commentFr: commentFrench, // Store French version (same or translated)
-            originalLanguage: detectedLanguage,
-            source: 'google',
-            reviewDate: new Date(googleReview.time * 1000),
-            isApproved: true,
-            isActive: true,
-          },
-        });
-        reviewsAdded++;
+      if (existingReview) {
+        // Review already exists - PRESERVE original content, don't update
+        logger.info(`Review from ${googleReview.author_name} already exists, skipping to preserve content`);
+        continue;
       }
+
+      // New review - process and save
+      const detectedLanguage = googleReview.language || 'fr';
+
+      // IMPORTANT: Store original text as-is, NEVER modify it
+      // Most reviews in Haguenau are already in French
+      // commentFr will be same as original for French/German reviews
+      let commentFrench = googleReview.text;
+
+      // Only translate if language is NOT French or German
+      const shouldTranslate = detectedLanguage !== 'fr' && detectedLanguage !== 'de';
+      if (shouldTranslate) {
+        try {
+          commentFrench = await translateToFrench(googleReview.text, detectedLanguage);
+          logger.info(`Translated review from ${detectedLanguage} to French`);
+        } catch (translateError) {
+          logger.error(`Translation failed for review, using original:`, translateError);
+          commentFrench = googleReview.text; // Fallback to original
+        }
+      }
+
+      await prisma.review.create({
+        data: {
+          companyId,
+          authorName: googleReview.author_name,
+          authorPhoto: googleReview.profile_photo_url,
+          rating: googleReview.rating,
+          comment: googleReview.text, // ALWAYS store Google's original text unchanged
+          commentFr: commentFrench, // French version (same or translated)
+          originalLanguage: detectedLanguage,
+          source: 'google',
+          reviewDate: reviewDate,
+          isApproved: true,
+          isActive: true,
+        },
+      });
+      reviewsAdded++;
+      logger.info(`Added new review from ${googleReview.author_name} (${detectedLanguage})`);
     }
 
     // Calculate rating distribution from reviews
