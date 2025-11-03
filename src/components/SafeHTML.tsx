@@ -35,7 +35,7 @@ export default function SafeHTML({ html, className = '' }: SafeHTMLProps) {
 
   return (
     <div
-      className={`prose max-w-none ${className}`}
+      className={`prose prose-slate max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-strong:text-gray-900 prose-li:text-gray-800 prose-a:text-blue-600 ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
     />
   );
