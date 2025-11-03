@@ -16,6 +16,7 @@ import { SocialShareButtons } from '@/components/SocialShareButtons';
 import RelatedCompanies from '@/components/RelatedCompanies';
 import MobileActions from '@/components/MobileActions';
 import SafeHTML from '@/components/SafeHTML';
+import CompanyActivities from '@/components/CompanyActivities';
 import { Metadata } from 'next';
 
 // ISR: Revalidate every 300 seconds (5 minutes)
@@ -589,6 +590,17 @@ export default async function CompanyDetailPage({
               companyName={company.name}
               size={200}
             />
+
+            {/* Company Activities */}
+            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
+                Activités et Actualités
+              </h3>
+              <CompanyActivities
+                companyId={company.id}
+                companySlug={company.slug}
+              />
+            </div>
 
             {/* Related Companies */}
             {relatedCompanies.length > 0 && (
