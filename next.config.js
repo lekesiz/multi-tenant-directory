@@ -24,11 +24,13 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
 
+  // External packages for server components
+  serverExternalPackages: ['@prisma/client', '@prisma/engines'],
+
   // Experimental features for better performance
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ['lucide-react', '@prisma/client'],
-    serverComponentsExternalPackages: ['@prisma/client', '@prisma/engines'],
+    optimizePackageImports: ['lucide-react'],
   },
 
   // Compression
