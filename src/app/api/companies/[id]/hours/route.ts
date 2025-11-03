@@ -157,6 +157,22 @@ export async function PUT(
       },
     });
 
+    // Also sync to Company.businessHours for backward compatibility
+    await prisma.company.update({
+      where: { id: companyId },
+      data: {
+        businessHours: {
+          monday: validatedData.monday,
+          tuesday: validatedData.tuesday,
+          wednesday: validatedData.wednesday,
+          thursday: validatedData.thursday,
+          friday: validatedData.friday,
+          saturday: validatedData.saturday,
+          sunday: validatedData.sunday,
+        },
+      },
+    });
+
     return NextResponse.json({
       success: true,
       data: businessHours,

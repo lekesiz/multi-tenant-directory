@@ -114,6 +114,14 @@ export async function PUT(req: NextRequest) {
       },
     });
 
+    // Also sync to Company.businessHours for backward compatibility
+    await prisma.company.update({
+      where: { id: ownership.companyId },
+      data: {
+        businessHours: weeklySchedule,
+      },
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('Error updating hours:', error);

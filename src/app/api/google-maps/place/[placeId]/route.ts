@@ -47,7 +47,7 @@ export async function GET(
       authorName: review.author_name,
       authorPhoto: review.profile_photo_url,
       rating: review.rating,
-      text: review.comment,
+      text: review.text,
       reviewDate: new Date(review.time * 1000).toISOString(),
     }));
 
