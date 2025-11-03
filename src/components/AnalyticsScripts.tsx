@@ -4,9 +4,19 @@ import Script from 'next/script';
 
 async function getDomainSettings() {
   try {
+    // Skip during static generation (build time)
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV) {
+      return {};
+    }
+
     const headersList = await headers();
     const host = headersList.get('host') || '';
     const domain = host.split(':')[0];
+
+    // Skip if no valid domain
+    if (!domain || domain === 'localhost') {
+      return {};
+    }
 
     const domainData = await prisma.domain.findFirst({
       where: {
@@ -20,7 +30,10 @@ async function getDomainSettings() {
 
     return (domainData?.settings as any)?.seo || {};
   } catch (error) {
-    console.error('Error fetching domain settings:', error);
+    // Silently fail during static generation
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error fetching domain settings:', error);
+    }
     return {};
   }
 }

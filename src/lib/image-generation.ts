@@ -251,13 +251,62 @@ export default {
 };
 
 /**
- * Generate image (generic wrapper for Activity API)
+ * Generate image using Google Gemini Imagen
+ * Note: Gemini 2.0 Flash does not directly generate images, but we can use Gemini Pro to create prompts for Replicate
  */
 export async function generateImage(
   prompt: string,
   options?: { style?: string; aspectRatio?: string; model?: string }
 ): Promise<string> {
-  // TODO: Implement actual image generation
-  // For now return placeholder
-  return `https://via.placeholder.com/1200x675.png?text=${encodeURIComponent(prompt.substring(0, 50))}`;
+  try {
+    // First, use Replicate if available
+    if (REPLICATE_API_TOKEN) {
+      const response = await fetch('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Token ${REPLICATE_API_TOKEN}`,
+        },
+        body: JSON.stringify({
+          version: 'fed7785dc6c8f0491705af34c33eec70e322b0e6e4d62a01eacf51bd5fd5ad80', // Flux Pro
+          input: {
+            prompt: `${prompt}. ${options?.style || 'Professional, high-quality style'}. Aspect ratio: ${options?.aspectRatio || '16:9'}.`,
+            num_outputs: 1,
+            aspect_ratio: options?.aspectRatio || '16:9',
+            output_quality: 90,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data: any = await response.json();
+        let prediction = data;
+        let attempts = 0;
+        const maxAttempts = 30;
+
+        while (prediction.status === 'processing' && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+            headers: { Authorization: `Token ${REPLICATE_API_TOKEN}` },
+          });
+          if (pollResponse.ok) {
+            prediction = await pollResponse.json();
+          }
+          attempts++;
+        }
+
+        if (prediction.status === 'succeeded' && prediction.output?.[0]) {
+          return prediction.output[0];
+        }
+      }
+    }
+
+    // Fallback to Unsplash
+    logger.info('Using Unsplash as fallback for image generation');
+    const searchQuery = prompt.split(' ').slice(0, 3).join(' ');
+    return `https://source.unsplash.com/1600x900/?${encodeURIComponent(searchQuery)}`;
+  } catch (error) {
+    logger.error('Error generating image:', error);
+    return `https://via.placeholder.com/1600x900.png?text=${encodeURIComponent('Activity Image')}`;
+  }
 }
