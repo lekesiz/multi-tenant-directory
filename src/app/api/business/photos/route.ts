@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ photos: ownership.company.photos });
   } catch (error) {
-    console.error('Error fetching photos:', error);
+    logger.error('Error fetching photos:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ photos: uploadedPhotos });
   } catch (error) {
-    console.error('Error uploading photos:', error);
+    logger.error('Error uploading photos:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
@@ -147,7 +148,7 @@ export async function DELETE(req: NextRequest) {
       try {
         await del(photo.url);
       } catch (error) {
-        console.error('Error deleting blob:', error);
+        logger.error('Error deleting blob:', error);
         // Continue even if blob deletion fails
       }
     }
@@ -162,7 +163,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting photos:', error);
+    logger.error('Error deleting photos:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

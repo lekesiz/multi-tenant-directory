@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { syncAllCompaniesReviews } from '@/lib/google-places';
 import { headers } from 'next/headers';
@@ -26,19 +27,19 @@ export async function GET(request: NextRequest) {
 
     // Check if Google Maps API key is configured
     if (!process.env.GOOGLE_MAPS_API_KEY) {
-      console.error('Google Maps API key not configured');
+      logger.error('Google Maps API key not configured');
       return NextResponse.json(
         { error: 'Google Maps API key not configured' },
         { status: 503 }
       );
     }
 
-    console.log('Starting Google Reviews sync cron job...');
+    logger.info('Starting Google Reviews sync cron job...');
     
     // Perform the sync
     const result = await syncAllCompaniesReviews();
 
-    console.log('Google Reviews sync completed:', {
+    logger.info('Google Reviews sync completed:', {
       totalReviewsAdded: result.totalReviewsAdded,
       companiesProcessed: result.companiesProcessed,
     });
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       syncTime,
     });
   } catch (error) {
-    console.error('Cron job error:', error);
+    logger.error('Cron job error:', error);
     return NextResponse.json(
       { error: 'Cron job failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

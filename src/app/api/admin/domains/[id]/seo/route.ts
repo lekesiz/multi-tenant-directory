@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth-guard';
@@ -58,7 +59,7 @@ export async function PUT(
       domain: updatedDomain,
     });
   } catch (error) {
-    console.error('Error updating SEO settings:', error);
+    logger.error('Error updating SEO settings:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

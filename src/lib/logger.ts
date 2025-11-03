@@ -29,12 +29,18 @@ class Logger {
    * Info level logging (general information)
    */
   info(message: string, context?: LogContext) {
+    const formattedMessage = this.formatMessage('info', message, context);
+    
     if (this.isDevelopment) {
-      console.log(this.formatMessage('info', message, context));
+      console.info(formattedMessage);
     }
-    // In production: send to logging service
-    if (this.isProduction && process.env.SENTRY_DSN) {
-      // Sentry.captureMessage(message, 'info');
+    
+    // In production: send to logging service (never console.log)
+    if (this.isProduction) {
+      if (process.env.SENTRY_DSN) {
+        // Sentry.captureMessage(message, 'info');
+      }
+      // Store in file or external service, but never console.log in production
     }
   }
 
@@ -129,3 +135,4 @@ export const logger = new Logger();
 
 // Export type for external use
 export type { LogLevel, LogContext };
+

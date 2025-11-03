@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -43,7 +44,7 @@ export default function CompanyStatusToggle({
       }, 1000);
     } catch (error) {
       toast.error('Erreur lors de la mise à jour du statut');
-      console.error('Error toggling status:', error);
+      logger.error('Error toggling status:', error);
     } finally {
       setLoading(false);
     }

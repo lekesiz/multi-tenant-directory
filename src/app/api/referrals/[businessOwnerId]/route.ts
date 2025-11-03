@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getReferralStats } from '@/lib/referral';
 
@@ -21,7 +22,7 @@ export async function GET(
     return NextResponse.json(stats);
 
   } catch (error) {
-    console.error('Get referral stats API error:', error);
+    logger.error('Get referral stats API error:', error);
     
     return NextResponse.json(
       { error: 'Erreur lors du chargement des statistiques de parrainage' },

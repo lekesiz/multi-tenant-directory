@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { addSecurityHeaders } from './middleware/security';
@@ -33,6 +34,7 @@ const SUPPORTED_DOMAINS = [
 const EXCLUDED_PATHS = [
   'companies',
   'api',
+  'docs',
   'auth',
   'admin',
   'business',
@@ -47,6 +49,7 @@ const EXCLUDED_PATHS = [
   'politique-de-confidentialite',
   'unsubscribe',
   'annuaire',
+  'sentry-test',
   '_next',
   'static',
   'favicon.ico',
@@ -73,6 +76,7 @@ export async function middleware(request: NextRequest) {
     if (pathParts.length === 1) {
       const slug = pathParts[0];
 
+      // Check if the slug is in excluded paths or contains a dot (file extension)
       if (!EXCLUDED_PATHS.includes(slug) && !slug.includes('.')) {
         const newUrl = url.clone();
         newUrl.pathname = `/companies/${slug}`;
@@ -94,7 +98,7 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(loginUrl);
         }
       } catch (err) {
-        console.error('Auth token error:', err);
+        logger.error('Auth token error:', err);
         // If token retrieval fails, allow request to proceed
         // The page will handle auth appropriately
       }
@@ -110,7 +114,7 @@ export async function middleware(request: NextRequest) {
 
     return addSecurityHeaders(request, response);
   } catch (error) {
-    console.error('Middleware error:', error);
+    logger.error('Middleware error:', error);
     // On error, continue with next middleware
     return NextResponse.next();
   }

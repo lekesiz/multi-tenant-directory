@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticateMobileUser } from '@/lib/mobile-auth';
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Send notification error:', error);
+    logger.error('Send notification error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de l\'envoi de la notification' },
       { status: 500 }

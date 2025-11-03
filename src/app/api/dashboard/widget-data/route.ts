@@ -3,6 +3,7 @@
  * Provides real-time data for dashboard widgets
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { TenantResolver } from '@/lib/multi-tenant-core';
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data });
 
   } catch (error) {
-    console.error('Widget data API error:', error);
+    logger.error('Widget data API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch widget data' },
       { status: 500 }

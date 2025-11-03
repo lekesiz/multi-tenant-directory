@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Google Places API Place Details
@@ -46,7 +47,7 @@ export async function GET(
       authorName: review.author_name,
       authorPhoto: review.profile_photo_url,
       rating: review.rating,
-      text: review.comment,
+      text: review.text,
       reviewDate: new Date(review.time * 1000).toISOString(),
     }));
 
@@ -76,7 +77,7 @@ export async function GET(
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching place details:', error);
+    logger.error('Error fetching place details:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

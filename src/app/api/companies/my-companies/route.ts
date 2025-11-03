@@ -2,6 +2,7 @@
  * Get companies owned by current user
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Get companies error:', error.message);
+    logger.error('❌ Get companies error:', error.message);
     return NextResponse.json(
       { error: 'Failed to fetch companies' },
       { status: 500 }

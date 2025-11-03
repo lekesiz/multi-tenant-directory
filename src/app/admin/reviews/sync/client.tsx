@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
@@ -47,7 +48,7 @@ export default function GoogleReviewsSyncClient({ initialCompanies, apiKeyConfig
         toast.error(data.error || 'Erreur lors de la synchronisation');
       }
     } catch (error) {
-      console.error('Error syncing reviews:', error);
+      logger.error('Error syncing reviews:', error);
       toast.error('Erreur lors de la synchronisation');
     } finally {
       setIsSyncing(false);
@@ -84,7 +85,7 @@ export default function GoogleReviewsSyncClient({ initialCompanies, apiKeyConfig
         toast.error(data.message || 'Erreur lors de la synchronisation');
       }
     } catch (error) {
-      console.error('Error syncing all reviews:', error);
+      logger.error('Error syncing all reviews:', error);
       toast.error('Erreur lors de la synchronisation');
     } finally {
       setIsSyncingAll(false);

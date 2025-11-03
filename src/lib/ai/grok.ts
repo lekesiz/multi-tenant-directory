@@ -3,6 +3,7 @@
  * Base service for all Grok AI integrations
  */
 
+import { logger } from '@/lib/logger';
 import { env } from '@/lib/env';
 
 export interface GrokMessage {
@@ -45,10 +46,9 @@ export class GrokAI {
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || env.XAI_API_KEY || '';
-    
-    if (!this.apiKey) {
-      throw new Error('XAI_API_KEY is not configured');
-    }
+
+    // Don't throw error at construction time for build compatibility
+    // Will throw when actually calling the API if key is missing
   }
 
   /**
@@ -58,6 +58,10 @@ export class GrokAI {
     messages: GrokMessage[],
     options: GrokCompletionOptions = {}
   ): Promise<GrokCompletionResponse> {
+    if (!this.apiKey) {
+      throw new Error('XAI_API_KEY is not configured');
+    }
+
     const {
       model = 'grok-beta',
       temperature = 0.7,
@@ -90,7 +94,7 @@ export class GrokAI {
 
       return await response.json();
     } catch (error) {
-      console.error('Grok AI completion error:', error);
+      logger.error('Grok AI completion error:', error);
       throw error;
     }
   }
@@ -147,7 +151,7 @@ export class GrokAI {
 
       return JSON.parse(jsonMatch[0]);
     } catch (error) {
-      console.error('Failed to parse JSON response:', response);
+      logger.error('Failed to parse JSON response:', response);
       throw new Error(`Invalid JSON response from Grok AI: ${error}`);
     }
   }
@@ -176,7 +180,7 @@ export async function safeGrokCall<T>(
     const grok = getGrokAI();
     return await fn(grok);
   } catch (error) {
-    console.error('Grok AI call failed, using fallback:', error);
+    logger.error('Grok AI call failed, using fallback:', error);
     return fallback;
   }
 }

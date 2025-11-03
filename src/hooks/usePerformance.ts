@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useEffect } from 'react';
 
 interface PerformanceMetrics {
@@ -23,7 +24,7 @@ export function usePerformance(componentName: string) {
 
       // Log slow components in development
       if (process.env.NODE_ENV === 'development' && duration > 100) {
-        console.warn(
+        logger.warn(
           `⚠️ Slow component render: ${componentName} took ${duration.toFixed(2)}ms`
         );
       }
@@ -53,7 +54,7 @@ export function useWebVitals() {
         const lcp = (lastEntry as any).renderTime || (lastEntry as any).loadTime;
         
         if (process.env.NODE_ENV === 'development') {
-          console.log(`LCP: ${lcp}ms`);
+          logger.info(`LCP: ${lcp}ms`);
         }
 
         // Send to analytics
@@ -84,7 +85,7 @@ export function measurePerformance<T>(
   const duration = end - start;
 
   if (process.env.NODE_ENV === 'development') {
-    console.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
+    logger.info(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
   }
 
   return result;
@@ -103,7 +104,7 @@ export async function measurePerformanceAsync<T>(
   const duration = end - start;
 
   if (process.env.NODE_ENV === 'development') {
-    console.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
+    logger.info(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
   }
 
   return result;

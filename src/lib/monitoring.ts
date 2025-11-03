@@ -3,6 +3,8 @@
  * Handles error reporting, performance monitoring, and health checks
  */
 
+import { logger } from './logger';
+
 interface ErrorEvent {
   message: string;
   stack?: string;
@@ -51,7 +53,7 @@ class ErrorTracker {
         await this.sendToMonitoringService(errorData);
       } else {
         // Development logging
-        console.error('🚨 Error tracked:', errorData);
+        logger.error('🚨 Error tracked:', errorData);
       }
 
       // Store in database for analytics
@@ -59,7 +61,7 @@ class ErrorTracker {
 
     } catch (reportingError) {
       // Fail silently - don't break the app if monitoring fails
-      console.error('Error reporting failed:', reportingError);
+      logger.error('Error reporting failed:', reportingError);
     }
   }
 

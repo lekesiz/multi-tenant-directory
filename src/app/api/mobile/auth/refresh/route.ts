@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Token refresh error:', error);
+    logger.error('Token refresh error:', error);
     
     if (error instanceof jwt.JsonWebTokenError) {
       return NextResponse.json(

@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 
@@ -40,7 +41,7 @@ export default function QRCodeGenerator({
         
         setQrCodeDataUrl(dataUrl);
       } catch (err) {
-        console.error('QR Code generation failed:', err);
+        logger.error('QR Code generation failed:', err);
         setError('Erreur lors de la génération du QR code');
       } finally {
         setIsLoading(false);
@@ -68,7 +69,7 @@ export default function QRCodeGenerator({
       await navigator.clipboard.writeText(url);
       // You could add a toast notification here
     } catch (err) {
-      console.error('Failed to copy URL:', err);
+      logger.error('Failed to copy URL:', err);
     }
   };
 

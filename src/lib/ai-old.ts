@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { openai } from '@ai-sdk/openai';
 import { generateText, streamText } from 'ai';
 
@@ -105,7 +106,7 @@ export async function generateChatbotResponse(userMessage: string, conversationH
 
     return text;
   } catch (error) {
-    console.error('Error generating chatbot response:', error);
+    logger.error('Error generating chatbot response:', error);
     throw new Error('Erreur lors de la génération de la réponse');
   }
 }
@@ -126,7 +127,7 @@ export async function streamChatbotResponse(userMessage: string, conversationHis
 
     return result.toTextStreamResponse();
   } catch (error) {
-    console.error('Error streaming chatbot response:', error);
+    logger.error('Error streaming chatbot response:', error);
     throw new Error('Erreur lors de la génération de la réponse');
   }
 }
@@ -151,7 +152,7 @@ export async function generateReviewResponse(
 
     return text;
   } catch (error) {
-    console.error('Error generating review response:', error);
+    logger.error('Error generating review response:', error);
     throw new Error('Erreur lors de la génération de la réponse à l\'avis');
   }
 }
@@ -182,7 +183,7 @@ export async function generateSEOContent(
 
     return text;
   } catch (error) {
-    console.error('Error generating SEO content:', error);
+    logger.error('Error generating SEO content:', error);
     throw new Error('Erreur lors de la génération du contenu SEO');
   }
 }
@@ -205,7 +206,7 @@ export async function generateBusinessInsights(
 
     return JSON.parse(text);
   } catch (error) {
-    console.error('Error generating business insights:', error);
+    logger.error('Error generating business insights:', error);
     throw new Error('Erreur lors de la génération des insights business');
   }
 }
@@ -251,7 +252,7 @@ Format JSON attendu:
 
     return JSON.parse(text);
   } catch (error) {
-    console.error('Error suggesting business improvements:', error);
+    logger.error('Error suggesting business improvements:', error);
     throw new Error('Erreur lors de la génération des suggestions d\'amélioration');
   }
 }

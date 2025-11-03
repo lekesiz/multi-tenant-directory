@@ -5,6 +5,8 @@
  * Used for AI orchestration and automation workflows
  */
 
+import { logger } from '@/lib/logger';
+
 export interface N8nWorkflow {
   id: string;
   name: string;
@@ -38,7 +40,7 @@ export class N8nClient {
     this.apiKey = apiKey || process.env.N8N_API_KEY || '';
 
     if (!this.apiKey) {
-      console.warn('N8N_API_KEY not set. n8n features will be disabled.');
+      logger.warn('N8N_API_KEY not set. n8n features will be disabled.');
     }
   }
 

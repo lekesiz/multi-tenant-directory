@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -48,7 +49,7 @@ export default function GenerateCoverButton({
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la génération');
-      console.error('Error generating cover image:', error);
+      logger.error('Error generating cover image:', error);
     } finally {
       setLoading(false);
     }

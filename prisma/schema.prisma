@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -8,18 +9,21 @@ datasource db {
 }
 
 model Domain {
-  id              Int              @id @default(autoincrement())
-  name            String           @unique
-  isActive        Boolean          @default(true)
-  siteTitle       String?
-  siteDescription String?
-  logoUrl         String?
-  primaryColor    String?          @default("#3B82F6")
-  settings        Json?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  content         CompanyContent[] @relation("DomainContent")
-  legalPages      LegalPage[]
+  id                    Int                    @id @default(autoincrement())
+  name                  String                 @unique
+  isActive              Boolean                @default(true)
+  siteTitle             String?
+  siteDescription       String?
+  logoUrl               String?
+  primaryColor          String?                @default("#3B82F6")
+  settings              Json?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  content               CompanyContent[]       @relation("DomainContent")
+  legalPages            LegalPage[]
+  newsletterSubscribers NewsletterSubscriber[]
+  emailCampaigns        EmailCampaign[]
+  leads                 Lead[]
 
   @@index([name, isActive])
   @@index([isActive])
@@ -48,6 +52,8 @@ model Company {
   updatedAt            DateTime             @updatedAt
   rating               Float?
   reviewCount          Int                  @default(0)
+  ratingDistribution   Json? // Google's rating distribution: {"5": 350, "4": 80, "3": 30, "2": 10, "1": 6}
+  lastSyncedAt         DateTime? // Last time Google reviews were synced
   isActive             Boolean              @default(true)
   cancelAtPeriodEnd    Boolean              @default(false)
   currentPeriodEnd     DateTime?
@@ -76,6 +82,12 @@ model Company {
   photos               Photo[]
   products             Product[]
   reviews              Review[]
+  contactInquiries     ContactInquiry[]
+  leadAssignments      LeadAssignment[]
+  companyScore         CompanyScore?
+  certificates         Certificate[]
+  communicationLogs    CommunicationLog[]
+  companyCategories    CompanyCategory[]
 
   @@index([slug])
   @@index([city])
@@ -1034,6 +1046,7 @@ model BusinessCategory {
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  leads          Lead[]
 
   @@index([googleCategory])
   @@index([order])
@@ -1144,4 +1157,300 @@ model PaymentMethod {
   @@index([companyId])
   @@index([stripePaymentMethodId])
   @@map("payment_methods")
+}
+
+model ContactInquiry {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String   @db.Text
+  companyId Int?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  status    String   @default("new") // new, read, replied, closed
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([email])
+  @@map("contact_inquiries")
+}
+
+// Newsletter & Email Marketing
+model NewsletterSubscriber {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  firstName         String?
+  lastName          String?
+  domainId          Int?
+  domain            Domain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  status            String    @default("active") // active, unsubscribed, bounced
+  source            String? // website, api, import
+  preferences       Json? // { weeklyDigest: true, newBusinesses: true, specialOffers: false }
+  confirmedAt       DateTime?
+  unsubscribedAt    DateTime?
+  unsubscribeReason String?
+  lastEmailSentAt   DateTime?
+  emailsSentCount   Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([domainId])
+  @@index([createdAt(sort: Desc)])
+  @@map("newsletter_subscribers")
+}
+
+model EmailCampaign {
+  id                String    @id @default(cuid())
+  name              String
+  subject           String
+  previewText       String?
+  htmlContent       String    @db.Text
+  textContent       String?   @db.Text
+  domainId          Int?
+  domain            Domain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  status            String    @default("draft") // draft, scheduled, sending, sent, failed
+  scheduledAt       DateTime?
+  sentAt            DateTime?
+  recipientCount    Int       @default(0)
+  openedCount       Int       @default(0)
+  clickedCount      Int       @default(0)
+  bouncedCount      Int       @default(0)
+  unsubscribedCount Int       @default(0)
+  createdBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([status])
+  @@index([domainId])
+  @@index([scheduledAt])
+  @@index([createdAt(sort: Desc)])
+  @@map("email_campaigns")
+}
+
+model EmailLog {
+  id           String    @id @default(cuid())
+  subscriberId String?
+  email        String
+  campaignId   String?
+  type         String // welcome, digest, reminder, campaign, transactional
+  subject      String
+  status       String    @default("pending") // pending, sent, delivered, opened, clicked, bounced, failed
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  bouncedAt    DateTime?
+  errorMessage String?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([subscriberId])
+  @@index([email])
+  @@index([campaignId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("email_logs")
+}
+
+// Lead Management System Models
+model Lead {
+  id           String   @id @default(cuid())
+  tenantId     Int // Domain.id ile ilişki
+  categoryId   Int? // BusinessCategory.id
+  postalCode   String
+  phone        String
+  email        String?
+  note         String?
+  consentFlags Json // GDPR consent tracking: {"marketing": true, "sharing": true, "calls": true}
+  source       String   @default("web") // web|mobile|api|import
+  status       String   @default("new") // new|qualified|assigned|won|lost|spam
+  budgetBand   String? // low|medium|high|custom
+  timeWindow   String? // urgent|this_week|this_month|flexible
+  attachments  String[] // Photo URLs
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  domain      Domain            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category    BusinessCategory? @relation(fields: [categoryId], references: [id])
+  assignments LeadAssignment[]
+  consentLogs ConsentLog[]
+
+  @@index([tenantId, status])
+  @@index([phone, tenantId]) // Spam prevention
+  @@index([createdAt(sort: Desc)])
+  @@index([categoryId, status])
+  @@map("leads")
+}
+
+model LeadAssignment {
+  id            String    @id @default(cuid())
+  leadId        String
+  companyId     Int
+  score         Float // AI matching score (0-100)
+  rank          Int // Priority order (1, 2, 3...)
+  offeredAt     DateTime  @default(now())
+  respondedAt   DateTime?
+  status        String    @default("sent") // sent|accepted|declined|expired
+  responseTime  Int? // Seconds to respond
+  declineReason String? // Why declined
+  notes         String? // Internal notes
+
+  // Relations
+  lead    Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, companyId])
+  @@index([companyId, status])
+  @@index([leadId, rank])
+  @@index([offeredAt(sort: Desc)])
+  @@map("lead_assignments")
+}
+
+model ConsentLog {
+  id          String   @id @default(cuid())
+  leadId      String?
+  userId      String?
+  channel     String // web|sms|wa|phone|email
+  textHash    String // Consent text hash for legal compliance
+  timestamp   DateTime @default(now())
+  ip          String?
+  userAgent   String?
+  consentType String // marketing|sharing|calls|data_processing
+
+  // Relations
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([timestamp(sort: Desc)])
+  @@index([consentType])
+  @@map("consent_logs")
+}
+
+model CompanyScore {
+  id             String   @id @default(cuid())
+  companyId      Int
+  qualityScore   Float    @default(0) // 0-100
+  priceIndex     Float    @default(0) // 0-100 (lower = cheaper)
+  responseSLA    Int      @default(0) // Average response time in minutes
+  acceptanceRate Float    @default(0) // 0-100
+  certifications String[] // RGE|QUALIBAT|QUALITENR|RC_PRO|DECENNALE
+  lastComputedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId])
+  @@index([qualityScore(sort: Desc)])
+  @@index([responseSLA(sort: Asc)])
+  @@map("company_scores")
+}
+
+model Certificate {
+  id          String    @id @default(cuid())
+  companyId   Int
+  type        String // RGE|QUALIBAT|QUALITENR|RC_PRO|DECENNALE
+  issuer      String
+  number      String
+  validFrom   DateTime
+  validTo     DateTime
+  documentUrl String?
+  verifiedAt  DateTime?
+  verifiedBy  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, type, number])
+  @@index([companyId, type])
+  @@index([validTo(sort: Asc)]) // Expiry tracking
+  @@map("certificates")
+}
+
+model CommunicationLog {
+  id                String    @id @default(cuid())
+  leadId            String?
+  companyId         Int?
+  channel           String // email|sms|wa|call|notification
+  templateId        String?
+  status            String    @default("pending") // pending|sent|delivered|failed
+  providerMessageId String?
+  recipient         String // Email/phone number
+  subject           String?
+  content           String?
+  metadata          Json? // Additional data
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  failedAt          DateTime?
+  errorMessage      String?
+  createdAt         DateTime  @default(now())
+
+  // Relations
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([companyId])
+  @@index([channel, status])
+  @@index([sentAt(sort: Desc)])
+  @@map("communication_logs")
+}
+
+// Category system with parent-child hierarchy
+model Category {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  name        String
+  nameFr      String? // French name
+  nameEn      String? // English name
+  nameDe      String? // German name
+  description String?
+  icon        String? // Icon name or emoji
+  color       String? // Hex color code
+  parentId    Int? // Parent category ID for hierarchical structure
+  googleTypes String[] // Google Place types that map to this category
+  isActive    Boolean  @default(true)
+  order       Int      @default(0) // Display order
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parent            Category?         @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children          Category[]        @relation("CategoryHierarchy")
+  companyCategories CompanyCategory[]
+
+  @@index([parentId])
+  @@index([slug])
+  @@index([isActive, order])
+  @@map("categories")
+}
+
+// Junction table for many-to-many relationship between Company and Category
+model CompanyCategory {
+  id         Int      @id @default(autoincrement())
+  companyId  Int
+  categoryId Int
+  isPrimary  Boolean  @default(false) // Mark one category as primary
+  createdAt  DateTime @default(now())
+
+  // Relations
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, categoryId])
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([isPrimary])
+  @@map("company_categories")
 }

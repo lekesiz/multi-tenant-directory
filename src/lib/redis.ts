@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Redis } from '@upstash/redis';
 
 // Initialize Redis client (Upstash Redis for serverless)
@@ -34,7 +35,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
       return null;
     }
   } catch (error) {
-    console.error('Cache get error:', error);
+    logger.error('Cache get error:', error);
     return null;
   }
 }
@@ -60,7 +61,7 @@ export async function setCache<T>(
       });
     }
   } catch (error) {
-    console.error('Cache set error:', error);
+    logger.error('Cache set error:', error);
   }
 }
 
@@ -75,7 +76,7 @@ export async function deleteCache(key: string): Promise<void> {
       memoryCache.delete(key);
     }
   } catch (error) {
-    console.error('Cache delete error:', error);
+    logger.error('Cache delete error:', error);
   }
 }
 
@@ -87,7 +88,7 @@ export async function deleteCachePattern(pattern: string): Promise<void> {
     if (redis) {
       // Upstash Redis doesn't support SCAN, so we need to track keys manually
       // For now, just log a warning
-      console.warn('Pattern deletion not supported with Upstash Redis');
+      logger.warn('Pattern deletion not supported with Upstash Redis');
     } else {
       // In-memory fallback
       const keys = Array.from(memoryCache.keys());
@@ -99,7 +100,7 @@ export async function deleteCachePattern(pattern: string): Promise<void> {
       });
     }
   } catch (error) {
-    console.error('Cache pattern delete error:', error);
+    logger.error('Cache pattern delete error:', error);
   }
 }
 
@@ -135,7 +136,7 @@ export async function clearAllCache(): Promise<void> {
       memoryCache.clear();
     }
   } catch (error) {
-    console.error('Cache clear error:', error);
+    logger.error('Cache clear error:', error);
   }
 }
 

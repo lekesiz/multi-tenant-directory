@@ -1,5 +1,7 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { translateToFrench } from '@/lib/translation';
 
 export async function POST(
   request: NextRequest,
@@ -64,49 +66,92 @@ export async function POST(
     const place = data.result;
     const googleReviews = place.reviews || [];
 
-    // Update company rating
+    // Update company rating and last sync time
     await prisma.company.update({
       where: { id: companyId },
       data: {
         rating: place.rating || null,
         reviewCount: place.user_ratings_total || 0,
+        lastSyncedAt: new Date(),
       },
     });
 
-    // Delete existing Google reviews for this company
-    await prisma.review.deleteMany({
-      where: {
-        companyId,
-        source: 'google',
-      },
-    });
+    // Sync reviews with translation and deduplication
+    let reviewsAdded = 0;
+    let reviewsUpdated = 0;
 
-    // Create new reviews
-    const createdReviews = [];
-    for (const review of googleReviews) {
-      const created = await prisma.review.create({
-        data: {
+    for (const googleReview of googleReviews) {
+      if (!googleReview.text?.trim()) {
+        continue; // Skip reviews without text
+      }
+
+      // Check if review already exists
+      const existingReview = await prisma.review.findFirst({
+        where: {
           companyId,
-          authorName: review.author_name,
-          authorPhoto: review.profile_photo_url || null,
-          rating: review.rating,
-          comment: review.comment || '',
+          authorName: googleReview.author_name,
           source: 'google',
-          reviewDate: new Date(review.time * 1000),
+          reviewDate: new Date(googleReview.time * 1000),
         },
       });
-      createdReviews.push(created);
+
+      // Detect language and translate if needed
+      const detectedLanguage = googleReview.language || 'fr';
+      const shouldTranslate = detectedLanguage !== 'fr' && detectedLanguage !== 'de';
+
+      let commentFrench = googleReview.text;
+      if (shouldTranslate) {
+        try {
+          commentFrench = await translateToFrench(googleReview.text, detectedLanguage);
+        } catch (error) {
+          logger.error('Translation error, using original text:', error);
+          commentFrench = googleReview.text;
+        }
+      }
+
+      if (!existingReview) {
+        // Create new review
+        await prisma.review.create({
+          data: {
+            companyId,
+            authorName: googleReview.author_name,
+            authorPhoto: googleReview.profile_photo_url || null,
+            rating: googleReview.rating,
+            comment: googleReview.text,
+            commentFr: commentFrench,
+            originalLanguage: detectedLanguage,
+            source: 'google',
+            reviewDate: new Date(googleReview.time * 1000),
+            isApproved: true,
+            isActive: true,
+          },
+        });
+        reviewsAdded++;
+      } else if (!existingReview.commentFr || existingReview.comment !== googleReview.text) {
+        // Update existing review if text changed or translation missing
+        await prisma.review.update({
+          where: { id: existingReview.id },
+          data: {
+            comment: googleReview.text,
+            commentFr: commentFrench,
+            originalLanguage: detectedLanguage,
+            rating: googleReview.rating,
+          },
+        });
+        reviewsUpdated++;
+      }
     }
 
     return NextResponse.json({
       success: true,
-      message: `Synced ${createdReviews.length} reviews from Google`,
+      message: `Synced reviews: ${reviewsAdded} new, ${reviewsUpdated} updated`,
+      reviewsAdded,
+      reviewsUpdated,
       rating: place.rating,
       reviewCount: place.user_ratings_total,
-      reviews: createdReviews,
     });
   } catch (error) {
-    console.error('Error syncing reviews:', error);
+    logger.error('Error syncing reviews:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

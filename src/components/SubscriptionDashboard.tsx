@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { AlertCircle, Check, Clock, CreditCard, Settings, Zap } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export default function SubscriptionDashboard({ companyId }: SubscriptionDashboa
           setError('Failed to load subscription details');
         }
       } catch (err) {
-        console.error('Error:', err);
+        logger.error('Error:', err);
         setError('An error occurred');
       } finally {
         setLoading(false);
@@ -90,7 +91,7 @@ export default function SubscriptionDashboard({ companyId }: SubscriptionDashboa
         setError('Failed to cancel subscription');
       }
     } catch (err) {
-      console.error('Error:', err);
+      logger.error('Error:', err);
       setError('An error occurred');
     } finally {
       setActionLoading(false);
@@ -118,7 +119,7 @@ export default function SubscriptionDashboard({ companyId }: SubscriptionDashboa
         setError('Failed to reactivate subscription');
       }
     } catch (err) {
-      console.error('Error:', err);
+      logger.error('Error:', err);
       setError('An error occurred');
     } finally {
       setActionLoading(false);

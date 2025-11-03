@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -123,7 +124,7 @@ export async function generateLLMSitemap(
 
     return xml;
   } catch (error) {
-    console.error('Error generating LLM sitemap:', error);
+    logger.error('Error generating LLM sitemap:', error);
     throw error;
   }
 }

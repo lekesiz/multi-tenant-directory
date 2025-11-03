@@ -5,6 +5,7 @@
 
 'use client';
 
+import { logger } from '@/lib/logger';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { TenantContext } from '@/lib/multi-tenant-core';
@@ -66,7 +67,7 @@ export function DashboardProvider({ children, initialTenant }: DashboardProvider
         }
       }
     } catch (err) {
-      console.error('Failed to fetch tenant context:', err);
+      logger.error('Failed to fetch tenant context:', err);
       setError('Failed to load tenant information');
     } finally {
       setIsLoading(false);
@@ -112,7 +113,7 @@ export function DashboardProvider({ children, initialTenant }: DashboardProvider
         }),
       });
     } catch (error) {
-      console.warn('Failed to track event:', error);
+      logger.warn('Failed to track event', { error });
     }
   };
 
@@ -202,7 +203,7 @@ export function useRealTimeUpdates(tenantId: string) {
           break;
         
         default:
-          console.log('Unknown real-time event:', data);
+          logger.info('Unknown real-time event', { data });
       }
     };
 
@@ -321,7 +322,7 @@ export class DashboardErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Dashboard error:', error, errorInfo);
+    logger.error('Dashboard error:', error, errorInfo);
     
     // Send error to monitoring service
     if (typeof window !== 'undefined') {
@@ -334,7 +335,7 @@ export class DashboardErrorBoundary extends React.Component<
           componentStack: errorInfo.componentStack,
           timestamp: new Date().toISOString(),
         }),
-      }).catch(console.error);
+      }).catch((error) => logger.error('Failed to send analytics event', error));
     }
   }
 

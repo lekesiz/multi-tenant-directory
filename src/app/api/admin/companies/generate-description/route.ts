@@ -1,13 +1,15 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { generateBusinessDescription } from '@/lib/translation';
+import { generateAICacheKey, getOrGenerateAI } from '@/lib/ai-cache';
 
 export async function POST(request: NextRequest) {
   try {
     // Check admin authentication
     const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== 'admin') {
+    if (!session || session.user?.role?.toLowerCase() !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -24,15 +26,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🤖 Generating SEO content for: ${name} (${category})`);
+    logger.info(`🤖 Generating SEO content for: ${name} (${category})`);
 
-    // Generate content using Claude
-    const generatedContent = await generateBusinessDescription({
-      name,
+    // Generate cache key
+    const cacheKey = generateAICacheKey('description', companyId || name, {
       category,
-      description,
-      location,
+      location: location || 'unknown',
     });
+
+    // Generate content using Claude with caching
+    const generatedContent = await getOrGenerateAI(
+      cacheKey,
+      () => generateBusinessDescription({
+        name,
+        category,
+        description,
+        location,
+      }),
+      30 * 24 * 60 * 60 // 30 days TTL
+    );
 
     if (!generatedContent) {
       return NextResponse.json(
@@ -41,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Content generated for ${name}`);
+    logger.info(`✅ Content generated for ${name}`);
 
     return NextResponse.json({
       success: true,
@@ -49,7 +61,7 @@ export async function POST(request: NextRequest) {
       message: 'Content generated successfully',
     });
   } catch (error) {
-    console.error('Error generating description:', error);
+    logger.error('Error generating description:', error);
     return NextResponse.json(
       { error: 'Failed to generate description' },
       { status: 500 }

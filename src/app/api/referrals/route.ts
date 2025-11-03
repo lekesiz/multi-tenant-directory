@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createReferralCode } from '@/lib/referral';
 
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Create referral API error:', error);
+    logger.error('Create referral API error:', error);
     
     return NextResponse.json(
       { error: 'Erreur lors de la création du code de parrainage' },

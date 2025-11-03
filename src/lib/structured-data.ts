@@ -104,12 +104,15 @@ export function generateLocalBusinessSchema(
     );
   }
 
-  // Aggregate rating
-  if (averageRating && company._count?.reviews && company._count.reviews > 0) {
+  // Aggregate rating - use Google's total rating and count if available
+  const totalRating = company.rating || averageRating;
+  const totalReviews = company.reviewCount || company._count?.reviews || 0;
+  
+  if (totalRating && totalReviews > 0) {
     schema.aggregateRating = {
       '@type': 'AggregateRating',
-      ratingValue: averageRating.toFixed(1),
-      reviewCount: company._count.reviews,
+      ratingValue: typeof totalRating === 'number' ? totalRating.toFixed(1) : totalRating,
+      reviewCount: totalReviews,
       bestRating: 5,
       worstRating: 1,
     };

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
@@ -46,7 +47,7 @@ export async function GET() {
       preferences: businessOwner,
     });
   } catch (error) {
-    console.error('Get preferences error:', error);
+    logger.error('Get preferences error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des préférences' },
       { status: 500 }
@@ -86,7 +87,7 @@ export async function PATCH(request: NextRequest) {
       preferences: updatedOwner,
     });
   } catch (error) {
-    console.error('Update preferences error:', error);
+    logger.error('Update preferences error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -62,7 +63,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error setting primary photo:', error);
+    logger.error('Error setting primary photo:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -89,7 +90,7 @@ export async function POST(
       message: 'Signalement enregistré',
     });
   } catch (error) {
-    console.error('Report error:', error);
+    logger.error('Report error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

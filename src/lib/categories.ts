@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { prisma } from './prisma';
 
 /**
@@ -15,7 +16,7 @@ export async function getCategoryFrenchName(googleCategory: string): Promise<str
       return category.frenchName;
     }
   } catch (error) {
-    console.error('Error fetching category:', error);
+    logger.error('Error fetching category:', error);
   }
 
   // Return title-cased original category as fallback
@@ -46,7 +47,7 @@ export async function getCategoryDetails(googleCategory: string) {
       return category;
     }
   } catch (error) {
-    console.error('Error fetching category details:', error);
+    logger.error('Error fetching category details:', error);
   }
 
   // Return minimal fallback
@@ -79,7 +80,7 @@ export async function getAllCategories() {
 
     return categories;
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    logger.error('Error fetching categories:', error);
     return [];
   }
 }
@@ -132,11 +133,11 @@ export async function seedDefaultCategories() {
         },
       });
     } catch (error) {
-      console.error(`Error seeding category ${cat.googleCategory}:`, error);
+      logger.error(`Error seeding category ${cat.googleCategory}:`, error);
     }
   }
 
-  console.log('✅ Categories seeded successfully');
+  logger.info('✅ Categories seeded successfully');
 }
 
 export default {

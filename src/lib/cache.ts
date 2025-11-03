@@ -1,105 +1,61 @@
-import { unstable_cache } from 'next/cache';
+/**
+ * Simple in-memory cache for expensive operations
+ * Useful for caching category translations, domain lookups, etc.
+ */
 
-// Cache durations in seconds
-export const CACHE_DURATIONS = {
-  STATIC: 60 * 60 * 24 * 7, // 1 week
-  DYNAMIC: 60 * 5, // 5 minutes
-  COMPANY: 60 * 10, // 10 minutes
-  REVIEWS: 60 * 5, // 5 minutes
-  SEARCH: 60 * 2, // 2 minutes
-  USER_CONTENT: 60 * 1, // 1 minute
-} as const;
-
-// Create a cached version of a function
-export function createCachedFunction<T extends (...args: any[]) => Promise<any>>(
-  fn: T,
-  keyParts: string[],
-  revalidate: number = CACHE_DURATIONS.DYNAMIC,
-  tags?: string[]
-): T {
-  return unstable_cache(
-    fn,
-    keyParts,
-    {
-      revalidate,
-      tags,
-    }
-  ) as T;
+interface CacheEntry<T> {
+  value: T;
+  expiresAt: number;
 }
 
-// Cache tags for invalidation
-export const CACHE_TAGS = {
-  COMPANIES: 'companies',
-  REVIEWS: 'reviews',
-  DOMAINS: 'domains',
-  USERS: 'users',
-  ANALYTICS: 'analytics',
-} as const;
+class SimpleCache {
+  private cache: Map<string, CacheEntry<any>>;
+  private defaultTTL: number;
 
-// Helper function to generate cache keys
-export function generateCacheKey(...parts: (string | number)[]): string {
-  return parts.map(part => String(part)).join(':');
-}
-
-// Memory cache for frequently accessed data
-class MemoryCache<T> {
-  private cache = new Map<string, { data: T; timestamp: number; ttl: number }>();
-
-  set(key: string, data: T, ttlSeconds: number = 300): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl: ttlSeconds * 1000,
-    });
+  constructor(defaultTTLSeconds: number = 300) {
+    this.cache = new Map();
+    this.defaultTTL = defaultTTLSeconds * 1000;
   }
 
-  get(key: string): T | null {
+  get<T>(key: string): T | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
-
-    if (Date.now() - entry.timestamp > entry.ttl) {
+    if (Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       return null;
     }
-
-    return entry.data;
+    return entry.value as T;
   }
 
-  delete(key: string): void {
-    this.cache.delete(key);
+  set<T>(key: string, value: T, ttlSeconds?: number): void {
+    const ttl = ttlSeconds ? ttlSeconds * 1000 : this.defaultTTL;
+    this.cache.set(key, { value, expiresAt: Date.now() + ttl });
   }
 
-  clear(): void {
-    this.cache.clear();
+  async getOrCompute<T>(key: string, computeFn: () => Promise<T>, ttlSeconds?: number): Promise<T> {
+    const cached = this.get<T>(key);
+    if (cached !== null) return cached;
+    const value = await computeFn();
+    this.set(key, value, ttlSeconds);
+    return value;
   }
 
-  size(): number {
-    return this.cache.size;
-  }
-}
-
-// Create memory cache instances
-export const memoryCache = new MemoryCache();
-
-// Cache wrapper with memory cache fallback
-export async function getCachedData<T>(
-  key: string,
-  fetchFn: () => Promise<T>,
-  ttlSeconds: number = 300
-): Promise<T> {
-  // Try memory cache first
-  const cached = memoryCache.get(key) as T | null;
-  if (cached !== null) {
-    return cached;
-  }
-
-  // Fetch data and cache it
-  try {
-    const data = await fetchFn();
-    memoryCache.set(key, data, ttlSeconds);
-    return data;
-  } catch (error) {
-    console.error('Cache fetch error:', error);
-    throw error;
+  cleanup(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.cache.entries()) {
+      if (now > entry.expiresAt) this.cache.delete(key);
+    }
   }
 }
+
+export const categoryCache = new SimpleCache(600);
+export const domainCache = new SimpleCache(300);
+
+if (typeof window === 'undefined') {
+  setInterval(() => {
+    categoryCache.cleanup();
+    domainCache.cleanup();
+  }, 5 * 60 * 1000);
+}
+
+export default SimpleCache;

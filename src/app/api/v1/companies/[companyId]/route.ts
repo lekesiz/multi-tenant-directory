@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { ApiKeyService, RateLimitService, ApiAnalyticsService } from '@/lib/api-ecosystem';
 import { prisma } from '@/lib/prisma';
@@ -208,7 +209,7 @@ export async function GET(
     return response;
 
   } catch (error) {
-    console.error('API v1 company detail error:', error);
+    logger.error('API v1 company detail error:', error);
     statusCode = 500;
     return NextResponse.json(
       { error: 'Internal server error' },

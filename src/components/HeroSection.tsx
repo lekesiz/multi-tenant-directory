@@ -2,12 +2,37 @@
 
 import { ArrowRight, Search, MapPin, Star } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface HeroSectionProps {
   domain?: string;
 }
 
 export default function HeroSection({ domain = 'Haguenau' }: HeroSectionProps) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [location, setLocation] = useState(domain);
+
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    
+    // Build search URL with query parameters
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (location) params.set('location', location);
+    
+    router.push(`/annuaire?${params.toString()}`);
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setSearchQuery(category);
+    const params = new URLSearchParams();
+    params.set('q', category);
+    if (location) params.set('location', location);
+    router.push(`/annuaire?${params.toString()}`);
+  };
+
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-purple-600 text-white">
       {/* Background Pattern */}
@@ -43,7 +68,7 @@ export default function HeroSection({ domain = 'Haguenau' }: HeroSectionProps) {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <Link
-                href="/search"
+                href="/annuaire"
                 className="inline-flex items-center justify-center gap-2 bg-white text-blue-600 font-bold px-8 py-4 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 <Search className="h-5 w-5" />
@@ -90,14 +115,16 @@ export default function HeroSection({ domain = 'Haguenau' }: HeroSectionProps) {
                 Que cherchez-vous?
               </h2>
 
-              <div className="space-y-4">
+              <form onSubmit={handleSearch} className="space-y-4">
                 {/* Search Input */}
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Plombier, Restaurant, Coiffeur..."
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   />
                 </div>
 
@@ -106,16 +133,21 @@ export default function HeroSection({ domain = 'Haguenau' }: HeroSectionProps) {
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
                     placeholder={domain}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   />
                 </div>
 
                 {/* Search Button */}
-                <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
+                <button 
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow"
+                >
                   Rechercher
                 </button>
-              </div>
+              </form>
 
               {/* Popular Searches */}
               <div className="mt-6 pt-6 border-t border-gray-200">
@@ -126,6 +158,8 @@ export default function HeroSection({ domain = 'Haguenau' }: HeroSectionProps) {
                   {['Restaurant', 'Plombier', 'Coiffeur', 'Garage', 'Médecin'].map((search) => (
                     <button
                       key={search}
+                      type="button"
+                      onClick={() => handleCategoryClick(search)}
                       className="px-3 py-1 text-sm text-gray-700 bg-gray-100 rounded-full hover:bg-blue-100 transition-colors"
                     >
                       {search}
@@ -150,14 +184,14 @@ export default function HeroSection({ domain = 'Haguenau' }: HeroSectionProps) {
               <p className="text-sm font-medium text-blue-100 mb-1">
                 🔒 Toutes les données sont sécurisées et vérifiées
               </p>
-              <p className="text-sm text-blue-200">
+              <p className="text-xs text-blue-200">
                 RGPD compliant • Données vérifiées • Avis authentiques
               </p>
             </div>
             <div className="flex gap-4 text-xs font-medium text-blue-100">
-              <span className="flex items-center gap-1">✓ Transparent</span>
-              <span className="flex items-center gap-1">✓ Fiable</span>
-              <span className="flex items-center gap-1">✓ Facile</span>
+              <span>✓ Transparent</span>
+              <span>✓ Fiable</span>
+              <span>✓ Facile</span>
             </div>
           </div>
         </div>
@@ -165,3 +199,4 @@ export default function HeroSection({ domain = 'Haguenau' }: HeroSectionProps) {
     </div>
   );
 }
+

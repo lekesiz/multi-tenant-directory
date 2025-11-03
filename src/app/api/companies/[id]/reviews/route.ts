@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -40,7 +41,7 @@ export async function GET(
 
     return NextResponse.json({ reviews });
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    logger.error('Error fetching reviews:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

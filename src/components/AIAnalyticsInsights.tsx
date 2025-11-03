@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -82,7 +83,7 @@ export default function AIAnalyticsInsights({ analyticsData, businessContext, co
       const data = await response.json();
       setInsights(transformInsightsData(data));
     } catch (error) {
-      console.error('Error generating insights:', error);
+      logger.error('Error generating insights:', error);
       toast.error('Erreur lors de l\'analyse des données');
       
       // Fallback with mock insights

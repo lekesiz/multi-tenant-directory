@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { authenticateMobileUser } from '@/lib/mobile-auth';
 import { prisma } from '@/lib/prisma';
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Get templates error:', error);
+    logger.error('Get templates error:', error);
     return NextResponse.json(
       { error: 'Erreur lors du chargement des templates' },
       { status: 500 }
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Create template error:', error);
+    logger.error('Create template error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

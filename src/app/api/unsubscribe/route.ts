@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
       new URL(`/unsubscribe/success?type=${type}`, request.url)
     );
   } catch (error) {
-    console.error('Unsubscribe error:', error);
+    logger.error('Unsubscribe error:', error);
     return NextResponse.redirect(
       new URL('/unsubscribe/error', request.url)
     );
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
       preferences: updatedOwner,
     });
   } catch (error) {
-    console.error('Unsubscribe error:', error);
+    logger.error('Unsubscribe error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

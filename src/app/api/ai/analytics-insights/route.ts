@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ insights });
   } catch (error) {
-    console.error('Analytics insights error:', error);
+    logger.error('Analytics insights error:', error);
     return NextResponse.json(
       { error: 'Failed to generate analytics insights' },
       { status: 500 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -67,7 +68,7 @@ function AdminReviewsContent() {
       setPagination(data.pagination);
     } catch (error) {
       toast.error('Erreur lors du chargement des avis');
-      console.error('Error fetching reviews:', error);
+      logger.error('Error fetching reviews:', error);
     } finally {
       setLoading(false);
     }
@@ -87,7 +88,7 @@ function AdminReviewsContent() {
       fetchReviews();
     } catch (error) {
       toast.error('Erreur lors de l\'approbation');
-      console.error('Error approving review:', error);
+      logger.error('Error approving review:', error);
     }
   };
 
@@ -105,7 +106,7 @@ function AdminReviewsContent() {
       fetchReviews();
     } catch (error) {
       toast.error('Erreur lors du rejet');
-      console.error('Error rejecting review:', error);
+      logger.error('Error rejecting review:', error);
     }
   };
 
@@ -123,7 +124,7 @@ function AdminReviewsContent() {
       fetchReviews();
     } catch (error) {
       toast.error('Erreur lors du changement de visibilité');
-      console.error('Error toggling review visibility:', error);
+      logger.error('Error toggling review visibility:', error);
     }
   };
 
@@ -141,7 +142,7 @@ function AdminReviewsContent() {
       fetchReviews();
     } catch (error) {
       toast.error('Erreur lors de la suppression');
-      console.error('Error deleting review:', error);
+      logger.error('Error deleting review:', error);
     }
   };
 

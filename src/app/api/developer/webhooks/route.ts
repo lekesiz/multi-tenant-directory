@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -35,7 +36,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Get webhooks error:', error);
+    logger.error('Get webhooks error:', error);
     return NextResponse.json(
       { error: 'Failed to get webhooks' },
       { status: 500 }
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Create webhook error:', error);
+    logger.error('Create webhook error:', error);
     return NextResponse.json(
       { error: 'Failed to create webhook' },
       { status: 500 }

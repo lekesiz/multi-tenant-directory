@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BusinessHoursForm from './BusinessHoursForm';
+import AIDescriptionGenerator from './AIDescriptionGenerator';
+import RichTextEditor from './RichTextEditor';
+import KeywordSuggestions from './KeywordSuggestions';
+import { slugify } from '@/lib/utils';
 
 interface Company {
   id: number;
@@ -93,6 +97,7 @@ export default function CompanyEditForm({
         promotions: string;
         priority: number;
         featuredUntil: string;
+        customTags: string[];
       }
     >
   >(
@@ -104,6 +109,7 @@ export default function CompanyEditForm({
         promotions: content?.promotions || '',
         priority: content?.priority || 0,
         featuredUntil: content?.featuredUntil ? new Date(content.featuredUntil).toISOString().split('T')[0] : '',
+        customTags: (content as any)?.customTags || [],
       };
       return acc;
     }, {} as any)
@@ -298,16 +304,23 @@ export default function CompanyEditForm({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   URL Slug *
+                  <span className="text-xs text-gray-500 font-normal ml-2">
+                    (Modifiable)
+                  </span>
                 </label>
                 <input
                   type="text"
                   value={formData.slug}
                   onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
+                    setFormData({ ...formData, slug: slugify(e.target.value) })
                   }
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  placeholder="ex: mon-entreprise"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  URL finale: /companies/{formData.slug || 'votre-slug'}
+                </p>
               </div>
 
               <div className="md:col-span-2">
@@ -497,6 +510,103 @@ export default function CompanyEditForm({
                   </div>
                 </div>
               </div>
+
+              {/* Categories Section */}
+              <div className="md:col-span-2">
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-purple-900 mb-2 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Kategoriler
+                  </h3>
+                  <p className="text-xs text-purple-700 mb-3">
+                    Şirketin kategorilerini yönetin. Kategori eklemek veya çıkartmak için aşağıdaki alanları kullanın.
+                  </p>
+                  
+                  {/* Current Categories */}
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Mevcut Kategoriler
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.categories.length === 0 ? (
+                        <span className="text-sm text-gray-500 italic">Henüz kategori eklenmemiş</span>
+                      ) : (
+                        formData.categories.map((category, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800"
+                          >
+                            {category}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCategories = formData.categories.filter((_, i) => i !== index);
+                                setFormData({ ...formData, categories: newCategories });
+                              }}
+                              className="ml-2 text-purple-600 hover:text-purple-900"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Add New Category */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Yeni Kategori Ekle
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        id="newCategory"
+                        placeholder="Kategori adı girin (örn: restaurant, bakery)"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const input = e.currentTarget;
+                            const value = input.value.trim();
+                            if (value && !formData.categories.includes(value)) {
+                              setFormData({
+                                ...formData,
+                                categories: [...formData.categories, value],
+                              });
+                              input.value = '';
+                            }
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const input = document.getElementById('newCategory') as HTMLInputElement;
+                          const value = input.value.trim();
+                          if (value && !formData.categories.includes(value)) {
+                            setFormData({
+                              ...formData,
+                              categories: [...formData.categories, value],
+                            });
+                            input.value = '';
+                          }
+                        }}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        Ekle
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter tuşuna basarak veya "Ekle" butonuna tıklayarak kategori ekleyebilirsiniz.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end">
@@ -559,23 +669,39 @@ export default function CompanyEditForm({
                 {settings.isVisible && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Özel Açıklama
-                      </label>
-                      <textarea
-                        value={settings.customDescription}
-                        onChange={(e) =>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Özel Açıklama (Zengin Metin Editörü)
+                        </label>
+                        <AIDescriptionGenerator
+                          companyId={company.id}
+                          companyName={company.name}
+                          category={company.categories[0] || 'Business'}
+                          location={`${company.city || ''}, ${company.address || ''}`.trim()}
+                          currentDescription={settings.customDescription}
+                          onGenerated={(description) =>
+                            setDomainSettings({
+                              ...domainSettings,
+                              [domain.id]: {
+                                ...settings,
+                                customDescription: description,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                      <RichTextEditor
+                        content={settings.customDescription}
+                        onChange={(html) =>
                           setDomainSettings({
                             ...domainSettings,
                             [domain.id]: {
                               ...settings,
-                              customDescription: e.target.value,
+                              customDescription: html,
                             },
                           })
                         }
-                        rows={4}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        placeholder={`${domain.name} için özel açıklama...`}
+                        placeholder={`${domain.name} için özel açıklama... (Resim, link ve zengin metin formatı ekleyebilirsiniz)`}
                       />
                     </div>
 
@@ -597,6 +723,26 @@ export default function CompanyEditForm({
                         rows={3}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                         placeholder="Özel teklifler, indirimler..."
+                      />
+                    </div>
+
+                    {/* Keyword Suggestions */}
+                    <div>
+                      <KeywordSuggestions
+                        companyName={company.name}
+                        category={company.categories[0] || ''}
+                        city={company.city || ''}
+                        description={settings.customDescription}
+                        currentTags={settings.customTags}
+                        onTagsChange={(tags) =>
+                          setDomainSettings({
+                            ...domainSettings,
+                            [domain.id]: {
+                              ...settings,
+                              customTags: tags,
+                            },
+                          })
+                        }
                       />
                     </div>
 
@@ -695,22 +841,65 @@ export default function CompanyEditForm({
               {company.reviews.map((review) => (
                 <div
                   key={review.id}
-                  className="border border-gray-200 rounded-lg p-4"
+                  className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-semibold text-gray-900">
-                      {review.authorName}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-semibold text-gray-900">
+                          {review.authorName}
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-yellow-500 mr-1">★</span>
+                          <span className="font-semibold">{review.rating}</span>
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p className="text-gray-700 text-sm mb-2">{review.comment}</p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-gray-500">
+                          {new Date(review.reviewDate).toLocaleDateString('tr-TR')}
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          review.isApproved 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {review.isApproved ? 'Onaylı' : 'Beklemede'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <span className="text-yellow-500 mr-1">★</span>
-                      <span className="font-semibold">{review.rating}</span>
-                    </div>
-                  </div>
-                  {review.comment && (
-                    <p className="text-gray-700 text-sm mb-2">{review.comment}</p>
-                  )}
-                  <div className="text-xs text-gray-500">
-                    {new Date(review.reviewDate).toLocaleDateString('tr-TR')}
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`"${review.authorName}" kullanıcısının yorumunu silmek istediğinizden emin misiniz?`)) {
+                          return;
+                        }
+                        
+                        try {
+                          const response = await fetch(`/api/admin/reviews/${review.id}`, {
+                            method: 'DELETE',
+                          });
+                          
+                          if (response.ok) {
+                            alert('✅ Yorum başarıyla silindi');
+                            router.refresh();
+                          } else {
+                            const error = await response.json();
+                            alert(`❌ Hata: ${error.error || 'Yorum silinemedi'}`);
+                          }
+                        } catch (error) {
+                          console.error('Error deleting review:', error);
+                          alert('❌ Yorum silinirken bir hata oluştu');
+                        }
+                      }}
+                      className="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Yorumu sil"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               ))}

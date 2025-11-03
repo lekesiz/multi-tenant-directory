@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
 // Mobile app configuration and version check
@@ -130,7 +131,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Mobile config error:', error);
+    logger.error('Mobile config error:', error);
     return NextResponse.json(
       { error: 'Erreur lors du chargement de la configuration' },
       { status: 500 }

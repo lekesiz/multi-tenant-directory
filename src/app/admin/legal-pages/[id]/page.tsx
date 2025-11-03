@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -54,7 +55,7 @@ export default function EditLegalPagePage() {
         setError('Page non trouvée');
       }
     } catch (error) {
-      console.error('Error fetching page:', error);
+      logger.error('Error fetching page:', error);
       setError('Erreur lors du chargement');
     } finally {
       setLoading(false);
@@ -86,7 +87,7 @@ export default function EditLegalPagePage() {
         setError(data.error || 'Erreur lors de la sauvegarde');
       }
     } catch (error) {
-      console.error('Error saving page:', error);
+      logger.error('Error saving page:', error);
       setError('Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
@@ -109,7 +110,7 @@ export default function EditLegalPagePage() {
         setError('Erreur lors de la suppression');
       }
     } catch (error) {
-      console.error('Error deleting page:', error);
+      logger.error('Error deleting page:', error);
       setError('Erreur lors de la suppression');
     }
   };

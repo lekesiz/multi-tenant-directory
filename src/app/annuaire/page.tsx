@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { Star, MapPin, Phone, ExternalLink, Building2 } from 'lucide-react';
+import { getCategoryFrenchName } from '@/lib/categories';
 
 // ISR: Revalidate every 5 minutes
 export const revalidate = 300;
@@ -10,7 +11,13 @@ export const revalidate = 300;
 interface SearchParams {
   category?: string;
   search?: string;
+  q?: string; // Query from homepage search
+  location?: string; // Location from homepage search
   page?: string;
+  city?: string; // City filter
+  rating?: string; // Minimum rating filter (1-5)
+  openNow?: string; // Filter for currently open businesses
+  sort?: string; // Sort: name, rating, reviews
 }
 
 async function getDomainFromHost(host: string) {
@@ -19,6 +26,43 @@ async function getDomainFromHost(host: string) {
   return await prisma.domain.findUnique({
     where: { name: domain },
   });
+}
+
+/**
+ * Check if business is currently open based on business hours
+ */
+function isBusinessOpen(businessHours: any): boolean {
+  if (!businessHours) return false;
+
+  const now = new Date();
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const currentDay = dayNames[now.getDay()];
+  const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+  const todayHours = businessHours[currentDay];
+  if (!todayHours) return false;
+
+  // New format (with shifts array)
+  if (todayHours.shifts && Array.isArray(todayHours.shifts)) {
+    if (todayHours.closed) return false;
+    return todayHours.shifts.some((shift: any) => {
+      return shift.open <= currentTime && currentTime <= shift.close;
+    });
+  }
+
+  // Legacy format
+  if (todayHours.closed) return false;
+  if (todayHours.open && todayHours.close) {
+    return todayHours.open <= currentTime && currentTime <= todayHours.close;
+  }
+
+  // Old format with isOpen
+  if (todayHours.isOpen === false) return false;
+  if (todayHours.openTime && todayHours.closeTime) {
+    return todayHours.openTime <= currentTime && currentTime <= todayHours.closeTime;
+  }
+
+  return false;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -61,6 +105,9 @@ export default async function AnnuairePage({
   const itemsPerPage = 24;
   const skip = (currentPage - 1) * itemsPerPage;
 
+  // Get search query from either 'search' or 'q' parameter
+  const searchQuery = params.search || params.q;
+
   // Build where clause
   const whereClause: any = {
     isActive: true, // Only show active companies
@@ -78,14 +125,42 @@ export default async function AnnuairePage({
     };
   }
 
-  if (params.search) {
+  if (searchQuery) {
     whereClause.OR = [
-      { name: { contains: params.search, mode: 'insensitive' } },
+      { name: { contains: searchQuery, mode: 'insensitive' } },
+      { categories: { has: searchQuery } },
+      { address: { contains: searchQuery, mode: 'insensitive' } },
+      { city: { contains: searchQuery, mode: 'insensitive' } },
     ];
   }
 
+  // City filter
+  if (params.city) {
+    whereClause.city = {
+      contains: params.city,
+      mode: 'insensitive',
+    };
+  }
+
+  // Minimum rating filter
+  const minRating = params.rating ? parseFloat(params.rating) : 0;
+
+  // Open now filter - we'll filter this after fetching
+  const filterOpenNow = params.openNow === 'true';
+
+  // Sort option
+  const sortBy = params.sort || 'name'; // name, rating, reviews
+
+  // Build orderBy clause based on sort option
+  let orderBy: any = { name: 'asc' };
+  if (sortBy === 'rating') {
+    orderBy = { rating: 'desc' };
+  } else if (sortBy === 'reviews') {
+    orderBy = { reviewCount: 'desc' };
+  }
+
   // Fetch companies and total count in parallel
-  const [companies, totalCount, allCompanies] = await Promise.all([
+  const [companies, totalCount, allCompanies, allCities] = await Promise.all([
     prisma.company.findMany({
       where: whereClause,
       select: {
@@ -93,8 +168,10 @@ export default async function AnnuairePage({
         name: true,
         slug: true,
         address: true,
+        city: true,
         phone: true,
         categories: true,
+        businessHours: true, // For "open now" filter
         content: {
           where: {
             domainId: currentDomain.id,
@@ -110,9 +187,9 @@ export default async function AnnuairePage({
           },
         },
       },
-      orderBy: { name: 'asc' },
-      take: itemsPerPage,
-      skip,
+      orderBy,
+      take: filterOpenNow || minRating > 0 ? itemsPerPage * 3 : itemsPerPage, // Fetch more if filtering
+      skip: filterOpenNow || minRating > 0 ? 0 : skip, // Don't skip if we need to filter
     }),
     prisma.company.count({ where: whereClause }),
     // Get all companies to extract unique categories
@@ -129,6 +206,23 @@ export default async function AnnuairePage({
         categories: true,
       },
     }),
+    // Get all unique cities
+    prisma.company.findMany({
+      where: {
+        content: {
+          some: {
+            domainId: currentDomain.id,
+            isVisible: true,
+          },
+        },
+        city: { not: null },
+      },
+      select: {
+        city: true,
+      },
+      distinct: ['city'],
+      orderBy: { city: 'asc' },
+    }),
   ]);
 
   // Extract unique categories from all companies
@@ -139,27 +233,71 @@ export default async function AnnuairePage({
     });
   });
 
-  // Convert to array and sort by count
-  const categories = Array.from(categoryMap.entries())
+  // Convert to array and sort by count, then get French names
+  const categoriesWithCounts = Array.from(categoryMap.entries())
     .map(([category, count]) => ({
-      category,
-      _count: { category: count },
+      slug: category,
+      count: count,
     }))
-    .sort((a, b) => b._count.category - a._count.category);
+    .sort((a, b) => b.count - a.count);
+  
+  // Get French names for categories
+  const categories = await Promise.all(
+    categoriesWithCounts.map(async (cat) => ({
+      slug: cat.slug,
+      name: await getCategoryFrenchName(cat.slug),
+      _count: { category: cat.count },
+    }))
+  );
 
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  // Calculate average rating for each company
-  const companiesWithRating = companies.map((company) => {
-    const avgRating = company.reviews.length > 0
-      ? company.reviews.reduce((sum, r) => sum + r.rating, 0) / company.reviews.length
-      : 0;
-    return {
-      ...company,
-      avgRating,
-      reviewCount: company.reviews.length,
-    };
-  });
+  // Calculate average rating and get French category names for each company
+  let companiesWithRating = await Promise.all(
+    companies.map(async (company) => {
+      const avgRating = company.reviews.length > 0
+        ? company.reviews.reduce((sum, r) => sum + r.rating, 0) / company.reviews.length
+        : 0;
+
+      // Get French names for categories
+      const frenchCategories = await Promise.all(
+        company.categories.map(cat => getCategoryFrenchName(cat))
+      );
+
+      return {
+        ...company,
+        categories: frenchCategories,
+        avgRating,
+        reviewCount: company.reviews.length,
+      };
+    })
+  );
+
+  // Apply client-side filters
+  let filteredCompanies = companiesWithRating;
+
+  // Filter by minimum rating
+  if (minRating > 0) {
+    filteredCompanies = filteredCompanies.filter(c => c.avgRating >= minRating);
+  }
+
+  // Filter by "open now"
+  if (filterOpenNow) {
+    filteredCompanies = filteredCompanies.filter(c => isBusinessOpen(c.businessHours));
+  }
+
+  // Apply pagination after filtering
+  const totalFilteredCount = filteredCompanies.length;
+  const paginatedCompanies = filteredCompanies.slice(skip, skip + itemsPerPage);
+
+  // Update companiesWithRating to use paginated results
+  companiesWithRating = paginatedCompanies;
+
+  // Recalculate total pages based on filtered results
+  const actualTotalCount = minRating > 0 || filterOpenNow ? totalFilteredCount : totalCount;
+  const totalPages = Math.ceil(actualTotalCount / itemsPerPage);
+
+  // Extract cities list
+  const cities = allCities.map(c => c.city).filter(Boolean) as string[];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -170,7 +308,7 @@ export default async function AnnuairePage({
             📋 Annuaire des Entreprises
           </h1>
           <p className="text-xl text-blue-100 mb-6">
-            {totalCount} professionnels à {currentDomain.siteTitle || 'Haguenau'}
+            {actualTotalCount} professionnel{actualTotalCount > 1 ? 's' : ''} à {currentDomain.siteTitle || 'Haguenau'}
           </p>
 
           {/* Search Form */}
@@ -179,7 +317,7 @@ export default async function AnnuairePage({
               <input
                 type="text"
                 name="search"
-                defaultValue={params.search}
+                defaultValue={searchQuery}
                 placeholder="Rechercher une entreprise..."
                 className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
               />
@@ -213,21 +351,21 @@ export default async function AnnuairePage({
                 >
                   <span className="flex items-center justify-between">
                     <span>Toutes</span>
-                    <span className="text-sm">{totalCount}</span>
+                    <span className="text-sm">{actualTotalCount}</span>
                   </span>
                 </Link>
                 {categories.map((cat) => (
                   <Link
-                    key={cat.category}
-                    href={`/annuaire?category=${encodeURIComponent(cat.category)}`}
+                    key={cat.slug}
+                    href={`/annuaire?category=${encodeURIComponent(cat.slug)}`}
                     className={`block px-3 py-2 rounded-lg transition ${
-                      params.category === cat.category
+                      params.category === cat.slug
                         ? 'bg-blue-50 text-blue-600 font-semibold'
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     <span className="flex items-center justify-between">
-                      <span className="truncate">{cat.category}</span>
+                      <span className="truncate">{cat.name}</span>
                       <span className="text-sm ml-2">{cat._count.category}</span>
                     </span>
                   </Link>
@@ -238,11 +376,11 @@ export default async function AnnuairePage({
 
           {/* Main Content - Companies Grid */}
           <main className="flex-1">
-            {params.search && (
+            {searchQuery && (
               <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-blue-800">
-                  <strong>{totalCount}</strong> résultat(s) pour &quot;
-                  <strong>{params.search}</strong>&quot;
+                  <strong>{actualTotalCount}</strong> résultat(s) pour &quot;
+                  <strong>{searchQuery}</strong>&quot;
                   <Link
                     href="/annuaire"
                     className="ml-4 text-blue-600 hover:underline"

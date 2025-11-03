@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './prisma';
 
@@ -42,6 +43,27 @@ export async function resolveTenant(request: NextRequest): Promise<TenantContext
     });
 
     if (!domain) {
+      // If domain not found, try to find any active domain as fallback
+      logger.warn(`Domain not found: ${domainName}, trying fallback`);
+      const fallbackDomain = await prisma.domain.findFirst({
+        where: { 
+          isActive: true 
+        },
+        select: {
+          id: true,
+          name: true,
+          isActive: true,
+          siteTitle: true,
+          siteDescription: true,
+          settings: true,
+        },
+      });
+      
+      if (fallbackDomain) {
+        logger.info(`Using fallback domain: ${fallbackDomain.name}`);
+        return { domain: fallbackDomain };
+      }
+      
       throw new Error(`Domain not found: ${domainName}`);
     }
 
@@ -51,7 +73,7 @@ export async function resolveTenant(request: NextRequest): Promise<TenantContext
 
     return { domain };
   } catch (error) {
-    console.error('Error resolving tenant:', error);
+    logger.error('Error resolving tenant:', error);
     throw error;
   }
 }

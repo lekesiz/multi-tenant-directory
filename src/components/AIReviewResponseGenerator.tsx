@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -51,7 +52,7 @@ export default function AIReviewResponseGenerator({
       setGeneratedResponse(data.response);
       setIsEditing(true);
     } catch (error) {
-      console.error('Error generating review response:', error);
+      logger.error('Error generating review response:', error);
       toast.error('Erreur lors de la génération de la réponse');
     } finally {
       setIsGenerating(false);

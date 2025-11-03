@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -30,7 +31,7 @@ export default function AdminLoginPage() {
         router.refresh();
       }
     } catch (err) {
-      console.error('Login error:', err);
+      logger.error('Login error:', err);
       setError('Une erreur s\'est produite. Veuillez réessayer.');
     } finally {
       setLoading(false);
@@ -43,7 +44,7 @@ export default function AdminLoginPage() {
         callbackUrl: '/admin/dashboard',
       });
     } catch (err) {
-      console.error('Google sign in error:', err);
+      logger.error('Google sign in error:', err);
       setError('Connexion avec Google impossible. Veuillez réessayer.');
     }
   };

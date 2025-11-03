@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { ChatBubbleLeftIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
@@ -87,7 +88,7 @@ export default function ReviewManagementClient({
         setReplyText('');
       }
     } catch (error) {
-      console.error('Error submitting reply:', error);
+      logger.error('Error submitting reply:', error);
     } finally {
       setLoading(false);
     }
@@ -114,7 +115,7 @@ export default function ReviewManagementClient({
         ));
       }
     } catch (error) {
-      console.error('Error deleting reply:', error);
+      logger.error('Error deleting reply:', error);
     } finally {
       setLoading(false);
     }
@@ -135,7 +136,7 @@ export default function ReviewManagementClient({
         setReplyText(data.response);
       }
     } catch (error) {
-      console.error('Error generating AI reply:', error);
+      logger.error('Error generating AI reply:', error);
     } finally {
       setLoading(false);
     }

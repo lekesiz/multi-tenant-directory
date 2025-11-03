@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -59,7 +60,7 @@ export default function ReferralDashboard({ businessOwnerId, businessName, baseU
       const data = await response.json();
       setStats(data);
     } catch (error) {
-      console.error('Error fetching referral stats:', error);
+      logger.error('Error fetching referral stats:', error);
       toast.error('Erreur lors du chargement des données de parrainage');
     } finally {
       setLoading(false);
@@ -90,7 +91,7 @@ export default function ReferralDashboard({ businessOwnerId, businessName, baseU
       // Refresh stats
       await fetchReferralStats();
     } catch (error) {
-      console.error('Error creating referral code:', error);
+      logger.error('Error creating referral code:', error);
       toast.error('Erreur lors de la création du code de parrainage');
     } finally {
       setCreating(false);
@@ -102,7 +103,7 @@ export default function ReferralDashboard({ businessOwnerId, businessName, baseU
       await navigator.clipboard.writeText(text);
       toast.success('Copié dans le presse-papiers !');
     } catch (error) {
-      console.error('Error copying to clipboard:', error);
+      logger.error('Error copying to clipboard:', error);
       toast.error('Erreur lors de la copie');
     }
   };

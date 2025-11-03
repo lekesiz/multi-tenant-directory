@@ -3,6 +3,7 @@
  * Save and retrieve custom dashboard layouts
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Dashboard layout save error:', error);
+    logger.error('Dashboard layout save error:', error);
     return NextResponse.json(
       { error: 'Failed to save dashboard layout' },
       { status: 500 }
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ widgets });
 
   } catch (error) {
-    console.error('Dashboard layout fetch error:', error);
+    logger.error('Dashboard layout fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch dashboard layout' },
       { status: 500 }
@@ -135,7 +136,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error('Dashboard layout delete error:', error);
+    logger.error('Dashboard layout delete error:', error);
     return NextResponse.json(
       { error: 'Failed to delete dashboard layout' },
       { status: 500 }

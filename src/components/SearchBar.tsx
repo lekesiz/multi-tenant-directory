@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Star, MapPin } from 'lucide-react';
@@ -53,7 +54,7 @@ export default function SearchBar() {
         setSelectedIndex(-1);
       }
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      logger.error('Error fetching suggestions:', error);
     } finally {
       setIsLoading(false);
     }

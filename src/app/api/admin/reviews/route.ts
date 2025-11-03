@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    logger.error('Error fetching reviews:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -175,7 +176,7 @@ export async function PATCH(request: NextRequest) {
       review,
     });
   } catch (error) {
-    console.error('Error updating review:', error);
+    logger.error('Error updating review:', error);
     return NextResponse.json(
       { error: 'Failed to update review' },
       { status: 500 }
@@ -247,7 +248,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Review deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting review:', error);
+    logger.error('Error deleting review:', error);
     return NextResponse.json(
       { error: 'Failed to delete review' },
       { status: 500 }

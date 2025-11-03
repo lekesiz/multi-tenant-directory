@@ -7,6 +7,7 @@
  * - GPT-4: Strategy & Integration (general knowledge, problem solving)
  */
 
+import { logger } from '@/lib/logger';
 import { getN8nClient } from './n8n-client';
 
 export interface AITask {
@@ -68,7 +69,7 @@ export class AIOrchestrator {
         executionTime: Date.now() - startTime,
       };
     } catch (error) {
-      console.error('AI orchestration failed:', error);
+      logger.error('AI orchestration failed:', error);
 
       // Fallback: Return empty result with error
       return {

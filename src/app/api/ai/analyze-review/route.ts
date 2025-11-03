@@ -3,6 +3,7 @@
  * POST /api/ai/analyze-review
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[AI Analyze Review] Error:', error);
+    logger.error('[AI Analyze Review] Error:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

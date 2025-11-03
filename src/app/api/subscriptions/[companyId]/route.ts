@@ -4,6 +4,7 @@
  * PATCH: Update subscription (cancel, reactivate, etc.)
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -73,7 +74,7 @@ export async function GET(
       featuredUntil: company.featuredUntil,
     });
   } catch (error: any) {
-    console.error('❌ Get subscription error:', error.message);
+    logger.error('❌ Get subscription error:', error.message);
     return NextResponse.json(
       { error: 'Failed to fetch subscription' },
       { status: 500 }
@@ -131,7 +132,7 @@ export async function PATCH(
           data: { cancelAtPeriodEnd: true },
         });
 
-        console.log(
+        logger.info(
           `✅ Subscription scheduled for cancellation: ${company.stripeSubscriptionId}`
         );
         break;
@@ -156,7 +157,7 @@ export async function PATCH(
           },
         });
 
-        console.log(
+        logger.info(
           `✅ Subscription canceled immediately: ${company.stripeSubscriptionId}`
         );
         break;
@@ -177,7 +178,7 @@ export async function PATCH(
           data: { cancelAtPeriodEnd: false },
         });
 
-        console.log(`✅ Subscription reactivated: ${company.stripeSubscriptionId}`);
+        logger.info(`✅ Subscription reactivated: ${company.stripeSubscriptionId}`);
         break;
       }
 
@@ -197,7 +198,7 @@ export async function PATCH(
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Subscription update error:', error.message);
+    logger.error('❌ Subscription update error:', error.message);
     return NextResponse.json(
       { error: error.message || 'Failed to update subscription' },
       { status: 500 }

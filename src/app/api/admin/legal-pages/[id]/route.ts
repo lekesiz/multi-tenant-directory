@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth-guard';
@@ -27,7 +28,7 @@ export async function GET(
 
     return NextResponse.json(page);
   } catch (error) {
-    console.error('Error fetching legal page:', error);
+    logger.error('Error fetching legal page:', error);
     return NextResponse.json(
       { error: 'Failed to fetch legal page' },
       { status: 500 }
@@ -56,7 +57,7 @@ export async function PATCH(
 
     return NextResponse.json(page);
   } catch (error) {
-    console.error('Error updating legal page:', error);
+    logger.error('Error updating legal page:', error);
     return NextResponse.json(
       { error: 'Failed to update legal page' },
       { status: 500 }
@@ -82,7 +83,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting legal page:', error);
+    logger.error('Error deleting legal page:', error);
     return NextResponse.json(
       { error: 'Failed to delete legal page' },
       { status: 500 }

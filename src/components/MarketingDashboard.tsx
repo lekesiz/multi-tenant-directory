@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -81,7 +82,7 @@ export default function MarketingDashboard({ businessOwnerId }: MarketingDashboa
         setLeadScores(scoresData.leadScores || []);
       }
     } catch (error) {
-      console.error('Error fetching marketing data:', error);
+      logger.error('Error fetching marketing data:', error);
       toast.error('Erreur lors du chargement des données marketing');
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { headers } from 'next/headers';
@@ -211,7 +212,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Advanced search error:', error);
+    logger.error('Advanced search error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la recherche' },
       { status: 500 }
@@ -271,7 +272,7 @@ export async function POST(request: NextRequest) {
       total: categories.length,
     });
   } catch (error) {
-    console.error('Get categories error:', error);
+    logger.error('Get categories error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des catégories' },
       { status: 500 }

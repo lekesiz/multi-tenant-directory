@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { put } from '@vercel/blob';
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
         });
         photoUrls.push(blob.url);
       } catch (uploadError) {
-        console.error('Photo upload error:', uploadError);
+        logger.error('Photo upload error:', uploadError);
         // Continue without this photo
       }
     }
@@ -134,14 +135,14 @@ export async function POST(request: NextRequest) {
           reviewId: review.id,
           unsubscribeToken: ownership.owner.unsubscribeToken,
         }).catch((error) => {
-          console.error('Failed to send review notification email:', error);
+          logger.error('Failed to send review notification email:', error);
           // Don't throw, continue with other emails
         });
       });
 
     // Send emails in parallel but don't wait for them
     Promise.all(emailPromises).catch((error) => {
-      console.error('Error sending review notification emails:', error);
+      logger.error('Error sending review notification emails:', error);
     });
 
     return NextResponse.json({
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Submit review error:', error);
+    logger.error('Submit review error:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

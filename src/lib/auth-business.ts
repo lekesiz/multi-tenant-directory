@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
@@ -25,7 +26,7 @@ export const authBusinessOptions: NextAuthOptions = {
           const validatedFields = loginSchema.safeParse(credentials);
           
           if (!validatedFields.success) {
-            console.error('Validation error:', validatedFields.error);
+            logger.error('Validation error:', validatedFields.error);
             return null;
           }
 
@@ -44,7 +45,7 @@ export const authBusinessOptions: NextAuthOptions = {
           });
 
           if (!businessOwner) {
-            console.error('Business owner not found:', email);
+            logger.error('Business owner not found:', email);
             return null;
           }
 
@@ -52,7 +53,7 @@ export const authBusinessOptions: NextAuthOptions = {
           const isPasswordValid = await bcrypt.compare(password, businessOwner.password);
 
           if (!isPasswordValid) {
-            console.error('Invalid password for:', email);
+            logger.error('Invalid password for:', email);
             return null;
           }
 
@@ -71,7 +72,7 @@ export const authBusinessOptions: NextAuthOptions = {
             })),
           };
         } catch (error) {
-          console.error('Business auth error:', error);
+          logger.error('Business auth error:', error);
           return null;
         }
       },

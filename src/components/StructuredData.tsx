@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { generatePageStructuredData, structuredDataToJsonLd, StructuredDataProps } from '@/lib/structured-data';
 import { useEffect } from 'react';
 
@@ -15,7 +16,7 @@ export default function StructuredData(props: StructuredDataProps) {
   useEffect(() => {
     // Log structured data for debugging
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Structured Data:', JSON.parse(jsonLd));
+      logger.info('📊 Structured Data', { data: JSON.parse(jsonLd) });
     }
   }, [jsonLd]);
 

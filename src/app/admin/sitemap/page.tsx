@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 // API routes will be used instead of direct imports
 
@@ -43,7 +44,7 @@ export default function SitemapAdminPage() {
       setStats(statsData);
 
     } catch (error) {
-      console.error('Error loading sitemap stats:', error);
+      logger.error('Error loading sitemap stats:', error);
       setError('Failed to load sitemap statistics');
     } finally {
       setLoading(false);
@@ -71,7 +72,7 @@ export default function SitemapAdminPage() {
       await loadSitemapStats();
 
     } catch (error) {
-      console.error('Error generating sitemaps:', error);
+      logger.error('Error generating sitemaps:', error);
       setError('Failed to generate sitemaps');
     } finally {
       setLoading(false);

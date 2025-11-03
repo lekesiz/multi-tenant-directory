@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
@@ -110,7 +111,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching hours:', error);
+    logger.error('Error fetching hours:', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

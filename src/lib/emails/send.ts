@@ -198,3 +198,131 @@ export async function sendPaymentSuccessEmail({
     `,
   });
 }
+
+
+/**
+ * Newsletter Email Functions
+ */
+
+import { generateNewsletterWelcomeEmail } from './templates/newsletter-welcome';
+import { generateNewsletterDigestEmail } from './templates/newsletter-digest';
+import { generateNewsletterUnsubscribeEmail } from './templates/newsletter-unsubscribe';
+
+/**
+ * Send newsletter welcome email
+ */
+export async function sendNewsletterWelcomeEmail({
+  email,
+  firstName,
+  domainName,
+  domainUrl,
+}: {
+  email: string;
+  firstName?: string;
+  domainName: string;
+  domainUrl: string;
+}) {
+  const baseUrl = process.env.NEXTAUTH_URL || domainUrl;
+  const unsubscribeUrl = `${baseUrl}/newsletter/unsubscribe?email=${encodeURIComponent(email)}`;
+  const preferencesUrl = `${baseUrl}/newsletter/preferences?email=${encodeURIComponent(email)}`;
+
+  const { subject, html, text } = generateNewsletterWelcomeEmail({
+    email,
+    firstName,
+    domainName,
+    domainUrl,
+    unsubscribeUrl,
+    preferencesUrl,
+  });
+
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+    text,
+  });
+}
+
+/**
+ * Send newsletter weekly digest email
+ */
+export async function sendNewsletterDigestEmail({
+  email,
+  firstName,
+  domainName,
+  domainUrl,
+  newCompanies,
+  topRatedCompanies,
+  weekNumber,
+  year,
+}: {
+  email: string;
+  firstName?: string;
+  domainName: string;
+  domainUrl: string;
+  newCompanies: any[];
+  topRatedCompanies: any[];
+  weekNumber: number;
+  year: number;
+}) {
+  const baseUrl = process.env.NEXTAUTH_URL || domainUrl;
+  const unsubscribeUrl = `${baseUrl}/newsletter/unsubscribe?email=${encodeURIComponent(email)}`;
+  const preferencesUrl = `${baseUrl}/newsletter/preferences?email=${encodeURIComponent(email)}`;
+
+  const { subject, html, text } = generateNewsletterDigestEmail({
+    email,
+    firstName,
+    domainName,
+    domainUrl,
+    newCompanies,
+    topRatedCompanies,
+    weekNumber,
+    year,
+    unsubscribeUrl,
+    preferencesUrl,
+  });
+
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+    text,
+  });
+}
+
+/**
+ * Send newsletter unsubscribe confirmation email
+ */
+export async function sendNewsletterUnsubscribeEmail({
+  email,
+  firstName,
+  domainName,
+  domainUrl,
+  reason,
+}: {
+  email: string;
+  firstName?: string;
+  domainName: string;
+  domainUrl: string;
+  reason?: string;
+}) {
+  const baseUrl = process.env.NEXTAUTH_URL || domainUrl;
+  const resubscribeUrl = `${baseUrl}/newsletter/subscribe?email=${encodeURIComponent(email)}`;
+
+  const { subject, html, text } = generateNewsletterUnsubscribeEmail({
+    email,
+    firstName,
+    domainName,
+    domainUrl,
+    resubscribeUrl,
+    reason,
+  });
+
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+    text,
+  });
+}
+

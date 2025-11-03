@@ -1,8 +1,18 @@
+import { logger } from '@/lib/logger';
 import { Resend } from 'resend';
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+// Lazy initialization to avoid build-time errors
+let resend: Resend | null = null;
+
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export interface EmailOptions {
   to: string;
@@ -58,12 +68,13 @@ export async function sendEmail({
   html,
 }: EmailOptions) {
   try {
-    if (!resend || !process.env.RESEND_API_KEY) {
-      console.warn('⚠️ RESEND_API_KEY not configured. Email not sent.');
+    const client = getResendClient();
+    if (!client) {
+      logger.warn('⚠️ RESEND_API_KEY not configured. Email not sent.');
       return { success: false, error: 'Email service not configured' };
     }
 
-    const data = await resend.emails.send({
+    const data = await client.emails.send({
       from: from || process.env.RESEND_FROM_EMAIL || 'noreply@example.com',
       to,
       replyTo: replyTo || from,
@@ -71,10 +82,10 @@ export async function sendEmail({
       html,
     });
 
-    console.log('✅ Email sent successfully:', data);
+    logger.info('✅ Email sent successfully', { data });
     return { success: true, data };
   } catch (error) {
-    console.error('❌ Email error:', error);
+    logger.error('❌ Email error:', error);
     return { success: false, error };
   }
 }

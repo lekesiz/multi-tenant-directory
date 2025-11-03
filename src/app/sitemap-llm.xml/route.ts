@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error generating LLM sitemap:', error);
+    logger.error('Error generating LLM sitemap:', error);
 
     return new NextResponse(
       `<?xml version="1.0" encoding="UTF-8"?>

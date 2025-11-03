@@ -1,9 +1,86 @@
+import { logger } from '@/lib/logger';
 import { PrismaClient } from '@prisma/client';
 import { translateToFrench, detectLanguage } from './translation';
 
 const prisma = new PrismaClient();
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
+
+/**
+ * Parse Google's weekday_text format to our BusinessHours format
+ * Example: ["Monday: 9:00 AM – 6:00 PM", "Tuesday: Closed", ...]
+ */
+function parseGoogleBusinessHours(weekdayText: string[]) {
+  const daysMap: Record<string, string> = {
+    'Monday': 'monday',
+    'Tuesday': 'tuesday',
+    'Wednesday': 'wednesday',
+    'Thursday': 'thursday',
+    'Friday': 'friday',
+    'Saturday': 'saturday',
+    'Sunday': 'sunday',
+    'Lundi': 'monday',
+    'Mardi': 'tuesday',
+    'Mercredi': 'wednesday',
+    'Jeudi': 'thursday',
+    'Vendredi': 'friday',
+    'Samedi': 'saturday',
+    'Dimanche': 'sunday',
+  };
+
+  const hours: Record<string, any> = {};
+
+  weekdayText.forEach((text) => {
+    // Parse "Monday: 9:00 AM – 6:00 PM" or "Monday: Closed"
+    const match = text.match(/^([^:]+):\s*(.+)$/);
+    if (!match) return;
+
+    const [, dayName, timeStr] = match;
+    const dayKey = daysMap[dayName.trim()];
+    if (!dayKey) return;
+
+    // Check if closed
+    if (timeStr.toLowerCase().includes('closed') || timeStr.toLowerCase().includes('fermé')) {
+      hours[dayKey] = { closed: true, shifts: [] };
+      return;
+    }
+
+    // Parse time range: "9:00 AM – 6:00 PM" or "9:00 – 18:00"
+    const timeMatch = timeStr.match(/(\d{1,2}:\d{2})\s*(?:AM|PM)?\s*[–-]\s*(\d{1,2}:\d{2})\s*(?:AM|PM)?/i);
+    if (timeMatch) {
+      let [, openTime, closeTime] = timeMatch;
+
+      // Convert 12-hour to 24-hour if needed
+      if (timeStr.includes('AM') || timeStr.includes('PM')) {
+        openTime = convertTo24Hour(openTime, timeStr.includes('AM', timeStr.indexOf(openTime)));
+        closeTime = convertTo24Hour(closeTime, timeStr.includes('PM', timeStr.indexOf(closeTime)));
+      }
+
+      hours[dayKey] = {
+        closed: false,
+        shifts: [{ open: openTime, close: closeTime }]
+      };
+    }
+  });
+
+  return hours;
+}
+
+/**
+ * Convert 12-hour time to 24-hour format
+ */
+function convertTo24Hour(time: string, isPM: boolean): string {
+  const [hours, minutes] = time.split(':').map(Number);
+  let hour24 = hours;
+
+  if (isPM && hours !== 12) {
+    hour24 = hours + 12;
+  } else if (!isPM && hours === 12) {
+    hour24 = 0;
+  }
+
+  return `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
 
 interface PlaceSearchResult {
   place_id: string;
@@ -56,6 +133,14 @@ interface GoogleReview {
   time: number;
 }
 
+export interface RatingDistribution {
+  five_star: number;
+  four_star: number;
+  three_star: number;
+  two_star: number;
+  one_star: number;
+}
+
 /**
  * Search for a place by name and address
  */
@@ -78,7 +163,7 @@ export async function searchPlace(
 
     return null;
   } catch (error) {
-    console.error('Error searching place:', error);
+    logger.error('Error searching place:', error);
     return null;
   }
 }
@@ -99,7 +184,7 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | n
 
     return null;
   } catch (error) {
-    console.error('Error getting place details:', error);
+    logger.error('Error getting place details:', error);
     return null;
   }
 }
@@ -183,7 +268,7 @@ export async function syncCompanyReviews(companyId: number): Promise<{
       if (!existingReview) {
         // Skip empty reviews
         if (!googleReview.text || googleReview.text.trim().length === 0) {
-          console.warn(`Skipping empty review from ${googleReview.author_name}`);
+          logger.warn(`Skipping empty review from ${googleReview.author_name}`);
           continue;
         }
 
@@ -217,22 +302,66 @@ export async function syncCompanyReviews(companyId: number): Promise<{
       }
     }
 
-    // Update company rating and review count
+    // Calculate rating distribution from reviews
+    const ratingDistribution = calculateRatingDistribution(placeDetails.reviews);
+
+    // Parse and sync business hours from Google if available
+    let parsedHours = null;
+    if (placeDetails.opening_hours?.weekday_text && placeDetails.opening_hours.weekday_text.length > 0) {
+      try {
+        parsedHours = parseGoogleBusinessHours(placeDetails.opening_hours.weekday_text);
+
+        // Sync to BusinessHours table
+        await prisma.businessHours.upsert({
+          where: { companyId },
+          update: {
+            monday: parsedHours.monday || null,
+            tuesday: parsedHours.tuesday || null,
+            wednesday: parsedHours.wednesday || null,
+            thursday: parsedHours.thursday || null,
+            friday: parsedHours.friday || null,
+            saturday: parsedHours.saturday || null,
+            sunday: parsedHours.sunday || null,
+          },
+          create: {
+            companyId,
+            monday: parsedHours.monday || null,
+            tuesday: parsedHours.tuesday || null,
+            wednesday: parsedHours.wednesday || null,
+            thursday: parsedHours.thursday || null,
+            friday: parsedHours.friday || null,
+            saturday: parsedHours.saturday || null,
+            sunday: parsedHours.sunday || null,
+            specialHours: [],
+          },
+        });
+
+        logger.info(`Synced business hours for company ${companyId} from Google`);
+      } catch (error) {
+        logger.error('Error syncing business hours:', error);
+        // Don't fail the entire sync if hours sync fails
+      }
+    }
+
+    // Update company rating, review count, rating distribution, and business hours
     await prisma.company.update({
       where: { id: companyId },
       data: {
         rating: placeDetails.rating,
         reviewCount: placeDetails.user_ratings_total || 0,
+        ratingDistribution: ratingDistribution as any,
+        businessHours: parsedHours as any,
+        lastSyncedAt: new Date(),
       },
     });
 
     return {
       success: true,
-      message: `Successfully synced ${reviewsAdded} new reviews`,
+      message: `Successfully synced ${reviewsAdded} new reviews${parsedHours ? ' and business hours' : ''}`,
       reviewsAdded,
     };
   } catch (error) {
-    console.error('Error syncing reviews:', error);
+    logger.error('Error syncing reviews:', error);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -271,12 +400,40 @@ export async function syncAllCompaniesReviews(): Promise<{
       companiesProcessed,
     };
   } catch (error) {
-    console.error('Error syncing all reviews:', error);
+    logger.error('Error syncing all reviews:', error);
     return {
       success: false,
       totalReviewsAdded: 0,
       companiesProcessed: 0,
     };
   }
+}
+
+
+
+/**
+ * Calculate rating distribution from Google reviews
+ * Note: This calculates distribution from the reviews returned by the API (max 5)
+ * For more accurate distribution, we would need to scrape Google Maps
+ */
+function calculateRatingDistribution(reviews: GoogleReview[]): RatingDistribution {
+  const distribution: RatingDistribution = {
+    five_star: 0,
+    four_star: 0,
+    three_star: 0,
+    two_star: 0,
+    one_star: 0,
+  };
+
+  reviews.forEach((review) => {
+    const rating = review.rating || 0;
+    if (rating === 5) distribution.five_star++;
+    else if (rating === 4) distribution.four_star++;
+    else if (rating === 3) distribution.three_star++;
+    else if (rating === 2) distribution.two_star++;
+    else if (rating === 1) distribution.one_star++;
+  });
+
+  return distribution;
 }
 

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
@@ -108,7 +109,7 @@ export async function POST(
           replyContent: validatedData.content,
           reviewUrl,
         }).catch((error) => {
-          console.error('Failed to send review reply email:', error);
+          logger.error('Failed to send review reply email:', error);
           // Don't throw, the reply was created successfully
         });
       }
@@ -119,7 +120,7 @@ export async function POST(
       });
     }
   } catch (error) {
-    console.error('Review reply error:', error);
+    logger.error('Review reply error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -184,7 +185,7 @@ export async function DELETE(
       message: 'Réponse supprimée',
     });
   } catch (error) {
-    console.error('Delete reply error:', error);
+    logger.error('Delete reply error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la suppression' },
       { status: 500 }

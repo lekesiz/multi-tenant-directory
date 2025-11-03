@@ -3,6 +3,7 @@
  * Handles external API integrations, webhooks, and developer tools
  */
 
+import { logger } from '@/lib/logger';
 import { prisma } from './prisma';
 import crypto from 'crypto';
 
@@ -216,7 +217,7 @@ export class WebhookService {
         });
 
       } catch (error) {
-        console.error(`Webhook delivery failed for ${webhook.id}:`, error);
+        logger.error(`Webhook delivery failed for ${webhook.id}:`, error);
 
         // Log failed delivery
         await prisma.webhookLog.create({
@@ -389,7 +390,7 @@ export class IntegrationService {
       };
 
     } catch (error) {
-      console.error('Google My Business sync error:', error);
+      logger.error('Google My Business sync error:', error);
       throw error;
     }
   }
@@ -425,7 +426,7 @@ export class IntegrationService {
       };
 
     } catch (error) {
-      console.error('Mailchimp sync error:', error);
+      logger.error('Mailchimp sync error:', error);
       throw error;
     }
   }
@@ -467,7 +468,7 @@ export class IntegrationService {
       };
 
     } catch (error) {
-      console.error('Zapier webhook error:', error);
+      logger.error('Zapier webhook error:', error);
       throw error;
     }
   }
@@ -511,7 +512,7 @@ export class IntegrationService {
       };
 
     } catch (error) {
-      console.error('Slack notification error:', error);
+      logger.error('Slack notification error:', error);
       throw error;
     }
   }
@@ -555,7 +556,7 @@ export class IntegrationService {
       };
 
     } catch (error) {
-      console.error('WhatsApp message error:', error);
+      logger.error('WhatsApp message error:', error);
       throw error;
     }
   }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -20,7 +21,7 @@ export async function POST() {
     return NextResponse.json(results);
 
   } catch (error) {
-    console.error('Error generating sitemaps:', error);
+    logger.error('Error generating sitemaps:', error);
     return NextResponse.json(
       { error: 'Failed to generate sitemaps' },
       { status: 500 }

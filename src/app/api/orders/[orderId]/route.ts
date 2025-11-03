@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -44,7 +45,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Get order API error:', error);
+    logger.error('Get order API error:', error);
     return NextResponse.json(
       { error: 'Failed to get order' },
       { status: 500 }
@@ -113,7 +114,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error('Update order API error:', error);
+    logger.error('Update order API error:', error);
     return NextResponse.json(
       { error: 'Failed to update order' },
       { status: 500 }

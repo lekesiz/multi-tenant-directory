@@ -2,6 +2,7 @@
  * Get All Subscription Plans
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Get plans error:', error.message);
+    logger.error('❌ Get plans error:', error.message);
     return NextResponse.json(
       { error: 'Failed to fetch plans' },
       { status: 500 }

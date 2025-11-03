@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -52,7 +53,7 @@ export default function AdminSubscriptionsPage() {
           setError('Failed to load subscriptions');
         }
       } catch (err) {
-        console.error('Error:', err);
+        logger.error('Error:', err);
         setError('An error occurred');
       } finally {
         setLoading(false);

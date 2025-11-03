@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -67,7 +68,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Get bookings API error:', error);
+    logger.error('Get bookings API error:', error);
     return NextResponse.json(
       { error: 'Failed to get bookings' },
       { status: 500 }
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Create booking API error:', error);
+    logger.error('Create booking API error:', error);
     
     if (error instanceof Error) {
       if (error.message.includes('not available')) {

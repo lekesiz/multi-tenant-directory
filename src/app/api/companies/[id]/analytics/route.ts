@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
@@ -123,7 +124,7 @@ export async function GET(
       period: validatedParams,
     });
   } catch (error) {
-    console.error('Error fetching analytics:', error);
+    logger.error('Error fetching analytics:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -233,7 +234,7 @@ export async function POST(
       message: `Event '${event}' tracked successfully`,
     });
   } catch (error) {
-    console.error('Error tracking analytics:', error);
+    logger.error('Error tracking analytics:', error);
     return NextResponse.json(
       { error: 'Failed to track analytics event' },
       { status: 500 }

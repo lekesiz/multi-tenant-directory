@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -19,7 +20,7 @@ export async function GET(
 
     return NextResponse.json(contents);
   } catch (error) {
-    console.error('Error fetching company content:', error);
+    logger.error('Error fetching company content:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -46,6 +47,7 @@ export async function POST(
       metaDescription,
       priority,
       featuredUntil,
+      customTags,
     } = body;
 
     // Convert featuredUntil to Date if provided
@@ -68,6 +70,7 @@ export async function POST(
         metaDescription,
         priority: priority !== undefined ? priority : 0,
         featuredUntil: featuredUntilDate,
+        customTags: customTags || [],
       },
       create: {
         companyId,
@@ -80,12 +83,13 @@ export async function POST(
         metaDescription,
         priority: priority || 0,
         featuredUntil: featuredUntilDate,
+        customTags: customTags || [],
       },
     });
 
     return NextResponse.json(content);
   } catch (error) {
-    console.error('Error creating/updating company content:', error);
+    logger.error('Error creating/updating company content:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

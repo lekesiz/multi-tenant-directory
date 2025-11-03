@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { generateBusinessInsights } from '@/lib/ai';
 
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     return NextResponse.json(formattedInsights);
 
   } catch (error) {
-    console.error('AI Insights API error:', error);
+    logger.error('AI Insights API error:', error);
     
     return NextResponse.json(
       { error: 'Erreur lors de la génération des insights' },

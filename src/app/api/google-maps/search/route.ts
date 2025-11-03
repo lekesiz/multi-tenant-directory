@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import type { GooglePlaceResult, GooglePlacesSearchResponse } from '@/types/google-maps';
 
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ results });
   } catch (error) {
-    console.error('Error searching Google Places:', error);
+    logger.error('Error searching Google Places:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

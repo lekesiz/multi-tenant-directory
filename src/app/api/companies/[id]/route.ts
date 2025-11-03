@@ -1,7 +1,32 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveTenant, getDomainId } from '@/lib/api-guard';
 import { requireAdmin } from '@/lib/auth-guard';
+import { z } from 'zod';
+
+// Validation schema for updating a company (all fields optional)
+const updateCompanySchema = z.object({
+  name: z.string().min(2, 'Company name must be at least 2 characters').optional(),
+  slug: z.string().min(2, 'Slug must be at least 2 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens').optional(),
+  googlePlaceId: z.string().optional().nullable(),
+  address: z.string().min(3, 'Address must be at least 3 characters').optional().nullable(),
+  city: z.string().min(2, 'City must be at least 2 characters').optional().nullable(),
+  postalCode: z.string().regex(/^\d{5}$/, 'Postal code must be exactly 5 digits').optional().nullable(),
+  phone: z.string().min(10, 'Phone must be at least 10 characters').optional().nullable(),
+  email: z.string().email('Invalid email address').optional().nullable(),
+  website: z.string().url('Invalid website URL').optional().nullable().or(z.literal('')),
+  latitude: z.union([z.number().min(-90).max(90), z.string()]).optional().nullable(),
+  longitude: z.union([z.number().min(-180).max(180), z.string()]).optional().nullable(),
+  categories: z.array(z.string()).optional().nullable(),
+  logoUrl: z.string().url('Invalid logo URL').optional().nullable().or(z.literal('')),
+  coverImageUrl: z.string().url('Invalid cover image URL').optional().nullable().or(z.literal('')),
+  isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  rating: z.number().min(0).max(5).optional().nullable(),
+  reviewCount: z.number().min(0).optional().nullable(),
+  businessHours: z.any().optional().nullable(),
+});
 
 // GET /api/companies/[id] - Şirket detayını getir
 export async function GET(
@@ -59,7 +84,7 @@ export async function GET(
 
     return NextResponse.json(company);
   } catch (error) {
-    console.error('Error fetching company:', error);
+    logger.error('Error fetching company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -81,15 +106,61 @@ export async function PUT(
   try {
     const { id } = await context.params;
     const companyId = parseInt(id);
+
+    if (isNaN(companyId)) {
+      return NextResponse.json(
+        { error: 'Invalid company ID' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
 
-    // Convert latitude/longitude strings to floats
-    const updateData: any = { ...body };
-    if (body.latitude !== undefined) {
-      updateData.latitude = body.latitude === '' ? null : parseFloat(body.latitude);
+    // Validate input data
+    const validation = updateCompanySchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Invalid input data',
+          details: validation.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        },
+        { status: 400 }
+      );
     }
-    if (body.longitude !== undefined) {
-      updateData.longitude = body.longitude === '' ? null : parseFloat(body.longitude);
+
+    // Convert latitude/longitude strings to floats with NaN validation
+    const updateData: any = { ...validation.data };
+    if (validation.data.latitude !== undefined) {
+      if (validation.data.latitude === '' || validation.data.latitude === null) {
+        updateData.latitude = null;
+      } else if (typeof validation.data.latitude === 'string') {
+        const lat = parseFloat(validation.data.latitude);
+        if (isNaN(lat) || lat < -90 || lat > 90) {
+          return NextResponse.json(
+            { error: 'Invalid latitude value. Must be between -90 and 90' },
+            { status: 400 }
+          );
+        }
+        updateData.latitude = lat;
+      }
+    }
+
+    if (validation.data.longitude !== undefined) {
+      if (validation.data.longitude === '' || validation.data.longitude === null) {
+        updateData.longitude = null;
+      } else if (typeof validation.data.longitude === 'string') {
+        const lng = parseFloat(validation.data.longitude);
+        if (isNaN(lng) || lng < -180 || lng > 180) {
+          return NextResponse.json(
+            { error: 'Invalid longitude value. Must be between -180 and 180' },
+            { status: 400 }
+          );
+        }
+        updateData.longitude = lng;
+      }
     }
 
     const company = await prisma.company.update({
@@ -99,7 +170,23 @@ export async function PUT(
 
     return NextResponse.json(company);
   } catch (error) {
-    console.error('Error updating company:', error);
+    logger.error('Error updating company:', error);
+
+    // Provide more specific error messages
+    if ((error as any).code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A company with this slug already exists' },
+        { status: 409 }
+      );
+    }
+
+    if ((error as any).code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Company not found' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -128,7 +215,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Company deleted successfully' });
   } catch (error) {
-    console.error('Error deleting company:', error);
+    logger.error('Error deleting company:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

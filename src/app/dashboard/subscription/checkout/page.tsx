@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Loader } from 'lucide-react';
@@ -65,7 +66,7 @@ function CheckoutContent() {
           setError(errorData.error || 'Failed to create checkout session');
         }
       } catch (err) {
-        console.error('Error:', err);
+        logger.error('Error:', err);
         setError('An error occurred');
       } finally {
         setLoading(false);

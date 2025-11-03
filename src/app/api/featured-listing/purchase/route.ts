@@ -2,6 +2,7 @@
  * Purchase Featured Listing Upgrade
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
     // For now, return a simple response with checkout info
     // In production, you'd integrate with Stripe to create a one-time charge
 
-    console.log(
+    logger.info(
       `✅ Featured listing purchase requested: Company ${companyId}, Tier ${tier}, Days ${days}, Price €${price / 100}`
     );
 
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Featured listing purchase error:', error.message);
+    logger.error('❌ Featured listing purchase error:', error.message);
     return NextResponse.json(
       { error: error.message || 'Failed to process purchase' },
       { status: 500 }
@@ -203,7 +204,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Get featured pricing error:', error.message);
+    logger.error('❌ Get featured pricing error:', error.message);
     return NextResponse.json(
       { error: 'Failed to fetch pricing' },
       { status: 500 }

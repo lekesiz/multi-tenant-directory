@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 /**
@@ -31,7 +32,10 @@ const serverSchema = z.object({
   
   // Grok AI (optional)
   XAI_API_KEY: z.string().optional(),
-  
+
+  // Resend Email (optional)
+  RESEND_API_KEY: z.string().optional(),
+
   // Node Environment
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
@@ -69,6 +73,7 @@ const processEnv = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || undefined,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || undefined,
   XAI_API_KEY: process.env.XAI_API_KEY || undefined,
+  RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
   NODE_ENV: process.env.NODE_ENV,
 
   // Client
@@ -97,7 +102,7 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
   );
 
   if (parsed.success === false) {
-    console.error(
+    logger.error(
       '❌ Invalid environment variables:',
       parsed.error.flatten().fieldErrors,
     );

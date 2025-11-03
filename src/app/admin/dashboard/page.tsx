@@ -1,38 +1,70 @@
+import { logger } from '@/lib/logger';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
 async function getDashboardStats() {
+  // Initialize with default values
+  const stats = {
+    totalCompanies: 0,
+    totalDomains: 0,
+    activeDomains: 0,
+    totalReviews: 0,
+    avgRating: 0,
+    totalLinks: 0,
+    visibleLinks: 0,
+    topCategories: [] as Array<{ category: string; count: number }>,
+    recentCompanies: [] as Array<{
+      id: number;
+      name: string;
+      slug: string;
+      city: string | null;
+      categories: string[];
+      createdAt: Date;
+    }>,
+    domainStats: [] as Array<{
+      id: number;
+      name: string;
+      isActive: boolean;
+      companyCount: number;
+    }>,
+    totalLeads: 0,
+    newLeads: 0,
+    assignedLeads: 0,
+    wonLeads: 0,
+  };
+
+  // Block 1: Base stats (always available)
   try {
     // Get total companies
-    const totalCompanies = await prisma.company.count();
+    stats.totalCompanies = await prisma.company.count();
 
     // Get total domains
-    const totalDomains = await prisma.domain.count();
+    stats.totalDomains = await prisma.domain.count();
 
     // Get active domains
-    const activeDomains = await prisma.domain.count({
+    stats.activeDomains = await prisma.domain.count({
       where: { isActive: true },
     });
 
     // Get total reviews
-    const totalReviews = await prisma.review.count();
+    stats.totalReviews = await prisma.review.count();
 
     // Get average rating
     const reviews = await prisma.review.findMany({
       select: { rating: true },
     });
-    const avgRating =
+    stats.avgRating =
       reviews.length > 0
         ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         : 0;
 
     // Get total company content links
-    const totalLinks = await prisma.companyContent.count();
+    stats.totalLinks = await prisma.companyContent.count();
 
     // Get visible company content
-    const visibleLinks = await prisma.companyContent.count({
+    stats.visibleLinks = await prisma.companyContent.count({
       where: { isVisible: true },
     });
 
@@ -48,13 +80,13 @@ async function getDashboardStats() {
       });
     });
 
-    const topCategories = Object.entries(categoryCount)
+    stats.topCategories = Object.entries(categoryCount)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([category, count]) => ({ category, count }));
 
     // Get recent companies
-    const recentCompanies = await prisma.company.findMany({
+    stats.recentCompanies = await prisma.company.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
       select: {
@@ -87,40 +119,48 @@ async function getDashboardStats() {
       },
     });
     
-    const domainStats = domains.map(domain => ({
+    stats.domainStats = domains.map(domain => ({
       id: domain.id,
       name: domain.name,
       isActive: domain.isActive,
       companyCount: domain.content.length,
     }));
 
-    return {
-      totalCompanies,
-      totalDomains,
-      activeDomains,
-      totalReviews,
-      avgRating,
-      totalLinks,
-      visibleLinks,
-      topCategories,
-      recentCompanies,
-      domainStats,
-    };
+    logger.info('✅ Base dashboard stats retrieved successfully', {
+      totalCompanies: stats.totalCompanies,
+      totalDomains: stats.totalDomains,
+      totalReviews: stats.totalReviews,
+    });
   } catch (error) {
-    console.error('Dashboard stats error:', error);
-    return {
-      totalCompanies: 0,
-      totalDomains: 0,
-      activeDomains: 0,
-      totalReviews: 0,
-      avgRating: 0,
-      totalLinks: 0,
-      visibleLinks: 0,
-      topCategories: [],
-      recentCompanies: [],
-      domainStats: [],
-    };
+    logger.error('❌ Error retrieving base dashboard stats:', error);
+    // Base stats remain at default values (0)
   }
+
+  // Block 2: Leads stats (may fail if tables don't exist yet)
+  try {
+    stats.totalLeads = await prisma.lead.count();
+    stats.newLeads = await prisma.lead.count({
+      where: { status: 'new' }
+    });
+    stats.assignedLeads = await prisma.lead.count({
+      where: { status: 'assigned' }
+    });
+    stats.wonLeads = await prisma.lead.count({
+      where: { status: 'won' }
+    });
+
+    logger.info('✅ Leads stats retrieved successfully', {
+      totalLeads: stats.totalLeads,
+      newLeads: stats.newLeads,
+    });
+  } catch (error) {
+    logger.warn('⚠️ Leads stats not available (tables may not exist yet)', {
+      error: error instanceof Error ? error.message : String(error)
+    });
+    // Leads stats remain at default values (0)
+  }
+
+  return stats;
 }
 
 export default async function AdminDashboard() {
@@ -257,6 +297,35 @@ export default async function AdminDashboard() {
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Leads</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {stats.totalLeads}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {stats.newLeads} nouveaux
+              </p>
+            </div>
+            <div className="bg-orange-100 p-3 rounded-lg">
+              <svg
+                className="w-8 h-8 text-orange-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
             </div>
@@ -439,7 +508,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Link
           href="/admin/companies/new"
           className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-6 flex items-center justify-between transition-colors"
@@ -461,6 +530,31 @@ export default async function AdminDashboard() {
               strokeLinejoin="round"
               strokeWidth={2}
               d="M12 4v16m8-8H4"
+            />
+          </svg>
+        </Link>
+
+        <Link
+          href="/admin/leads"
+          className="bg-orange-600 hover:bg-orange-700 text-white rounded-lg p-6 flex items-center justify-between transition-colors"
+        >
+          <div>
+            <h3 className="text-lg font-semibold">Gestion des Leads</h3>
+            <p className="text-orange-100 text-sm mt-1">
+              Voir et gérer les demandes de devis
+            </p>
+          </div>
+          <svg
+            className="w-8 h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
         </Link>

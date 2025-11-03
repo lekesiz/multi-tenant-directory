@@ -3,6 +3,7 @@
  * Handles referral code generation, tracking, and rewards
  */
 
+import { logger } from '@/lib/logger';
 import { prisma } from './prisma';
 import { nanoid } from 'nanoid';
 
@@ -124,7 +125,7 @@ export async function trackReferralClick(code: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error tracking referral click:', error);
+    logger.error('Error tracking referral click:', error);
     return false;
   }
 }
@@ -156,7 +157,7 @@ export async function trackReferralSignup(
 
     return true;
   } catch (error) {
-    console.error('Error tracking referral signup:', error);
+    logger.error('Error tracking referral signup:', error);
     return false;
   }
 }
@@ -188,7 +189,7 @@ export async function trackReferralConversion(referredId: string): Promise<void>
     // Apply rewards to both referrer and referred
     await applyReferralRewards(referral.referrerId, referredId, referral);
   } catch (error) {
-    console.error('Error tracking referral conversion:', error);
+    logger.error('Error tracking referral conversion:', error);
   }
 }
 
@@ -210,7 +211,7 @@ async function applyReferralRewards(
     // Send notification emails (to be implemented)
     // await sendReferralRewardNotifications(referrerId, referredId, referral);
   } catch (error) {
-    console.error('Error applying referral rewards:', error);
+    logger.error('Error applying referral rewards:', error);
   }
 }
 
@@ -386,7 +387,7 @@ export async function validateReferralCode(code: string): Promise<{
 
     return { valid: true, referral };
   } catch (error) {
-    console.error('Error validating referral code:', error);
+    logger.error('Error validating referral code:', error);
     return { valid: false, error: 'Erreur lors de la validation' };
   }
 }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { headers } from 'next/headers';
 import ReviewCard from "@/components/ReviewCard";
 import { prisma } from '@/lib/prisma';
@@ -14,10 +15,11 @@ import ContactForm from '@/components/ContactForm';
 import { SocialShareButtons } from '@/components/SocialShareButtons';
 import RelatedCompanies from '@/components/RelatedCompanies';
 import MobileActions from '@/components/MobileActions';
+import SafeHTML from '@/components/SafeHTML';
 import { Metadata } from 'next';
 
-// ISR disabled - dynamic rendering only (avoids prerender issues)
-export const revalidate = 0;
+// ISR: Revalidate every 300 seconds (5 minutes)
+export const revalidate = 300;
 
 async function getDomainFromHost(host: string) {
   let domain = host.split(':')[0];
@@ -45,6 +47,15 @@ export async function generateMetadata({
     }
 
     const { slug } = await params;
+    
+    // Yasal sayfa slug'larını exclude et
+    const legalSlugs = ['politique-confidentialite', 'politique-de-confidentialite', 'mentions-legales', 'cgu', 'contact', 'tarifs', 'pricing'];
+    if (legalSlugs.includes(slug)) {
+      return {
+        title: 'Page',
+      };
+    }
+    
     const company = await prisma.company.findFirst({
       where: {
         slug: slug,
@@ -55,35 +66,16 @@ export async function generateMetadata({
           },
         },
       },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        address: true,
-        city: true,
-        postalCode: true,
-        phone: true,
-        email: true,
-        website: true,
-        latitude: true,
-        longitude: true,
-        businessHours: true,
-        categories: true,
-        logoUrl: true,
-        coverImageUrl: true,
-        rating: true,
-        reviewCount: true,
-        createdAt: true,
-        updatedAt: true,
-        isActive: true,
+      include: {
         content: {
           where: {
             domainId: currentDomain.id,
           },
         },
         reviews: {
-          orderBy: {
-            reviewDate: 'desc' as const,
+          where: {
+            isActive: true,
+            isApproved: true,
           },
         },
         hours: true,
@@ -130,7 +122,7 @@ export async function generateMetadata({
       },
     };
   } catch (error) {
-    console.error('Error generating metadata:', error);
+    logger.error('Error generating metadata:', error);
     return {
       title: 'Entreprise',
     };
@@ -153,6 +145,12 @@ export default async function CompanyDetailPage({
 
   const { slug } = await params;
 
+  // Yasal sayfa slug'larını exclude et
+  const legalSlugs = ['politique-confidentialite', 'politique-de-confidentialite', 'mentions-legales', 'cgu', 'contact', 'tarifs', 'pricing'];
+  if (legalSlugs.includes(slug)) {
+    return notFound();
+  }
+
   const company = await prisma.company.findFirst({
     where: {
       slug: slug,
@@ -163,35 +161,19 @@ export default async function CompanyDetailPage({
         },
       },
     },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      address: true,
-      city: true,
-      postalCode: true,
-      phone: true,
-      email: true,
-      website: true,
-      latitude: true,
-      longitude: true,
-      businessHours: true,
-      categories: true,
-      logoUrl: true,
-      coverImageUrl: true,
-      rating: true,
-      reviewCount: true,
-      createdAt: true,
-      updatedAt: true,
-      isActive: true,
+    include: {
       content: {
         where: {
           domainId: currentDomain.id,
         },
       },
       reviews: {
+        where: {
+          isActive: true,
+          isApproved: true,
+        },
         orderBy: {
-          reviewDate: 'desc' as const,
+          reviewDate: 'desc',
         },
       },
       hours: true,
@@ -203,6 +185,30 @@ export default async function CompanyDetailPage({
   }
 
   const content = company.content[0];
+
+  // Get French category names
+  const categoryMappings = await prisma.businessCategory.findMany({
+    where: {
+      googleCategory: { in: company.categories },
+      isActive: true,
+    },
+    select: {
+      googleCategory: true,
+      frenchName: true,
+    },
+  });
+
+  const categoryMap: Record<string, string> = {};
+  categoryMappings.forEach((mapping) => {
+    categoryMap[mapping.googleCategory] = mapping.frenchName;
+  });
+
+  // Helper function to get French name or fallback
+  const getCategoryName = (slug: string) => {
+    return categoryMap[slug] || slug.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
 
   // Get related companies (same category and city, excluding current company)
   const relatedCompanies = await prisma.company.findMany({
@@ -257,7 +263,7 @@ export default async function CompanyDetailPage({
         company={{
           ...company,
           _count: { reviews: company.reviews.length }
-        } as any}
+        }}
         breadcrumbs={[
           { name: 'Accueil', url: `https://${currentDomain.name}` },
           { name: 'Annuaire', url: `https://${currentDomain.name}/annuaire` },
@@ -313,7 +319,7 @@ export default async function CompanyDetailPage({
                           key={category}
                           className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
                         >
-                          {category}
+                          {getCategoryName(category)}
                         </span>
                       ))}
                     </div>
@@ -352,9 +358,10 @@ export default async function CompanyDetailPage({
                   <h2 className="text-xl font-semibold text-gray-900 mb-3">
                     À propos
                   </h2>
-                  <p className="text-gray-700 whitespace-pre-line">
-                    {content.customDescription}
-                  </p>
+                  <SafeHTML
+                    html={content.customDescription}
+                    className="text-gray-700"
+                  />
                 </div>
               )}
 
@@ -405,7 +412,15 @@ export default async function CompanyDetailPage({
             />
 
             {/* Reviews */}
-            <CompanyReviews companyId={company.id} companyName={company.name} />
+            <CompanyReviews 
+              companyId={company.id} 
+              companyName={company.name}
+              totalReviews={company.reviewCount}
+              googleRating={company.rating}
+              googlePlaceId={company.googlePlaceId}
+              ratingDistribution={company.ratingDistribution as Record<string, number> | null}
+              lastSyncedAt={company.lastSyncedAt}
+            />
 
             {/* Contact Form */}
             <div className="bg-white rounded-lg shadow p-4 sm:p-6 lg:p-8">

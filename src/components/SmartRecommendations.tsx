@@ -1,5 +1,6 @@
 'use client';
 
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -96,7 +97,7 @@ export default function SmartRecommendations({ companyId, businessData }: SmartR
       const data = await response.json();
       setRecommendations(data.suggestions || []);
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
+      logger.error('Error fetching recommendations:', error);
       toast.error('Erreur lors du chargement des recommandations');
       
       // Fallback with mock data

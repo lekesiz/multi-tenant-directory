@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { generateChatbotResponse } from '@/lib/ai';
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('AI Chat API error:', error);
+    logger.error('AI Chat API error:', error);
     
     return NextResponse.json(
       { error: 'Erreur lors de la génération de la réponse' },

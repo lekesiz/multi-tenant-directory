@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { DeveloperPortalService } from '@/lib/api-ecosystem';
 
@@ -12,7 +13,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Get API docs error:', error);
+    logger.error('Get API docs error:', error);
     return NextResponse.json(
       { error: 'Failed to get API documentation' },
       { status: 500 }

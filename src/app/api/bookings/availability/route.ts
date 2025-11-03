@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { BookingService } from '@/lib/ecommerce';
 
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Get availability API error:', error);
+    logger.error('Get availability API error:', error);
     
     if (error instanceof Error) {
       if (error.message.includes('not enabled')) {

@@ -1,15 +1,33 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getServerSession } from 'next-auth';
 import { authBusinessOptions } from '@/lib/auth-business';
 
-// Business hours schema
-const dayHoursSchema = z.object({
-  open: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
-  close: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
-  closed: z.boolean(),
-}).nullable();
+// Business hours schema - supports both single shift and multiple shifts (split shifts)
+const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+
+const shiftSchema = z.object({
+  open: z.string().regex(timeRegex, 'Invalid time format (HH:MM)'),
+  close: z.string().regex(timeRegex, 'Invalid time format (HH:MM)'),
+});
+
+// Legacy format (single shift) or new format (multiple shifts)
+const dayHoursSchema = z.union([
+  // New format: multiple shifts (split shifts)
+  z.object({
+    closed: z.boolean(),
+    shifts: z.array(shiftSchema).min(1).max(3).optional(), // Max 3 shifts per day
+  }),
+  // Legacy format: single shift (backwards compatible)
+  z.object({
+    open: z.string().regex(timeRegex),
+    close: z.string().regex(timeRegex),
+    closed: z.boolean(),
+  }),
+  z.null(),
+]);
 
 const businessHoursSchema = z.object({
   monday: dayHoursSchema,
@@ -28,6 +46,34 @@ const businessHoursSchema = z.object({
   })).optional(),
   timezone: z.string().default('Europe/Paris'),
 });
+
+/**
+ * Normalize day hours to new format (with shifts array)
+ * Supports both legacy format and new format
+ */
+function normalizeDayHours(dayData: any) {
+  if (!dayData) return null;
+
+  // Already in new format (has shifts array)
+  if (dayData.shifts !== undefined) {
+    return dayData;
+  }
+
+  // Legacy format: convert to new format
+  if (dayData.open && dayData.close) {
+    return {
+      closed: dayData.closed || false,
+      shifts: dayData.closed ? [] : [{ open: dayData.open, close: dayData.close }],
+    };
+  }
+
+  // Closed day
+  if (dayData.closed) {
+    return { closed: true, shifts: [] };
+  }
+
+  return dayData;
+}
 
 // GET business hours
 export async function GET(
@@ -50,23 +96,35 @@ export async function GET(
     });
 
     if (!businessHours) {
-      // Return default hours if not set
+      // Return default hours if not set (new format with shifts support)
       return NextResponse.json({
-        monday: { open: '09:00', close: '18:00', closed: false },
-        tuesday: { open: '09:00', close: '18:00', closed: false },
-        wednesday: { open: '09:00', close: '18:00', closed: false },
-        thursday: { open: '09:00', close: '18:00', closed: false },
-        friday: { open: '09:00', close: '18:00', closed: false },
-        saturday: { open: '09:00', close: '12:00', closed: false },
-        sunday: { open: '00:00', close: '00:00', closed: true },
+        monday: { closed: false, shifts: [{ open: '09:00', close: '18:00' }] },
+        tuesday: { closed: false, shifts: [{ open: '09:00', close: '18:00' }] },
+        wednesday: { closed: false, shifts: [{ open: '09:00', close: '18:00' }] },
+        thursday: { closed: false, shifts: [{ open: '09:00', close: '18:00' }] },
+        friday: { closed: false, shifts: [{ open: '09:00', close: '18:00' }] },
+        saturday: { closed: false, shifts: [{ open: '09:00', close: '12:00' }] },
+        sunday: { closed: true, shifts: [] },
         specialHours: [],
         timezone: 'Europe/Paris',
       });
     }
 
-    return NextResponse.json(businessHours);
+    // Normalize hours to new format (backwards compatible)
+    const normalizedHours = {
+      ...businessHours,
+      monday: normalizeDayHours(businessHours.monday),
+      tuesday: normalizeDayHours(businessHours.tuesday),
+      wednesday: normalizeDayHours(businessHours.wednesday),
+      thursday: normalizeDayHours(businessHours.thursday),
+      friday: normalizeDayHours(businessHours.friday),
+      saturday: normalizeDayHours(businessHours.saturday),
+      sunday: normalizeDayHours(businessHours.sunday),
+    };
+
+    return NextResponse.json(normalizedHours);
   } catch (error) {
-    console.error('Error fetching business hours:', error);
+    logger.error('Error fetching business hours:', error);
     return NextResponse.json(
       { error: 'Failed to fetch business hours' },
       { status: 500 }
@@ -156,12 +214,28 @@ export async function PUT(
       },
     });
 
+    // Also sync to Company.businessHours for backward compatibility
+    await prisma.company.update({
+      where: { id: companyId },
+      data: {
+        businessHours: {
+          monday: validatedData.monday,
+          tuesday: validatedData.tuesday,
+          wednesday: validatedData.wednesday,
+          thursday: validatedData.thursday,
+          friday: validatedData.friday,
+          saturday: validatedData.saturday,
+          sunday: validatedData.sunday,
+        },
+      },
+    });
+
     return NextResponse.json({
       success: true,
       data: businessHours,
     });
   } catch (error) {
-    console.error('Error updating business hours:', error);
+    logger.error('Error updating business hours:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

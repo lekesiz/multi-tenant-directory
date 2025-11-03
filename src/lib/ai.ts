@@ -3,6 +3,7 @@
  * Provides unified interface for OpenAI and Anthropic APIs
  */
 
+import { logger } from '@/lib/logger';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { AI_CONFIG, AI_PROMPTS, isAIAvailable } from '@/config/ai';
@@ -68,7 +69,7 @@ async function callOpenAI(prompt: string): Promise<AIResponse> {
       costCents: calculateCost('openai', model, tokensUsed),
     };
   } catch (error) {
-    console.error('[AI] OpenAI error:', error);
+    logger.error('[AI] OpenAI error:', error);
     return {
       success: false,
       content: '',
@@ -123,7 +124,7 @@ async function callAnthropic(prompt: string): Promise<AIResponse> {
       costCents: calculateCost('anthropic', model, tokensUsed),
     };
   } catch (error) {
-    console.error('[AI] Anthropic error:', error);
+    logger.error('[AI] Anthropic error:', error);
     return {
       success: false,
       content: '',
@@ -347,7 +348,7 @@ export function parseAIJSON<T = any>(content: string): T | null {
 
     return JSON.parse(cleaned) as T;
   } catch (error) {
-    console.error('[AI] Failed to parse JSON:', error);
+    logger.error('[AI] Failed to parse JSON:', error);
     return null;
   }
 }

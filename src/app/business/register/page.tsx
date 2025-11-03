@@ -13,6 +13,7 @@ const registerSchema = z.object({
   confirmPassword: z.string(),
   firstName: z.string().min(2, 'Prénom requis'),
   lastName: z.string().min(2, 'Nom requis'),
+  businessName: z.string().min(2, 'Nom de l\'entreprise requis'),
   phone: z.string().optional(),
   acceptTerms: z.boolean().refine(val => val === true, 'Vous devez accepter les conditions'),
 }).refine(data => data.password === data.confirmPassword, {
@@ -29,6 +30,7 @@ export default function BusinessRegisterPage() {
     confirmPassword: '',
     firstName: '',
     lastName: '',
+    businessName: '',
     phone: '',
     acceptTerms: false,
   });
@@ -44,16 +46,16 @@ export default function BusinessRegisterPage() {
       const validatedData = registerSchema.parse(formData);
 
       // Call register API
-      const response = await fetch('/api/business/register', {
+      const response = await fetch('/api/business/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          name: `${validatedData.firstName} ${validatedData.lastName}`,
           email: validatedData.email,
           password: validatedData.password,
-          firstName: validatedData.firstName,
-          lastName: validatedData.lastName,
+          businessName: validatedData.businessName,
           phone: validatedData.phone,
         }),
       });
@@ -172,6 +174,27 @@ export default function BusinessRegisterPage() {
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nom de l'entreprise
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.businessName}
+                onChange={(e) =>
+                  setFormData({ ...formData, businessName: e.target.value })
+                }
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  errors.businessName ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Votre Entreprise SARL"
+              />
+              {errors.businessName && (
+                <p className="mt-1 text-sm text-red-600">{errors.businessName}</p>
               )}
             </div>
 

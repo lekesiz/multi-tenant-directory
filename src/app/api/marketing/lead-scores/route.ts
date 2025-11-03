@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { marketingAutomation } from '@/lib/marketing-automation';
 import { authenticateMobileUser } from '@/lib/mobile-auth';
@@ -106,7 +107,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Get lead scores error:', error);
+    logger.error('Get lead scores error:', error);
     return NextResponse.json(
       { error: 'Erreur lors du chargement des scores' },
       { status: 500 }
@@ -158,7 +159,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Update lead score error:', error);
+    logger.error('Update lead score error:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

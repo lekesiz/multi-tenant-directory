@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ analysis });
   } catch (error) {
-    console.error('Sentiment analysis error:', error);
+    logger.error('Sentiment analysis error:', error);
     return NextResponse.json(
       { error: 'Failed to analyze sentiment' },
       { status: 500 }

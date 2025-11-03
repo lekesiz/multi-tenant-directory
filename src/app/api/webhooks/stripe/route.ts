@@ -3,6 +3,7 @@
  * Handles subscription and payment events from Stripe
  */
 
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
@@ -11,9 +12,20 @@ import {
   handleInvoicePayment,
 } from '@/lib/stripe-utils';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-09-30.clover' as any,
-});
+// Lazy initialization to avoid build-time errors
+let stripe: Stripe | null = null;
+
+function getStripeClient(): Stripe {
+  if (!stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+    }
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-09-30.clover' as any,
+    });
+  }
+  return stripe;
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
@@ -28,7 +40,7 @@ async function verifyStripeWebhook(request: NextRequest) {
     throw new Error('Missing signature or webhook secret');
   }
 
-  const event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+  const event = getStripeClient().webhooks.constructEvent(body, sig, webhookSecret);
   return event;
 }
 
@@ -36,7 +48,7 @@ export async function POST(request: NextRequest) {
   try {
     const event = await verifyStripeWebhook(request);
 
-    console.log(`📨 Received Stripe webhook: ${event.type}`);
+    logger.info(`📨 Received Stripe webhook: ${event.type}`);
 
     // Handle different event types
     switch (event.type) {
@@ -54,7 +66,7 @@ export async function POST(request: NextRequest) {
           trialEndDate: subscription.trial_end || undefined,
         });
 
-        console.log(`✅ Subscription ${event.type} processed`);
+        logger.info(`✅ Subscription ${event.type} processed`);
         break;
       }
 
@@ -86,7 +98,7 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          console.log(`✅ Subscription deleted for company ${company.id}`);
+          logger.info(`✅ Subscription deleted for company ${company.id}`);
         }
         break;
       }
@@ -108,20 +120,20 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        console.log(`✅ Invoice event ${event.type} processed`);
+        logger.info(`✅ Invoice event ${event.type} processed`);
         break;
       }
 
       case 'charge.dispute.created': {
         const dispute = event.data.object as Stripe.Dispute;
-        console.warn(`⚠️ Dispute created: ${dispute.id}`);
+        logger.warn(`⚠️ Dispute created: ${dispute.id}`);
         // TODO: Notify customer and business owner about dispute
         break;
       }
 
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
-        console.log(`💰 Refund processed: ${charge.id}`);
+        logger.info(`💰 Refund processed: ${charge.id}`);
         // TODO: Update subscription status and notify customer
         break;
       }
@@ -129,7 +141,7 @@ export async function POST(request: NextRequest) {
       // Payment method events
       case 'payment_method.attached': {
         const paymentMethod = event.data.object as Stripe.PaymentMethod;
-        console.log(`✅ Payment method attached: ${paymentMethod.id}`);
+        logger.info(`✅ Payment method attached: ${paymentMethod.id}`);
         break;
       }
 
@@ -140,12 +152,12 @@ export async function POST(request: NextRequest) {
           where: { stripePaymentMethodId: paymentMethod.id },
           data: { isExpired: true },
         });
-        console.log(`✅ Payment method detached: ${paymentMethod.id}`);
+        logger.info(`✅ Payment method detached: ${paymentMethod.id}`);
         break;
       }
 
       default:
-        console.log(`⚠️ Unhandled event type: ${event.type}`);
+        logger.info(`⚠️ Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json(
@@ -153,7 +165,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('❌ Webhook error:', error.message);
+    logger.error('❌ Webhook error:', error.message);
 
     if (error.message.includes('No matching signing secret')) {
       return NextResponse.json(
