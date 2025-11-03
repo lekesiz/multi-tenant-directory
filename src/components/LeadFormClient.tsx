@@ -65,8 +65,6 @@ export default function LeadFormClient({ categories = [] }: LeadFormClientProps)
         }
       };
 
-      console.log('Sending lead data:', payload);
-
       // Send to API
       const response = await fetch('/api/leads', {
         method: 'POST',
@@ -75,8 +73,6 @@ export default function LeadFormClient({ categories = [] }: LeadFormClientProps)
         },
         body: JSON.stringify(payload)
       });
-
-      console.log('Response status:', response.status);
 
       if (response.ok) {
         // Show success message
@@ -90,15 +86,13 @@ export default function LeadFormClient({ categories = [] }: LeadFormClientProps)
       } else {
         // Get error details from response
         const errorData = await response.json();
-        console.error('API Error:', errorData);
-        
+
         // Show error message with details
         const errorText = errorData.error || 'Une erreur est survenue. Veuillez réessayer.';
         setErrorMessage(errorText);
         setShowError(true);
       }
     } catch (error) {
-      console.error('Network Error:', error);
       setErrorMessage('Erreur de connexion. Vérifiez votre connexion internet.');
       setShowError(true);
     } finally {
