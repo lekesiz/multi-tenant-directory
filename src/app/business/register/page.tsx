@@ -6,6 +6,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
 import { useRecaptcha } from '@/hooks/useRecaptcha';
+import PasswordStrength from '@/components/PasswordStrength';
 
 // Validation schema
 const registerSchema = z.object({
@@ -238,6 +239,7 @@ export default function BusinessRegisterPage() {
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password}</p>
               )}
+              <PasswordStrength password={formData.password} className="mt-2" />
             </div>
 
             <div>
