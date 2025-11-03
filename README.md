@@ -1,6 +1,6 @@
 # 🏢 Multi-Tenant Directory Platform
 
-**Modern, scalable, and SEO-optimized local business directory platform** with multi-tenant architecture. One codebase serving **21 domains** with domain-specific content, AI-powered features, and comprehensive business management tools.
+**Modern, scalable, and SEO-optimized local business directory platform** with multi-tenant architecture. One codebase serving **22 domains** with domain-specific content, AI-powered features, and comprehensive business management tools.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/lekesiz/multi-tenant-directory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -17,7 +17,7 @@
 - 🇫🇷 [bas-rhin.pro](https://bas-rhin.pro) - Secondary domain
 - 📚 [API Documentation](https://haguenau.pro/docs) - Interactive Swagger UI
 
-**21 Active Domains:**
+**22 Active Domains:**
 hoerdt.pro, mutzig.pro, schiltigheim.pro, illkirch.pro, lingolsheim.pro, bischheim.pro, bischwiller.pro, hoenheim.pro, ostwald.pro, obernai.pro, erstein.pro, mundolsheim.pro, geispolsheim.pro, saverne.pro, selestat.pro, molsheim.pro, souffelweyersheim.pro, wissembourg.pro, brumath.pro, reichstett.pro, strasbourg.pro
 
 ---
@@ -600,4 +600,15 @@ If you find this project useful, please consider giving it a ⭐ on GitHub!
 **Made with ❤️ by NETZ Informatique**
 
 *Empowering local businesses with modern technology*
+
+
+### Recent Updates (January 2025)
+- ✅ **SIRET Integration** - Added SIREN (9 digits) and SIRET (14 digits) fields for French businesses
+- ✅ **Legal Form Field** - Support for SARL, SAS, EURL, and other French company types
+- ✅ **Domain Expansion** - Increased from 14 to 22 active domains
+- ✅ **New Domains Added** - bas-rhin.pro, erstein.pro, geispolsheim.pro, illkirch.pro, ittenheim.pro, mutzig.pro, ostwald.pro, vendenheim.pro, gries.pro
+- ✅ **ISR Cache Fix** - Fixed company profiles not displaying after schema changes
+- ✅ **Dynamic Rendering** - Converted critical pages from ISR to dynamic rendering
+- ✅ **Domain Management** - Enhanced admin panel for domain configuration
+- ✅ **Vercel Synchronization** - Automated domain sync with Vercel API
 
