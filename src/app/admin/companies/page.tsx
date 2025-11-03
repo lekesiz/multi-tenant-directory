@@ -13,10 +13,23 @@ export default async function AdminCompaniesPage() {
   }
 
   const companies = await prisma.company.findMany({
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      city: true,
+      isActive: true,
+      googlePlaceId: true,
+      createdAt: true,
       content: {
-        include: {
-          domain: true,
+        select: {
+          domainId: true,
+          domain: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
       _count: {
