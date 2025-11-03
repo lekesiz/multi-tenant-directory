@@ -41,6 +41,7 @@ const defaultHours: DayHours = {
 
 export default function BusinessHoursForm({ companyId, initialHours }: Props) {
   const [loading, setLoading] = useState(false);
+  const [fetchingHours, setFetchingHours] = useState(true);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
@@ -53,6 +54,58 @@ export default function BusinessHoursForm({ companyId, initialHours }: Props) {
     saturday: initialHours?.saturday || { ...defaultHours, closed: true },
     sunday: initialHours?.sunday || { ...defaultHours, closed: true },
   });
+
+  // Fetch existing business hours on mount
+  useEffect(() => {
+    const fetchHours = async () => {
+      try {
+        const response = await fetch(`/api/companies/${companyId}/hours`);
+        if (response.ok) {
+          const data = await response.json();
+          // Convert from new format (with shifts) to old format for this form
+          const convertedHours: BusinessHours = {
+            monday: convertShiftsToDayHours(data.monday),
+            tuesday: convertShiftsToDayHours(data.tuesday),
+            wednesday: convertShiftsToDayHours(data.wednesday),
+            thursday: convertShiftsToDayHours(data.thursday),
+            friday: convertShiftsToDayHours(data.friday),
+            saturday: convertShiftsToDayHours(data.saturday),
+            sunday: convertShiftsToDayHours(data.sunday),
+          };
+          setHours(convertedHours);
+        }
+      } catch (err) {
+        console.error('Error fetching business hours:', err);
+      } finally {
+        setFetchingHours(false);
+      }
+    };
+
+    fetchHours();
+  }, [companyId]);
+
+  // Convert new format (shifts array) to old format (single open/close)
+  const convertShiftsToDayHours = (dayData: any): DayHours | null => {
+    if (!dayData) return defaultHours;
+    if (dayData.closed) return { ...defaultHours, closed: true };
+    if (dayData.shifts && dayData.shifts.length > 0) {
+      // For now, just take the first shift (we'll enhance to support multiple shifts later)
+      return {
+        open: dayData.shifts[0].open,
+        close: dayData.shifts[0].close,
+        closed: false,
+      };
+    }
+    // Old format
+    if (dayData.open && dayData.close) {
+      return {
+        open: dayData.open,
+        close: dayData.close,
+        closed: dayData.closed || false,
+      };
+    }
+    return defaultHours;
+  };
 
   const updateDay = (day: keyof BusinessHours, field: keyof DayHours, value: string | boolean) => {
     setHours({
@@ -89,6 +142,21 @@ export default function BusinessHoursForm({ companyId, initialHours }: Props) {
       setLoading(false);
     }
   };
+
+  // Show loading state while fetching existing hours
+  if (fetchingHours) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-center py-12">
+          <svg className="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="ml-3 text-gray-600">Chargement des horaires...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
