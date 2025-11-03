@@ -109,9 +109,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     try {
       imageUrl = await generateImage(imagePrompt, {
-        width: data.aspectRatio === '16:9' ? 1920 : data.aspectRatio === '1:1' ? 1024 : 1080,
-        height: data.aspectRatio === '16:9' ? 1080 : data.aspectRatio === '1:1' ? 1024 : 1920,
-        model: 'gemini', // Using Gemini for image generation
+        style: data.style,
+        aspectRatio: data.aspectRatio,
+        model: 'gemini-nano', // Using Gemini for image generation
       });
     } catch (imageError) {
       logger.error('Image generation error:', imageError);

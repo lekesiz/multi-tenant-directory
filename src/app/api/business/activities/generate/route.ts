@@ -136,7 +136,8 @@ Generate content that is:
     let aiModel: 'gemini' = 'gemini';
 
     try {
-      const aiResponse = await generateText(systemPrompt, userPrompt);
+      const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
+      const aiResponse = await generateText(combinedPrompt);
 
       // Try to parse JSON from response
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);

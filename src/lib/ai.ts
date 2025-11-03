@@ -448,3 +448,17 @@ Créez du contenu optimisé SEO et professionnel.`;
   return callAI(prompt);
 }
 
+
+/**
+ * Generate text content (generic wrapper for Activity API)
+ */
+export async function generateText(
+  prompt: string,
+  options?: { model?: string; temperature?: number; maxTokens?: number }
+): Promise<string> {
+  const response = await callAI(prompt);
+  if (!response.success) {
+    throw new Error(response.error || "Failed to generate text");
+  }
+  return response.content;
+}

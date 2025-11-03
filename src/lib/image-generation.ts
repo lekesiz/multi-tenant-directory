@@ -249,3 +249,15 @@ export default {
   generateCoverImageFallback,
   generateImagePromptDescription,
 };
+
+/**
+ * Generate image (generic wrapper for Activity API)
+ */
+export async function generateImage(
+  prompt: string,
+  options?: { style?: string; aspectRatio?: string; model?: string }
+): Promise<string> {
+  // TODO: Implement actual image generation
+  // For now return placeholder
+  return `https://via.placeholder.com/1200x675.png?text=${encodeURIComponent(prompt.substring(0, 50))}`;
+}

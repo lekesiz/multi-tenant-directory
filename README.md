@@ -48,7 +48,13 @@ hoerdt.pro, mutzig.pro, schiltigheim.pro, illkirch.pro, lingolsheim.pro, bischhe
 ### 📊 Admin Panel
 - ✅ **Company Management** - Full CRUD operations
 - ✅ **User Management** - Admin and business owner roles
-- ✅ **Category Management** - Dynamic category system
+- ✅ **Category Management** - Hierarchical category system with subcategories
+  - Parent-child category relationships
+  - Manual slug editing with auto-generation
+  - Multi-language support (FR/EN/DE)
+  - Icon and color customization
+  - Google Place Types mapping
+- ✅ **Lead Management** - View, search, and export leads to CSV
 - ✅ **Review Moderation** - Approve, reject, and sync reviews
 - ✅ **Domain SEO** - Per-domain SEO configuration
 - ✅ **Bulk Operations** - Mass review sync and updates
@@ -92,6 +98,8 @@ hoerdt.pro, mutzig.pro, schiltigheim.pro, illkirch.pro, lingolsheim.pro, bischhe
 
 ### 🎨 UI/UX
 - ✅ **Modern Design** - Clean and professional interface
+- ✅ **Rich Text Editor** - TipTap WYSIWYG editor with improved text visibility
+- ✅ **SafeHTML Component** - Improved text readability with proper contrast
 - ✅ **Dark Mode** - System-based theme switching
 - ✅ **Animations** - Smooth transitions and interactions
 - ✅ **Accessibility** - WCAG 2.1 AA compliant
@@ -515,7 +523,18 @@ Found a bug? Please open an issue on [GitHub Issues](https://github.com/lekesiz/
 
 ## 📝 Changelog
 
-### v2.0.0 (2025-10-21)
+See [CHANGELOG.md](./CHANGELOG.md) for a complete list of changes.
+
+### Recent Updates (November 2025)
+- ✅ **Subcategory Management** - Create and edit subcategories with full validation
+- ✅ **Improved Slugify** - Proper handling of French characters and underscores
+- ✅ **Manual Slug Editing** - Allow custom slug editing in category forms
+- ✅ **Rich Text Improvements** - Enhanced visibility and text contrast in TipTap editor
+- ✅ **Leads CSV Export** - Export leads with search functionality
+- ✅ **Lead Search** - Advanced filtering by postal code and category
+- ✅ **SafeHTML Enhancement** - Improved text readability in rendered HTML
+
+### v2.0.0 (October 2025)
 - ✅ Complete API documentation (119 endpoints)
 - ✅ Swagger UI integration
 - ✅ AI-powered features (15 endpoints)
@@ -528,7 +547,7 @@ Found a bug? Please open an issue on [GitHub Issues](https://github.com/lekesiz/
 - ✅ Mobile API (7 endpoints)
 - ✅ Developer tools (API keys, webhooks)
 
-### v1.0.0 (2025-09-15)
+### v1.0.0 (September 2025)
 - ✅ Initial release
 - ✅ Multi-tenant architecture (21 domains)
 - ✅ Admin panel
