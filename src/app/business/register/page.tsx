@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
 
 // Validation schema
 const registerSchema = z.object({
@@ -23,6 +24,7 @@ const registerSchema = z.object({
 
 export default function BusinessRegisterPage() {
   const router = useRouter();
+  const { executeRecaptcha, isReady } = useRecaptcha();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -45,6 +47,9 @@ export default function BusinessRegisterPage() {
       // Validate form data
       const validatedData = registerSchema.parse(formData);
 
+      // Execute reCAPTCHA
+      const recaptchaToken = await executeRecaptcha('register');
+
       // Call register API
       const response = await fetch('/api/business/signup', {
         method: 'POST',
@@ -57,6 +62,7 @@ export default function BusinessRegisterPage() {
           password: validatedData.password,
           businessName: validatedData.businessName,
           phone: validatedData.phone,
+          recaptchaToken,
         }),
       });
 

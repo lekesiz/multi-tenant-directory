@@ -4,11 +4,29 @@ import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { createEmailVerificationToken } from '@/lib/verification';
 import { sendVerificationEmail } from '@/lib/email';
+import { validateRecaptcha } from '@/lib/recaptcha';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, password, businessName, phone } = body;
+    const { name, email, password, businessName, phone, recaptchaToken } = body;
+
+    // Verify reCAPTCHA token
+    const recaptchaValidation = await validateRecaptcha(recaptchaToken, 'register', 0.5);
+    if (!recaptchaValidation.valid) {
+      logger.warn('reCAPTCHA validation failed', {
+        email,
+        error: recaptchaValidation.error,
+        score: recaptchaValidation.score,
+      });
+      return NextResponse.json(
+        {
+          error: 'Vérification de sécurité échouée. Veuillez réessayer.',
+          details: recaptchaValidation.error,
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate required fields
     if (!name || !email || !password || !businessName) {
