@@ -49,6 +49,7 @@ input,
   color: #111827 !important; /* gray-900 - Extremely dark for maximum readability */
   font-weight: 500 !important; /* Medium weight for better visibility */
   -webkit-text-fill-color: #111827 !important; /* Force color in webkit browsers */
+  caret-color: #2563eb !important; /* blue-600 - Highly visible cursor/caret */
 }
 
 /* Button Text - Ensure High Contrast */
@@ -133,6 +134,7 @@ select:focus {
   textarea,
   select {
     color: #f3f4f6 !important; /* gray-100 - Light text on dark background */
+    caret-color: #60a5fa !important; /* blue-400 - Visible cursor in dark mode */
     /* Background color NOT forced - let Tailwind classes control it */
   }
 
@@ -170,6 +172,7 @@ select:focus {
 .prose {
   max-width: none;
   color: inherit;
+  caret-color: #2563eb; /* blue-600 - Visible cursor in editor */
 }
 
 .prose p {
