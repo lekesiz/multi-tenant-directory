@@ -7,6 +7,7 @@ import BusinessHoursForm from './BusinessHoursForm';
 import AIDescriptionGenerator from './AIDescriptionGenerator';
 import RichTextEditor from './RichTextEditor';
 import KeywordSuggestions from './KeywordSuggestions';
+import { slugify } from '@/lib/utils';
 
 interface Company {
   id: number;
@@ -303,16 +304,23 @@ export default function CompanyEditForm({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   URL Slug *
+                  <span className="text-xs text-gray-500 font-normal ml-2">
+                    (Modifiable)
+                  </span>
                 </label>
                 <input
                   type="text"
                   value={formData.slug}
                   onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
+                    setFormData({ ...formData, slug: slugify(e.target.value) })
                   }
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  placeholder="ex: mon-entreprise"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  URL finale: /companies/{formData.slug || 'votre-slug'}
+                </p>
               </div>
 
               <div className="md:col-span-2">
