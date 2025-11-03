@@ -9,11 +9,13 @@ import {
   ClockIcon,
   StarIcon,
   ChartBarIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Aperçu', href: '/business/dashboard', icon: HomeIcon },
   { name: 'Mon Profil', href: '/business/dashboard/profile', icon: UserIcon },
+  { name: 'Activités', href: '/business/dashboard/activities', icon: SparklesIcon },
   { name: 'Photos', href: '/business/dashboard/photos', icon: PhotoIcon },
   { name: 'Horaires', href: '/business/dashboard/hours', icon: ClockIcon },
   { name: 'Avis', href: '/business/dashboard/reviews', icon: StarIcon },
