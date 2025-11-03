@@ -40,7 +40,7 @@ export default function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class: 'prose max-w-none focus:outline-none min-h-[200px] px-4 py-2',
+        class: 'prose prose-slate max-w-none focus:outline-none min-h-[200px] px-4 py-2 prose-headings:text-gray-900 prose-p:text-gray-800 prose-strong:text-gray-900 prose-li:text-gray-800 prose-a:text-blue-600',
       },
     },
   });
