@@ -7,34 +7,35 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 async function CategoriesList() {
-  // Fetch categories with parent-child relationship
-  const categories = await prisma.category.findMany({
-    where: {
-      parentId: null, // Only get top-level categories
-    },
-    include: {
-      children: {
-        include: {
-          _count: {
-            select: {
-              companyCategories: true,
+  try {
+    // Fetch categories with parent-child relationship
+    const categories = await prisma.category.findMany({
+      where: {
+        parentId: null, // Only get top-level categories
+      },
+      include: {
+        children: {
+          include: {
+            _count: {
+              select: {
+                companyCategories: true,
+              },
             },
           },
+          orderBy: {
+            order: 'asc',
+          },
         },
-        orderBy: {
-          order: 'asc',
+        _count: {
+          select: {
+            companyCategories: true,
+          },
         },
       },
-      _count: {
-        select: {
-          companyCategories: true,
-        },
+      orderBy: {
+        order: 'asc',
       },
-    },
-    orderBy: {
-      order: 'asc',
-    },
-  });
+    });
 
   return (
     <div className="overflow-x-auto">
@@ -116,6 +117,20 @@ async function CategoriesList() {
       </table>
     </div>
   );
+  } catch (error) {
+    console.error('Categories fetch error:', error);
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <h2 className="text-xl font-semibold text-red-800 mb-2">Erreur de chargement</h2>
+        <p className="text-red-600">
+          Impossible de charger les catégories. Veuillez réessayer plus tard.
+        </p>
+        <pre className="mt-4 text-sm text-gray-700 bg-white p-4 rounded overflow-auto">
+          {error instanceof Error ? error.message : 'Unknown error'}
+        </pre>
+      </div>
+    );
+  }
 }
 
 export default function AdminCategoriesPage() {
