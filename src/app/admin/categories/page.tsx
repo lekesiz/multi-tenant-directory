@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 
@@ -60,9 +60,9 @@ async function CategoriesList() {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {categories.map((category) => (
-            <>
+            <React.Fragment key={category.id}>
               {/* Parent Category */}
-              <tr key={category.id} className="bg-white">
+              <tr className="bg-white">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {category.slug}
                 </td>
@@ -110,7 +110,7 @@ async function CategoriesList() {
                   </td>
                 </tr>
               ))}
-            </>
+            </React.Fragment>
           ))}
         </tbody>
       </table>
