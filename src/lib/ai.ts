@@ -457,7 +457,7 @@ export async function generateText(
   options?: { model?: string; temperature?: number; maxTokens?: number }
 ): Promise<string> {
   const response = await callAI(prompt);
-  if (\!response.success) {
+  if (!response.success) {
     throw new Error(response.error || "Failed to generate text");
   }
   return response.content;
