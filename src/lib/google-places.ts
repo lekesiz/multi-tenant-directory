@@ -6,6 +6,82 @@ const prisma = new PrismaClient();
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 
+/**
+ * Parse Google's weekday_text format to our BusinessHours format
+ * Example: ["Monday: 9:00 AM – 6:00 PM", "Tuesday: Closed", ...]
+ */
+function parseGoogleBusinessHours(weekdayText: string[]) {
+  const daysMap: Record<string, string> = {
+    'Monday': 'monday',
+    'Tuesday': 'tuesday',
+    'Wednesday': 'wednesday',
+    'Thursday': 'thursday',
+    'Friday': 'friday',
+    'Saturday': 'saturday',
+    'Sunday': 'sunday',
+    'Lundi': 'monday',
+    'Mardi': 'tuesday',
+    'Mercredi': 'wednesday',
+    'Jeudi': 'thursday',
+    'Vendredi': 'friday',
+    'Samedi': 'saturday',
+    'Dimanche': 'sunday',
+  };
+
+  const hours: Record<string, any> = {};
+
+  weekdayText.forEach((text) => {
+    // Parse "Monday: 9:00 AM – 6:00 PM" or "Monday: Closed"
+    const match = text.match(/^([^:]+):\s*(.+)$/);
+    if (!match) return;
+
+    const [, dayName, timeStr] = match;
+    const dayKey = daysMap[dayName.trim()];
+    if (!dayKey) return;
+
+    // Check if closed
+    if (timeStr.toLowerCase().includes('closed') || timeStr.toLowerCase().includes('fermé')) {
+      hours[dayKey] = { closed: true, shifts: [] };
+      return;
+    }
+
+    // Parse time range: "9:00 AM – 6:00 PM" or "9:00 – 18:00"
+    const timeMatch = timeStr.match(/(\d{1,2}:\d{2})\s*(?:AM|PM)?\s*[–-]\s*(\d{1,2}:\d{2})\s*(?:AM|PM)?/i);
+    if (timeMatch) {
+      let [, openTime, closeTime] = timeMatch;
+
+      // Convert 12-hour to 24-hour if needed
+      if (timeStr.includes('AM') || timeStr.includes('PM')) {
+        openTime = convertTo24Hour(openTime, timeStr.includes('AM', timeStr.indexOf(openTime)));
+        closeTime = convertTo24Hour(closeTime, timeStr.includes('PM', timeStr.indexOf(closeTime)));
+      }
+
+      hours[dayKey] = {
+        closed: false,
+        shifts: [{ open: openTime, close: closeTime }]
+      };
+    }
+  });
+
+  return hours;
+}
+
+/**
+ * Convert 12-hour time to 24-hour format
+ */
+function convertTo24Hour(time: string, isPM: boolean): string {
+  const [hours, minutes] = time.split(':').map(Number);
+  let hour24 = hours;
+
+  if (isPM && hours !== 12) {
+    hour24 = hours + 12;
+  } else if (!isPM && hours === 12) {
+    hour24 = 0;
+  }
+
+  return `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
 interface PlaceSearchResult {
   place_id: string;
   name: string;
@@ -229,20 +305,59 @@ export async function syncCompanyReviews(companyId: number): Promise<{
     // Calculate rating distribution from reviews
     const ratingDistribution = calculateRatingDistribution(placeDetails.reviews);
 
-    // Update company rating, review count, and rating distribution
+    // Parse and sync business hours from Google if available
+    let parsedHours = null;
+    if (placeDetails.opening_hours?.weekday_text && placeDetails.opening_hours.weekday_text.length > 0) {
+      try {
+        parsedHours = parseGoogleBusinessHours(placeDetails.opening_hours.weekday_text);
+
+        // Sync to BusinessHours table
+        await prisma.businessHours.upsert({
+          where: { companyId },
+          update: {
+            monday: parsedHours.monday || null,
+            tuesday: parsedHours.tuesday || null,
+            wednesday: parsedHours.wednesday || null,
+            thursday: parsedHours.thursday || null,
+            friday: parsedHours.friday || null,
+            saturday: parsedHours.saturday || null,
+            sunday: parsedHours.sunday || null,
+          },
+          create: {
+            companyId,
+            monday: parsedHours.monday || null,
+            tuesday: parsedHours.tuesday || null,
+            wednesday: parsedHours.wednesday || null,
+            thursday: parsedHours.thursday || null,
+            friday: parsedHours.friday || null,
+            saturday: parsedHours.saturday || null,
+            sunday: parsedHours.sunday || null,
+            specialHours: [],
+          },
+        });
+
+        logger.info(`Synced business hours for company ${companyId} from Google`);
+      } catch (error) {
+        logger.error('Error syncing business hours:', error);
+        // Don't fail the entire sync if hours sync fails
+      }
+    }
+
+    // Update company rating, review count, rating distribution, and business hours
     await prisma.company.update({
       where: { id: companyId },
       data: {
         rating: placeDetails.rating,
         reviewCount: placeDetails.user_ratings_total || 0,
         ratingDistribution: ratingDistribution as any,
+        businessHours: parsedHours as any,
         lastSyncedAt: new Date(),
       },
     });
 
     return {
       success: true,
-      message: `Successfully synced ${reviewsAdded} new reviews`,
+      message: `Successfully synced ${reviewsAdded} new reviews${parsedHours ? ' and business hours' : ''}`,
       reviewsAdded,
     };
   } catch (error) {
