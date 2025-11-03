@@ -15,6 +15,7 @@ import ContactForm from '@/components/ContactForm';
 import { SocialShareButtons } from '@/components/SocialShareButtons';
 import RelatedCompanies from '@/components/RelatedCompanies';
 import MobileActions from '@/components/MobileActions';
+import SafeHTML from '@/components/SafeHTML';
 import { Metadata } from 'next';
 
 // ISR: Revalidate every 300 seconds (5 minutes)
@@ -357,9 +358,10 @@ export default async function CompanyDetailPage({
                   <h2 className="text-xl font-semibold text-gray-900 mb-3">
                     À propos
                   </h2>
-                  <p className="text-gray-700 whitespace-pre-line">
-                    {content.customDescription}
-                  </p>
+                  <SafeHTML
+                    html={content.customDescription}
+                    className="text-gray-700"
+                  />
                 </div>
               )}
 

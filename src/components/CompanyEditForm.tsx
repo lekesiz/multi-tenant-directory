@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BusinessHoursForm from './BusinessHoursForm';
 import AIDescriptionGenerator from './AIDescriptionGenerator';
+import RichTextEditor from './RichTextEditor';
 
 interface Company {
   id: number;
@@ -659,7 +660,7 @@ export default function CompanyEditForm({
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700">
-                          Özel Açıklama
+                          Özel Açıklama (Zengin Metin Editörü)
                         </label>
                         <AIDescriptionGenerator
                           companyId={company.id}
@@ -678,20 +679,18 @@ export default function CompanyEditForm({
                           }
                         />
                       </div>
-                      <textarea
-                        value={settings.customDescription}
-                        onChange={(e) =>
+                      <RichTextEditor
+                        content={settings.customDescription}
+                        onChange={(html) =>
                           setDomainSettings({
                             ...domainSettings,
                             [domain.id]: {
                               ...settings,
-                              customDescription: e.target.value,
+                              customDescription: html,
                             },
                           })
                         }
-                        rows={4}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        placeholder={`${domain.name} için özel açıklama...`}
+                        placeholder={`${domain.name} için özel açıklama... (Resim, link ve zengin metin formatı ekleyebilirsiniz)`}
                       />
                     </div>
 
