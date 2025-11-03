@@ -6,21 +6,22 @@ import { requireAdmin } from '@/lib/auth-guard';
 import { z } from 'zod';
 
 // Validation schema for creating a company
+// Relaxed validation to be more forgiving with user input
 const createCompanySchema = z.object({
-  name: z.string().min(2, 'Company name must be at least 2 characters'),
+  name: z.string().min(1, 'Company name is required'),
   slug: z.string().min(2, 'Slug must be at least 2 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
   googlePlaceId: z.string().optional().nullable(),
-  address: z.string().min(3, 'Address must be at least 3 characters').optional().nullable(),
-  city: z.string().min(2, 'City must be at least 2 characters').optional().nullable(),
-  postalCode: z.string().regex(/^\d{5}$/, 'Postal code must be exactly 5 digits').optional().nullable(),
-  phone: z.string().min(10, 'Phone must be at least 10 characters').optional().nullable(),
-  email: z.string().email('Invalid email address').optional().nullable(),
-  website: z.string().url('Invalid website URL').optional().nullable().or(z.literal('')),
+  address: z.string().optional().nullable().transform(v => v?.trim() || null),
+  city: z.string().optional().nullable().transform(v => v?.trim() || null),
+  postalCode: z.string().optional().nullable().transform(v => v?.trim() || null), // Accept any format
+  phone: z.string().optional().nullable().transform(v => v?.trim() || null),
+  email: z.string().email('Invalid email address').optional().nullable().or(z.literal('')).transform(v => v === '' ? null : v),
+  website: z.string().optional().nullable().or(z.literal('')).transform(v => v === '' ? null : v),
   latitude: z.number().min(-90).max(90).optional().nullable(),
   longitude: z.number().min(-180).max(180).optional().nullable(),
   categories: z.array(z.string()).optional().nullable(),
-  logoUrl: z.string().url('Invalid logo URL').optional().nullable().or(z.literal('')),
-  coverImageUrl: z.string().url('Invalid cover image URL').optional().nullable().or(z.literal('')),
+  logoUrl: z.string().optional().nullable().or(z.literal('')).transform(v => v === '' ? null : v),
+  coverImageUrl: z.string().optional().nullable().or(z.literal('')).transform(v => v === '' ? null : v),
   businessHours: z.array(z.string()).optional().nullable(),
 });
 
