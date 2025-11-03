@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Download, Search } from 'lucide-react';
 
 interface Lead {
   id: string;
@@ -34,22 +35,42 @@ interface Lead {
 
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'new' | 'assigned' | 'won' | 'lost'>('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchLeads();
   }, [filter]);
+
+  // Filter leads based on search query
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredLeads(leads);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = leads.filter(lead =>
+        lead.phone.toLowerCase().includes(query) ||
+        lead.email?.toLowerCase().includes(query) ||
+        lead.postalCode.toLowerCase().includes(query) ||
+        lead.category?.frenchName.toLowerCase().includes(query) ||
+        lead.note?.toLowerCase().includes(query)
+      );
+      setFilteredLeads(filtered);
+    }
+  }, [searchQuery, leads]);
 
   const fetchLeads = async () => {
     try {
       const url = filter === 'all' ? '/api/leads' : `/api/leads?status=${filter}`;
       const response = await fetch(url);
       const data = await response.json();
-      
+
       if (response.ok) {
         setLeads(data.leads || []);
+        setFilteredLeads(data.leads || []);
       } else {
         toast.error('Erreur lors du chargement des leads');
       }
@@ -163,31 +184,76 @@ export default function AdminLeadsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestion des Leads</h1>
           <p className="text-gray-600 mt-2">
             Gérez les demandes de devis et leur distribution aux entreprises
           </p>
         </div>
-        <div className="flex space-x-2">
-          {(['all', 'new', 'assigned', 'won', 'lost'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                filter === status
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {status === 'all' ? 'Tous' : 
-               status === 'new' ? 'Nouveaux' :
-               status === 'assigned' ? 'Assignés' :
-               status === 'won' ? 'Gagnés' : 'Perdus'}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+          <div className="flex space-x-2">
+            {(['all', 'new', 'assigned', 'won', 'lost'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${
+                  filter === status
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {status === 'all' ? 'Tous' :
+                 status === 'new' ? 'Nouveaux' :
+                 status === 'assigned' ? 'Assignés' :
+                 status === 'won' ? 'Gagnés' : 'Perdus'}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
+
+      {/* Search and Export */}
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-white rounded-lg shadow p-4">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Rechercher par téléphone, email, code postal..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        <button
+          onClick={() => {
+            const csvContent = [
+              ['Date', 'Catégorie', 'Code Postal', 'Téléphone', 'Email', 'Statut', 'Assignations'].join(','),
+              ...filteredLeads.map(lead => [
+                formatDate(lead.createdAt),
+                lead.category?.frenchName || 'N/A',
+                lead.postalCode,
+                lead.phone,
+                lead.email || 'N/A',
+                getStatusText(lead.status),
+                lead.assignments.length
+              ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `leads_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            toast.success('Export réussi');
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 whitespace-nowrap"
+        >
+          <Download className="h-4 w-4" />
+          Exporter CSV
+        </button>
       </div>
 
       {/* Stats Cards */}
@@ -219,12 +285,28 @@ export default function AdminLeadsPage() {
       </div>
 
       {/* Leads List */}
-      {leads.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Aucun lead trouvé</p>
+      {filteredLeads.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <p className="text-gray-500">
+            {searchQuery ? 'Aucun lead trouvé pour cette recherche' : 'Aucun lead trouvé'}
+          </p>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="mt-4 text-blue-600 hover:text-blue-800"
+            >
+              Réinitialiser la recherche
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <p className="text-sm text-gray-600">
+              {filteredLeads.length} lead{filteredLeads.length > 1 ? 's' : ''} trouvé{filteredLeads.length > 1 ? 's' : ''}
+              {searchQuery && ` pour "${searchQuery}"`}
+            </p>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -250,7 +332,7 @@ export default function AdminLeadsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {leads.map((lead) => (
+                {filteredLeads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
