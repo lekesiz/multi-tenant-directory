@@ -2,6 +2,8 @@ import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { createEmailVerificationToken } from '@/lib/verification';
+import { sendVerificationEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,11 +73,35 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Create email verification token and send verification email
+    let verificationEmailSent = false;
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const verificationTokenRecord = await createEmailVerificationToken(email);
+        const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/business/verify-email?token=${verificationTokenRecord.token}`;
+
+        await sendVerificationEmail({
+          to: email,
+          verificationUrl,
+          firstName: firstName || undefined,
+        });
+
+        verificationEmailSent = true;
+        logger.info('Verification email sent', { email, businessOwnerId: businessOwner.id });
+      } catch (error) {
+        logger.error('Error sending verification email', error);
+        // Don't fail registration if email fails - user can resend later
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Compte créé avec succès. En attente d\'approbation.',
+      message: verificationEmailSent
+        ? 'Compte créé avec succès. Vérifiez votre email pour activer votre compte.'
+        : 'Compte créé avec succès. En attente d\'approbation.',
       businessOwnerId: businessOwner.id,
       companyId: company.id,
+      requiresEmailVerification: !verificationEmailSent,
     });
   } catch (error) {
     logger.error('Registration error:', error);

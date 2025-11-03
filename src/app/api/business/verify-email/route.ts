@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendVerificationEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
+import { verifyToken, deleteVerificationToken } from '@/lib/verification';
 
 
 // Verify email with token
@@ -17,31 +18,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Decode token
-    let businessOwnerId: string;
-    let timestampStr: string;
-    
-    try {
-      const decoded = Buffer.from(token, 'base64').toString('utf-8');
-      [businessOwnerId, timestampStr] = decoded.split(':');
-      
-      // Check if token is expired (24 hours)
-      if (Date.now() - parseInt(timestampStr) > 24 * 60 * 60 * 1000) {
-        return NextResponse.json(
-          { error: 'Le lien de vérification a expiré' },
-          { status: 400 }
-        );
-      }
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Token invalide' },
-        { status: 400 }
+    // Verify the token using our new verification system
+    const verification = await verifyToken(token, 'email_verification');
+
+    if (!verification.valid) {
+      return NextResponse.redirect(
+        new URL(`/business/login?message=invalid-token&error=${encodeURIComponent(verification.error || 'Token invalide')}`, request.url)
       );
     }
 
     // Find business owner
     const businessOwner = await prisma.businessOwner.findUnique({
-      where: { id: businessOwnerId },
+      where: { email: verification.email },
     });
 
     if (!businessOwner) {
@@ -51,8 +39,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (businessOwner.emailVerified) {
-      // Already verified, redirect to login
+    if (businessOwner.isEmailVerified && businessOwner.emailVerified) {
+      // Already verified, delete token and redirect to login
+      if (verification.tokenId) {
+        await deleteVerificationToken(verification.tokenId);
+      }
       return NextResponse.redirect(
         new URL('/business/login?message=already-verified', request.url)
       );
@@ -60,9 +51,19 @@ export async function GET(request: NextRequest) {
 
     // Update email verification status
     await prisma.businessOwner.update({
-      where: { id: businessOwnerId },
-      data: { emailVerified: new Date() },
+      where: { id: businessOwner.id },
+      data: {
+        emailVerified: new Date(),
+        isEmailVerified: true,
+      },
     });
+
+    // Delete the verification token after successful verification
+    if (verification.tokenId) {
+      await deleteVerificationToken(verification.tokenId);
+    }
+
+    logger.info('Email verified successfully', { email: businessOwner.email });
 
     // Redirect to login with success message
     return NextResponse.redirect(
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (businessOwner.emailVerified) {
+    if (businessOwner.isEmailVerified && businessOwner.emailVerified) {
       return NextResponse.json({
         success: true,
         message: 'Cet email est déjà vérifié.',
@@ -112,9 +113,10 @@ export async function POST(request: NextRequest) {
     // Generate new verification token and send email
     if (process.env.RESEND_API_KEY) {
       try {
-        const verificationToken = Buffer.from(`${businessOwner.id}:${Date.now()}`).toString('base64');
-        const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/business/verify-email?token=${verificationToken}`;
-        
+        const { createEmailVerificationToken } = await import('@/lib/verification');
+        const verificationTokenRecord = await createEmailVerificationToken(businessOwner.email);
+        const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/business/verify-email?token=${verificationTokenRecord.token}`;
+
         await sendVerificationEmail({
           to: businessOwner.email,
           verificationUrl,

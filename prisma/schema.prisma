@@ -1532,3 +1532,18 @@ model Activity {
   @@index([companyId, status, publishedAt])
   @@map("activities")
 }
+
+// Email verification tokens for business owners
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  type      String   @default("email_verification") // email_verification, password_reset
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("verification_tokens")
+}
