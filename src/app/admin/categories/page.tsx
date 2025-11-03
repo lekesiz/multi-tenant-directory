@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 
 // Force dynamic rendering to avoid build-time database queries
+// Updated: 2025-11-03 - Prisma Client regeneration required
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
