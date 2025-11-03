@@ -2,6 +2,10 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import CategoryEditForm from '@/components/CategoryEditForm';
 
+// Force dynamic rendering to avoid build-time database queries
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 type PageProps = {
   params: Promise<{ id: string }>;
 };
