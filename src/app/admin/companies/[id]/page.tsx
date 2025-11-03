@@ -23,7 +23,32 @@ export default async function EditCompanyPage({
 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      address: true,
+      city: true,
+      postalCode: true,
+      phone: true,
+      email: true,
+      website: true,
+      categories: true, // Include categories array
+      logoUrl: true,
+      coverImageUrl: true,
+      latitude: true,
+      longitude: true,
+      rating: true,
+      reviewCount: true,
+      googlePlaceId: true,
+      ratingDistribution: true,
+      lastSyncedAt: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+      siren: true,
+      siret: true,
+      legalForm: true,
       content: {
         include: {
           domain: true,
