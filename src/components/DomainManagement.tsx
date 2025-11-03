@@ -301,6 +301,12 @@ export default function DomainManagement({
 
                 <div className="flex gap-2">
                   <a
+                    href={`/admin/domains/${domain.id}`}
+                    className="flex-1 text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Gérer les entreprises
+                  </a>
+                  <a
                     href={`https://${domain.name}`}
                     target="_blank"
                     rel="noopener noreferrer"

@@ -34,7 +34,7 @@ export default async function DomainDetailPage({ params }: PageProps) {
         include: {
           company: {
             include: {
-              categories: {
+              companyCategories: {
                 include: {
                   category: true,
                 },
@@ -58,7 +58,7 @@ export default async function DomainDetailPage({ params }: PageProps) {
   // Fetch all companies for assignment
   const allCompanies = await prisma.company.findMany({
     include: {
-      categories: {
+      companyCategories: {
         include: {
           category: true,
         },
