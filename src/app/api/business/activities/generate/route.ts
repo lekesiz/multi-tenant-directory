@@ -133,7 +133,7 @@ Generate content that is:
 
     // Generate content using AI
     let generatedContent: any;
-    let aiModel = 'gemini';
+    let aiModel: 'gemini' = 'gemini';
 
     try {
       const aiResponse = await generateText(systemPrompt, userPrompt);
