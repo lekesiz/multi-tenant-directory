@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
     const slug = await generateUniqueSlug(data.title, companyId);
 
     // Create activity
-    // @ts-expect-error - TODO: Fix field name mismatches between migration and schema
     const activity = await prisma.activity.create({
       data: {
         companyId,
@@ -82,23 +81,15 @@ export async function POST(req: NextRequest) {
         content: data.content,
         excerpt: data.excerpt,
         type: data.type,
-        // postType: data.postType || 'daily', // DISABLED - field not in schema
         status: data.status || 'draft',
-        imageUrl: data.imageUrl,
-        imageCaption: data.imageCaption,
-        videoUrl: data.videoUrl,
-        videoThumbnail: data.videoThumbnail,
-        mediaUrls: data.mediaUrls || [],
+        featuredImage: data.imageUrl || null,
+        images: data.mediaUrls || [],
+        videoUrl: data.videoUrl || null,
         tags: data.tags || [],
-        category: data.category,
         metaTitle: data.metaTitle || data.title,
         metaDescription: data.metaDescription || data.excerpt,
-        metaKeywords: data.metaKeywords || [],
+        keywords: data.metaKeywords || [],
         scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : null,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
-        authorId: session.user.id,
-        authorName: session.user.name || session.user.email,
-        sharedOn: [],
         publishedAt: data.status === 'published' ? new Date() : null,
       },
     });

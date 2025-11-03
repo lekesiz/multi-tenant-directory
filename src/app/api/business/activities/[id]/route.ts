@@ -116,29 +116,28 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     const data = validation.data;
 
-    // Update activity
+    // Update activity - using correct field names from migration
     const updateData: any = {};
 
     if (data.title !== undefined) updateData.title = data.title;
     if (data.content !== undefined) updateData.content = data.content;
     if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
     if (data.type !== undefined) updateData.type = data.type;
-    if (data.postType !== undefined) updateData.postType = data.postType;
+    // postType field doesn't exist in migration - removed
     if (data.status !== undefined) updateData.status = data.status;
-    if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
-    if (data.imageCaption !== undefined) updateData.imageCaption = data.imageCaption;
+    if (data.imageUrl !== undefined) updateData.featuredImage = data.imageUrl; // FIXED: imageUrl -> featuredImage
+    // imageCaption doesn't exist in migration - removed
     if (data.videoUrl !== undefined) updateData.videoUrl = data.videoUrl;
-    if (data.videoThumbnail !== undefined) updateData.videoThumbnail = data.videoThumbnail;
-    if (data.mediaUrls !== undefined) updateData.mediaUrls = data.mediaUrls;
+    // videoThumbnail doesn't exist in migration - removed
+    if (data.mediaUrls !== undefined) updateData.images = data.mediaUrls; // FIXED: mediaUrls -> images
     if (data.tags !== undefined) updateData.tags = data.tags;
-    if (data.category !== undefined) updateData.category = data.category;
+    // category doesn't exist in migration - removed
     if (data.metaTitle !== undefined) updateData.metaTitle = data.metaTitle;
     if (data.metaDescription !== undefined) updateData.metaDescription = data.metaDescription;
-    if (data.metaKeywords !== undefined) updateData.metaKeywords = data.metaKeywords;
+    if (data.metaKeywords !== undefined) updateData.keywords = data.metaKeywords; // FIXED: metaKeywords -> keywords
     if (data.scheduledFor !== undefined)
       updateData.scheduledFor = data.scheduledFor ? new Date(data.scheduledFor) : null;
-    if (data.expiresAt !== undefined)
-      updateData.expiresAt = data.expiresAt ? new Date(data.expiresAt) : null;
+    // expiresAt doesn't exist in migration - removed
 
     const updatedActivity = await prisma.activity.update({
       where: { id },

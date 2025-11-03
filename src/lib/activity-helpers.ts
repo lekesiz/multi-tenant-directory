@@ -206,10 +206,10 @@ export async function enhanceActivityWithMetadata(
  * Calculate engagement rate
  */
 export function calculateEngagementRate(activity: Activity): number {
-  if (activity.views === 0) return 0;
+  if (activity.viewCount === 0) return 0;
 
-  const totalEngagements = activity.likes + activity.shares + activity.comments;
-  return (totalEngagements / activity.views) * 100;
+  const totalEngagements = activity.likeCount + activity.shareCount + activity.commentCount;
+  return (totalEngagements / activity.viewCount) * 100;
 }
 
 /**
@@ -224,10 +224,10 @@ export async function getActivityAnalytics(companyId: number): Promise<ActivityA
   const draftActivities = activities.filter((a) => a.status === 'draft');
   const scheduledActivities = activities.filter((a) => a.status === 'scheduled');
 
-  const totalViews = activities.reduce((sum, a) => sum + a.views, 0);
-  const totalLikes = activities.reduce((sum, a) => sum + a.likes, 0);
-  const totalShares = activities.reduce((sum, a) => sum + a.shares, 0);
-  const totalComments = activities.reduce((sum, a) => sum + a.comments, 0);
+  const totalViews = activities.reduce((sum, a) => sum + a.viewCount, 0);
+  const totalLikes = activities.reduce((sum, a) => sum + a.likeCount, 0);
+  const totalShares = activities.reduce((sum, a) => sum + a.shareCount, 0);
+  const totalComments = activities.reduce((sum, a) => sum + a.commentCount, 0);
 
   const avgEngagementRate =
     publishedActivities.length > 0
@@ -238,7 +238,7 @@ export async function getActivityAnalytics(companyId: number): Promise<ActivityA
   // Top performing activities
   const topPerforming = await prisma.activity.findMany({
     where: { companyId, status: 'published' },
-    orderBy: { views: 'desc' },
+    orderBy: { viewCount: 'desc' },
     take: 5,
   });
 
@@ -297,7 +297,7 @@ function getActivityByMonth(
       months[monthKey] = { count: 0, views: 0 };
     }
     months[monthKey].count++;
-    months[monthKey].views += activity.views;
+    months[monthKey].views += activity.viewCount;
   });
 
   return Object.entries(months)
@@ -312,7 +312,7 @@ function getActivityByMonth(
 export async function incrementActivityViews(activityId: string): Promise<void> {
   await prisma.activity.update({
     where: { id: activityId },
-    data: { views: { increment: 1 } },
+    data: { viewCount: { increment: 1 } },
   });
 }
 
@@ -344,21 +344,20 @@ export async function checkScheduledActivities(): Promise<void> {
 
 /**
  * Archive expired activities
+ * NOTE: expiresAt field doesn't exist in migration - this function is disabled
  */
 export async function archiveExpiredActivities(): Promise<void> {
-  const now = new Date();
-
-  await prisma.activity.updateMany({
-    where: {
-      status: 'published',
-      expiresAt: {
-        lte: now,
-      },
-    },
-    data: {
-      status: 'archived',
-    },
-  });
+  // DISABLED: expiresAt field not in database schema
+  // const now = new Date();
+  // await prisma.activity.updateMany({
+  //   where: {
+  //     status: 'published',
+  //     expiresAt: { lte: now },
+  //   },
+  //   data: {
+  //     status: 'archived',
+  //   },
+  // });
 }
 
 /**
