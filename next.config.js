@@ -6,6 +6,9 @@ const nextConfig = {
   // Performance optimizations
   poweredByHeader: false,
 
+  // Output configuration for Vercel
+  output: 'standalone',
+
   // Include Prisma engine binaries in deployment
   outputFileTracingIncludes: {
     '/': ['./node_modules/.prisma/client/**/*', './prisma/**/*'],
