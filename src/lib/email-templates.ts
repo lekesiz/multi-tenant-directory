@@ -1,343 +1,271 @@
-import { Resend } from 'resend';
-import { logger } from '@/lib/logger';
+/**
+ * Email template helper functions
+ * Generates HTML email templates for various notifications
+ */
 
-// Lazy initialization to avoid build-time errors
-let resend: Resend | null = null;
+interface BusinessOwnerInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  businessName: string;
+  createdAt: Date;
+}
 
-function getResendClient() {
+/**
+ * Generate HTML email template for admin notification when a new business registers
+ */
+export function getAdminNotificationEmailHtml(ownerInfo: BusinessOwnerInfo): string {
+  const { firstName, lastName, email, phone, businessName, createdAt } = ownerInfo;
+  const registrationDate = new Date(createdAt).toLocaleString('fr-FR', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+  });
+
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nouvelle inscription entreprise</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2 4px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px 8px 0 0;
+      margin: -30px -30px 30px -30px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .info-section {
+      background-color: #f8f9fa;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .info-row {
+      display: flex;
+      margin: 10px 0;
+    }
+    .info-label {
+      font-weight: 600;
+      min-width: 150px;
+      color: #555;
+    }
+    .info-value {
+      color: #333;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      margin: 20px 0;
+      transition: transform 0.2s;
+    }
+    .button:hover {
+      transform: translateY(-2px);
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background-color: #ffc107;
+      color: #000;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔔 Nouvelle inscription entreprise</h1>
+    </div>
+
+    <p>Une nouvelle entreprise vient de s'inscrire sur la plateforme et attend votre approbation.</p>
+
+    <div class="info-section">
+      <h2 style="margin-top: 0; color: #667eea;">Informations du propriétaire</h2>
+
+      <div class="info-row">
+        <span class="info-label">Nom complet:</span>
+        <span class="info-value">${firstName} ${lastName}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Email:</span>
+        <span class="info-value"><a href="mailto:${email}" style="color: #667eea;">${email}</a></span>
+      </div>
+
+      ${phone ? `
+      <div class="info-row">
+        <span class="info-label">Téléphone:</span>
+        <span class="info-value"><a href="tel:${phone}" style="color: #667eea;">${phone}</a></span>
+      </div>
+      ` : ''}
+
+      <div class="info-row">
+        <span class="info-label">Date d'inscription:</span>
+        <span class="info-value">${registrationDate}</span>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h2 style="margin-top: 0; color: #667eea;">Informations de l'entreprise</h2>
+
+      <div class="info-row">
+        <span class="info-label">Nom de l'entreprise:</span>
+        <span class="info-value"><strong>${businessName}</strong></span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Statut:</span>
+        <span class="info-value">
+          En attente d'approbation
+          <span class="badge">ACTION REQUISE</span>
+        </span>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/admin/companies" class="button">
+        Gérer dans le panneau d'administration
+      </a>
+    </div>
+
+    <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 15px; margin: 20px 0;">
+      <strong style="color: #856404;">⚠️ Action requise:</strong>
+      <p style="margin: 10px 0 0 0; color: #856404;">
+        Veuillez vérifier les informations de l'entreprise et approuver ou rejeter l'inscription depuis votre panneau d'administration.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>Cet email a été envoyé automatiquement par le système Haguenau.pro</p>
+      <p style="font-size: 12px; color: #999;">
+        © ${new Date().getFullYear()} Haguenau.pro - Tous droits réservés
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * Generate plain text version for admin notification email
+ */
+export function getAdminNotificationEmailText(ownerInfo: BusinessOwnerInfo): string {
+  const { firstName, lastName, email, phone, businessName, createdAt } = ownerInfo;
+  const registrationDate = new Date(createdAt).toLocaleString('fr-FR', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+  });
+
+  return `
+NOUVELLE INSCRIPTION ENTREPRISE
+
+Une nouvelle entreprise vient de s'inscrire sur la plateforme et attend votre approbation.
+
+INFORMATIONS DU PROPRIÉTAIRE
+=============================
+Nom complet: ${firstName} ${lastName}
+Email: ${email}
+${phone ? `Téléphone: ${phone}` : ''}
+Date d'inscription: ${registrationDate}
+
+INFORMATIONS DE L'ENTREPRISE
+============================
+Nom de l'entreprise: ${businessName}
+Statut: En attente d'approbation
+
+ACTION REQUISE
+==============
+Veuillez vérifier les informations de l'entreprise et approuver ou rejeter l'inscription depuis votre panneau d'administration.
+
+Lien: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/admin/companies
+
+---
+Cet email a été envoyé automatiquement par le système Haguenau.pro
+© ${new Date().getFullYear()} Haguenau.pro - Tous droits réservés
+  `.trim();
+}
+
+/**
+ * Send admin notification email
+ */
+export async function sendAdminNotificationEmail(ownerInfo: BusinessOwnerInfo): Promise<boolean> {
+  // Get admin email from environment variable
+  const adminEmail = process.env.ADMIN_EMAIL;
+
+  if (!adminEmail) {
+    console.warn('ADMIN_EMAIL not configured, skipping admin notification');
+    return false;
+  }
+
+  // Only send if Resend is configured
   if (!process.env.RESEND_API_KEY) {
-    return null;
+    console.warn('RESEND_API_KEY not configured, skipping admin notification');
+    return false;
   }
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
-export interface LeadNotificationData {
-  lead: {
-    id: string;
-    postalCode: string;
-    phone: string;
-    email?: string | null;
-    note?: string | null;
-    category?: {
-      frenchName: string;
-    } | null;
-    createdAt: Date;
-  };
-  company: {
-    id: number;
-    name: string;
-    email?: string;
-  };
-  assignment: {
-    id: string;
-    score: number;
-    rank: number;
-  };
-}
-
-/**
- * Lead bildirimi email'i gönderir
- */
-export async function sendLeadNotificationEmail(
-  companyEmail: string,
-  leadData: LeadNotificationData
-): Promise<boolean> {
   try {
-    const client = getResendClient();
-    if (!client) {
-      logger.warn('⚠️ RESEND_API_KEY not configured. Email not sent.');
-      return false;
-    }
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const { lead, company, assignment } = leadData;
-
-    const emailContent = generateLeadNotificationEmail(leadData);
-
-    const result = await client.emails.send({
-      from: 'Haguenau Pro <noreply@haguenau.pro>',
-      to: [companyEmail],
-      subject: `🎯 Nouveau prospect pour ${company.name} - Score: ${assignment.score}/100`,
-      html: emailContent.html,
-      text: emailContent.text,
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@haguenau.pro',
+      to: adminEmail,
+      subject: `Nouvelle inscription: ${ownerInfo.businessName}`,
+      html: getAdminNotificationEmailHtml(ownerInfo),
+      text: getAdminNotificationEmailText(ownerInfo),
     });
 
-    if (result.error) {
-      logger.error('Failed to send lead notification email:', result.error);
-      return false;
-    }
-
-    logger.info(`Lead notification email sent to ${companyEmail} for lead ${lead.id}`);
     return true;
-
   } catch (error) {
-    logger.error('Error sending lead notification email:', error);
+    console.error('Error sending admin notification email:', error);
     return false;
   }
 }
 
 /**
- * Lead bildirimi email içeriği oluşturur
+ * Send lead notification email (stub for assignments dispatch)
+ * TODO: Implement proper lead notification email template
  */
-function generateLeadNotificationEmail(data: LeadNotificationData) {
-  const { lead, company, assignment } = data;
-  
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Nouveau Prospect - ${company.name}</title>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .lead-card { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .score-badge { background: #4CAF50; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; display: inline-block; }
-        .contact-info { background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0; }
-        .cta-button { background: #2196F3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; font-weight: bold; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
-        .urgency { background: #ffeb3b; padding: 10px; border-radius: 5px; margin: 10px 0; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>🎯 Nouveau Prospect!</h1>
-          <p>Un client potentiel vous attend</p>
-        </div>
-        
-        <div class="content">
-          <div class="lead-card">
-            <h2>Détails du Prospect</h2>
-            
-            <div style="margin: 15px 0;">
-              <strong>Catégorie:</strong> ${lead.category?.frenchName || 'Non spécifiée'}<br>
-              <strong>Localisation:</strong> ${lead.postalCode}<br>
-              <strong>Date de demande:</strong> ${new Date(lead.createdAt).toLocaleDateString('fr-FR')}
-            </div>
-
-            <div class="contact-info">
-              <h3>📞 Informations de Contact</h3>
-              <p><strong>Téléphone:</strong> ${lead.phone}</p>
-              ${lead.email ? `<p><strong>Email:</strong> ${lead.email}</p>` : ''}
-            </div>
-
-            ${lead.note ? `
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
-              <h3>📝 Description du Projet</h3>
-              <p>${lead.note}</p>
-            </div>
-            ` : ''}
-
-            <div style="text-align: center; margin: 20px 0;">
-              <span class="score-badge">Score de Correspondance: ${assignment.score}/100</span>
-              <p style="margin-top: 10px; color: #666;">
-                Vous êtes le ${assignment.rank}${assignment.rank === 1 ? 'er' : 'ème'} choix pour ce prospect
-              </p>
-            </div>
-
-            <div class="urgency">
-              <strong>⚡ Action Requise:</strong> Ce prospect a été envoyé à plusieurs entreprises. 
-              Répondez rapidement pour maximiser vos chances!
-            </div>
-
-            <div style="text-align: center;">
-              <a href="https://haguenau.pro/business/dashboard/leads" class="cta-button">
-                Voir dans mon Dashboard
-              </a>
-            </div>
-          </div>
-
-          <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3>💡 Conseils pour Répondre</h3>
-            <ul>
-              <li>Répondez dans les 2 heures pour maximiser vos chances</li>
-              <li>Soyez professionnel et précis dans votre réponse</li>
-              <li>Proposez un devis détaillé si possible</li>
-              <li>Mentionnez vos certifications et garanties</li>
-            </ul>
-          </div>
-
-          <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <strong>⚠️ Important:</strong> Ce prospect vous a été transmis dans le cadre de notre service de mise en relation. 
-            Respectez les règles RGPD et ne contactez le client que pour ce projet spécifique.
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Cet email a été envoyé automatiquement par Haguenau Pro</p>
-          <p>Si vous ne souhaitez plus recevoir ces notifications, vous pouvez modifier vos préférences dans votre dashboard.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  const text = `
-NOUVEAU PROSPECT POUR ${company.name.toUpperCase()}
-
-Détails du Prospect:
-- Catégorie: ${lead.category?.frenchName || 'Non spécifiée'}
-- Localisation: ${lead.postalCode}
-- Téléphone: ${lead.phone}
-- Email: ${lead.email || 'Non fourni'}
-- Date: ${new Date(lead.createdAt).toLocaleDateString('fr-FR')}
-
-${lead.note ? `Description: ${lead.note}` : ''}
-
-Score de Correspondance: ${assignment.score}/100
-Rang: ${assignment.rank}${assignment.rank === 1 ? 'er' : 'ème'} choix
-
-ACTION REQUISE: Répondez rapidement pour maximiser vos chances!
-
-Dashboard: https://haguenau.pro/business/dashboard/leads
-
----
-Haguenau Pro - Service de mise en relation professionnelle
-  `;
-
-  return { html, text };
-}
-
-/**
- * Lead kabul/red bildirimi email'i gönderir
- */
-export async function sendLeadResponseNotificationEmail(
-  leadEmail: string,
-  companyName: string,
-  response: 'accepted' | 'declined',
-  message?: string
-): Promise<boolean> {
-  try {
-    const client = getResendClient();
-    if (!client) {
-      logger.warn('⚠️ RESEND_API_KEY not configured. Email not sent.');
-      return false;
-    }
-
-    const subject = response === 'accepted'
-      ? `✅ ${companyName} a accepté votre demande`
-      : `❌ ${companyName} n'a pas pu traiter votre demande`;
-
-    const emailContent = generateLeadResponseEmail(companyName, response, message);
-
-    const result = await client.emails.send({
-      from: 'Haguenau Pro <noreply@haguenau.pro>',
-      to: [leadEmail],
-      subject,
-      html: emailContent.html,
-      text: emailContent.text,
-    });
-
-    if (result.error) {
-      logger.error('Failed to send lead response notification email:', result.error);
-      return false;
-    }
-
-    logger.info(`Lead response notification email sent to ${leadEmail}`);
-    return true;
-
-  } catch (error) {
-    logger.error('Error sending lead response notification email:', error);
-    return false;
-  }
-}
-
-/**
- * Lead yanıt bildirimi email içeriği oluşturur
- */
-function generateLeadResponseEmail(companyName: string, response: 'accepted' | 'declined', message?: string) {
-  const isAccepted = response === 'accepted';
-  
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Réponse à votre demande</title>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: ${isAccepted ? 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)' : 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'}; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .message-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>${isAccepted ? '✅ Demande Acceptée!' : '❌ Demande Non Traitée'}</h1>
-          <p>${companyName}</p>
-        </div>
-        
-        <div class="content">
-          <div class="message-box">
-            <h2>${isAccepted ? 'Excellente nouvelle!' : 'Désolé pour la déception'}</h2>
-            
-            <p>
-              ${isAccepted 
-                ? `L'entreprise <strong>${companyName}</strong> a accepté votre demande et devrait vous contacter prochainement.`
-                : `L'entreprise <strong>${companyName}</strong> n'a pas pu traiter votre demande à ce moment.`
-              }
-            </p>
-
-            ${message ? `
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0;">
-              <h3>Message de l'entreprise:</h3>
-              <p>${message}</p>
-            </div>
-            ` : ''}
-
-            ${isAccepted ? `
-            <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3>📞 Prochaines Étapes</h3>
-              <ul>
-                <li>Attendez l'appel ou l'email de l'entreprise</li>
-                <li>Préparez vos questions sur le projet</li>
-                <li>Demandez un devis détaillé</li>
-                <li>Vérifiez les certifications de l'entreprise</li>
-              </ul>
-            </div>
-            ` : `
-            <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3>💡 Ne vous découragez pas!</h3>
-              <p>Votre demande a été envoyée à plusieurs entreprises. D'autres réponses positives peuvent arriver.</p>
-            </div>
-            `}
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Cet email a été envoyé automatiquement par Haguenau Pro</p>
-          <p>Pour toute question, contactez-nous à support@haguenau.pro</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  const text = `
-${isAccepted ? 'DEMANDE ACCEPTÉE!' : 'DEMANDE NON TRAITÉE'}
-
-${companyName}
-
-${isAccepted 
-  ? `L'entreprise ${companyName} a accepté votre demande et devrait vous contacter prochainement.`
-  : `L'entreprise ${companyName} n'a pas pu traiter votre demande à ce moment.`
-}
-
-${message ? `Message: ${message}` : ''}
-
----
-Haguenau Pro - Service de mise en relation professionnelle
-  `;
-
-  return { html, text };
+export async function sendLeadNotificationEmail(email: string, data: any): Promise<boolean> {
+  console.warn('sendLeadNotificationEmail not fully implemented yet');
+  return false;
 }

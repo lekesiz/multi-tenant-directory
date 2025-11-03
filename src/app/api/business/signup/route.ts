@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { createEmailVerificationToken } from '@/lib/verification';
 import { sendVerificationEmail } from '@/lib/email';
 import { validateRecaptcha } from '@/lib/recaptcha';
+import { sendAdminNotificationEmail } from '@/lib/email-templates';
 
 export async function POST(request: NextRequest) {
   try {
@@ -110,6 +111,24 @@ export async function POST(request: NextRequest) {
         logger.error('Error sending verification email', error);
         // Don't fail registration if email fails - user can resend later
       }
+    }
+
+    // Send admin notification email (non-blocking)
+    if (process.env.ADMIN_EMAIL && process.env.RESEND_API_KEY) {
+      sendAdminNotificationEmail({
+        firstName,
+        lastName,
+        email,
+        phone: phone || undefined,
+        businessName,
+        createdAt: businessOwner.createdAt,
+      }).then((success) => {
+        if (success) {
+          logger.info('Admin notification sent', { businessOwnerId: businessOwner.id });
+        }
+      }).catch((error) => {
+        logger.error('Error sending admin notification', error);
+      });
     }
 
     return NextResponse.json({
