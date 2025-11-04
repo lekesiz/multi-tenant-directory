@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 
+// Force dynamic rendering because this page uses headers() for domain detection
+export const dynamic = 'force-dynamic';
+
 export default async function NotFound() {
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '/';

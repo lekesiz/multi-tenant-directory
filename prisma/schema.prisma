@@ -39,7 +39,7 @@ model Company {
 
   // Official French Government Data (Annuaire des Entreprises)
   siren          String?   @unique // 9-digit company identifier
-  siret          String?   @unique // 14-digit establishment identifier (SIREN + 5 digits)
+  // siret          String?   @unique // 14-digit establishment identifier (SIREN + 5 digits) - TODO: Add to database
   legalForm      String? // Legal form (SARL, SAS, etc.)
   legalStatus    String? // Legal status
   capital        Float? // Company capital
@@ -113,7 +113,7 @@ model Company {
   @@index([subscriptionStatus, subscriptionEnd])
   @@index([isFeatured])
   @@index([siren])
-  @@index([siret])
+  // @@index([siret]) - TODO: Add when siret column is added to database
   @@index([isVerified])
   @@index([nafCode])
   @@map("companies")

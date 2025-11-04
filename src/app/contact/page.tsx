@@ -4,6 +4,9 @@ import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import ContactForm from '@/components/ContactForm';
 
+// Force dynamic rendering because this page uses headers() for domain detection
+export const dynamic = 'force-dynamic';
+
 async function getDomainInfo() {
   const headersList = await headers();
   let domain = headersList.get('x-tenant-domain') || 'bas-rhin.pro';

@@ -26,6 +26,9 @@ import {
   getAverageRatingByDomain
 } from '@/lib/queries/review';
 
+// Force dynamic rendering because we use headers() for domain detection
+export const dynamic = 'force-dynamic';
+
 // ISR: Revalidate every 5 minutes for better performance
 export const revalidate = 300;
 

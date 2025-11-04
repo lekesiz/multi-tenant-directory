@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma';
 import { Star, MapPin, Phone, ExternalLink, Building2 } from 'lucide-react';
 
 // ISR: Revalidate every 5 minutes
+// Force dynamic rendering because this page uses headers() for domain detection
+export const dynamic = 'force-dynamic';
+
 export const revalidate = 300;
 
 interface SearchParams {
