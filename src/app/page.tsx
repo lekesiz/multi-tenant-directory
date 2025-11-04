@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { generateMetaTags } from '@/lib/seo';
 import StructuredData from '@/components/StructuredData';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
@@ -129,6 +130,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const { domainData } = await getCurrentDomainInfo();
+  
+  if (!domainData) {
+    notFound();
+  }
   
   // Fetch data in parallel for better performance
   const [stats, featuredCompanies] = await Promise.all([
