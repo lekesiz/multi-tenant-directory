@@ -4,6 +4,9 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { generateLLMSitemap } from '@/lib/llm-sitemap-generator';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 /**
  * LLM-specific Sitemap
  * Provides AI-friendly URLs for structured data extraction

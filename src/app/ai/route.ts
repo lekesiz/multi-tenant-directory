@@ -2,6 +2,9 @@ import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 /**
  * AI Crawling Policy - Machine-readable policy for AI crawlers and LLMs
  * Enables controlled access to platform data for AI training and aggregation
