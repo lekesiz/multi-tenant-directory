@@ -214,10 +214,21 @@ export async function getFeaturedCompanies(domainId: number, limit = 6) {
       slug: true,
       address: true,
       city: true,
-      categories: true,
       logoUrl: true,
       rating: true,
       reviewCount: true,
+      companyCategories: {
+        select: {
+          category: {
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              icon: true,
+            },
+          },
+        },
+      },
       content: {
         where: {
           domainId,

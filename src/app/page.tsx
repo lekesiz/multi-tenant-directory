@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { generateMetaTags } from '@/lib/seo';
@@ -24,7 +24,6 @@ import {
   getReviewsCountByDomain,
   getAverageRatingByDomain
 } from '@/lib/queries/review';
-import { getCategoryFrenchName } from '@/lib/categories';
 
 // ISR: Revalidate every 5 minutes for better performance
 export const revalidate = 300;
@@ -54,6 +53,7 @@ async function getMainCategories(domainId: number) {
   const mainCategories = await prisma.category.findMany({
     where: {
       parentId: null,
+      isActive: true,
     },
     orderBy: {
       name: 'asc',
@@ -75,6 +75,14 @@ async function getMainCategories(domainId: number) {
       const count = await prisma.companyCategory.count({
         where: {
           categoryId: { in: allCategoryIds },
+          company: {
+            content: {
+              some: {
+                domainId,
+                isVisible: true,
+              },
+            },
+          },
         },
       });
 
@@ -108,70 +116,49 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: 'fr_FR',
     },
     twitter: {
-      card: metaTags.twitterCard,
-      title: metaTags.twitterTitle,
-      description: metaTags.twitterDescription,
-      images: metaTags.twitterImage ? [metaTags.twitterImage] : [],
+      card: 'summary_large_image',
+      title: metaTags.ogTitle,
+      description: metaTags.ogDescription,
+      images: metaTags.ogImage ? [metaTags.ogImage] : [],
     },
     alternates: {
-      canonical: metaTags.canonical,
-    },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-      },
+      canonical: metaTags.ogUrl,
     },
   };
 }
 
-// Category icons are now stored in the database (categories.icon field)
-// No need for hardcoded mapping anymore
+export default async function HomePage() {
+  const { domain: domainData } = await getCurrentDomainInfo();
+  
+  // Fetch data in parallel for better performance
+  const [stats, featuredCompanies] = await Promise.all([
+    getStats(domainData.id),
+    getFeaturedCompanies(domainData.id, 6),
+  ]);
 
-export default async function Home() {
+  // Get main categories with error handling
+  let mainCategories: {
+    id: number;
+    slug: string;
+    name: string;
+    icon: string | null;
+    count: number;
+  }[] = [];
+  
   try {
-    const { domain, displayName, domainData } = await getCurrentDomainInfo();
-
-    if (!domainData) {
-      return <div>Domain not found</div>;
-    }
-
-    // Fetch all data in parallel for better performance
-    const [stats, featuredCompanies] = await Promise.all([
-      getStats(domainData.id),
-      getFeaturedCompanies(domainData.id),
-    ]);
-
-    // Get main categories (7 parent categories) with error handling
-    let mainCategories: Array<{
-      id: number;
-      slug: string;
-      name: string;
-      icon: string | null;
-      count: number;
-    }> = [];
-    try {
-      mainCategories = await getMainCategories(domainData.id);
-    } catch (error) {
-      logger.error('Error fetching main categories:', error);
-      // Fallback to empty array if database is not available
-      mainCategories = [];
-    }
+    mainCategories = await getMainCategories(domainData.id);
+  } catch (error) {
+    console.error('Error fetching main categories:', error);
+    // Fallback to empty array if database is not available
+  }
 
   return (
-    <>
-      <StructuredData
-        domain={domain}
-        type="homepage"
-        breadcrumbs={[
-          { name: 'Accueil', url: `https://${domain}` }
-        ]}
-      />
-      <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <HeroSection domain={displayName} />
+      <HeroSection
+        domain={domainData}
+        stats={stats}
+      />
 
       {/* Benefits Section */}
       <BenefitsSection />
@@ -184,24 +171,24 @@ export default async function Home() {
 
       {/* Featured Businesses Carousel */}
       {featuredCompanies.length > 0 && (
-        <FeaturedBusinessesCarousel businesses={await Promise.all(featuredCompanies.map(async c => ({
+        <FeaturedBusinessesCarousel businesses={featuredCompanies.map(c => ({
           id: c.id,
           name: c.name,
           slug: c.slug,
           address: c.address || '',
           city: c.city || '',
-          categories: await Promise.all((c.categories || []).map(cat => getCategoryFrenchName(cat))),
+          categories: c.companyCategories?.map(cc => cc.category.name) || [],
           rating: c.rating || 0,
           reviewCount: c.reviewCount || 0,
           logoUrl: c.logoUrl,
-        })))} />
+        }))} />
       )}
 
       {/* Pricing Section */}
       <PricingHomepageSection />
 
       {/* Lead Form Section - Client Component with React handlers */}
-      <LeadFormClient categories={popularCategories} />
+      <LeadFormClient categories={mainCategories} />
 
       {/* Stats Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -210,21 +197,19 @@ export default async function Home() {
             <div className="text-5xl font-bold mb-2" style={{ color: domainData.primaryColor || '#2563EB' }}>
               {stats.companiesCount}
             </div>
-            <div className="text-gray-600 font-medium">
-              Professionnels Référencés
-            </div>
+            <div className="text-gray-600 text-lg">Entreprises</div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="text-5xl font-bold text-indigo-600 mb-2">
+            <div className="text-5xl font-bold mb-2" style={{ color: domainData.primaryColor || '#2563EB' }}>
               {stats.reviewsCount}
             </div>
-            <div className="text-gray-600 font-medium">Avis Clients</div>
+            <div className="text-gray-600 text-lg">Avis Clients</div>
           </div>
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="text-5xl font-bold text-purple-600 mb-2">
-              {stats.avgRating || '-'}
+            <div className="text-5xl font-bold mb-2" style={{ color: domainData.primaryColor || '#2563EB' }}>
+              {stats.avgRating || '0.0'} ⭐
             </div>
-            <div className="text-gray-600 font-medium">Note Moyenne</div>
+            <div className="text-gray-600 text-lg">Note Moyenne</div>
           </div>
         </div>
       </section>
@@ -236,14 +221,12 @@ export default async function Home() {
             Entreprises Mises en Avant
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {await Promise.all(featuredCompanies.map(async (company) => {
-              const frenchCategories = await Promise.all(
-                company.categories.slice(0, 3).map(cat => getCategoryFrenchName(cat))
-              );
+            {featuredCompanies.map((company) => {
+              const categories = company.companyCategories?.slice(0, 3).map(cc => cc.category) || [];
               return (
                 <Link
                   key={company.id}
-                  href={`/companies/${company.slug}`}
+                  href={`/${company.slug}`}
                   className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1"
                 >
                   <h4 className="font-bold text-lg text-gray-900 mb-2">
@@ -253,12 +236,13 @@ export default async function Home() {
                     {company.address}, {company.city}
                   </p>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {frenchCategories.map((cat, idx) => (
+                    {categories.map((cat) => (
                       <span
-                        key={idx}
-                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
+                        key={cat.id}
+                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full flex items-center gap-1"
                       >
-                        {cat}
+                        {cat.icon && <span>{cat.icon}</span>}
+                        <span>{cat.name}</span>
                       </span>
                     ))}
                   </div>
@@ -273,7 +257,7 @@ export default async function Home() {
                   )}
                 </Link>
               );
-            }))}
+            })}
           </div>
         </section>
       )}
@@ -291,14 +275,16 @@ export default async function Home() {
                 href={`/categories/${encodeURIComponent(category.slug)}`}
                 className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1 cursor-pointer group"
               >
-                <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
-                  {category.icon || '📁'}
-                </div>
-                <div className="font-semibold text-gray-900 mb-2 text-lg">
-                  {category.name}
-                </div>
-                <div className="text-sm text-gray-500">
-                  {category.count} entreprise{category.count > 1 ? 's' : ''}
+                <div className="text-center">
+                  <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
+                    {category.icon || '📁'}
+                  </div>
+                  <h4 className="font-bold text-lg text-gray-900 mb-2">
+                    {category.name}
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {category.count} entreprise{category.count !== 1 ? 's' : ''}
+                  </p>
                 </div>
               </Link>
             ))}
@@ -306,8 +292,8 @@ export default async function Home() {
           <div className="text-center mt-8">
             <Link
               href="/categories"
-              className="inline-block text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition-all"
-              style={{ background: domainData.primaryColor || '#2563EB' }}
+              className="inline-block px-8 py-3 rounded-full font-semibold text-white transition-all hover:scale-105"
+              style={{ backgroundColor: domainData.primaryColor || '#2563EB' }}
             >
               Voir Toutes les Catégories
             </Link>
@@ -315,291 +301,14 @@ export default async function Home() {
         </section>
       )}
 
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div 
-          className="rounded-3xl shadow-2xl p-12 text-center text-white"
-          style={{ background: `linear-gradient(to right, ${domainData.primaryColor || '#2563EB'}, #4F46E5)` }}
-        >
-          <h3 className="text-4xl font-bold mb-4">
-            Vous êtes un Professionnel ?
-          </h3>
-          <p className="text-xl mb-8 opacity-90">
-            Rejoignez notre plateforme et augmentez votre visibilité locale
-          </p>
-          <Link
-            href="/business/register"
-            className="inline-block bg-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-colors"
-            style={{ color: domainData.primaryColor || '#2563EB' }}
-          >
-            Créer Mon Profil Gratuitement
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h4 className="text-lg font-bold mb-4">{displayName}.PRO</h4>
-              <p className="text-gray-400 text-sm">
-                La plateforme de référence pour trouver les meilleurs
-                professionnels à {displayName}.
-              </p>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Navigation</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <Link href="/" className="hover:text-white transition-colors">
-                    Accueil
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/annuaire"
-                    className="hover:text-white transition-colors"
-                  >
-                    Annuaire
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/categories"
-                    className="hover:text-white transition-colors"
-                  >
-                    Catégories
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Professionnels</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <Link
-                    href="/rejoindre"
-                    className="hover:text-white transition-colors"
-                  >
-                    Créer un Profil
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/tarifs"
-                    className="hover:text-white transition-colors"
-                  >
-                    Tarifs
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/admin/login"
-                    className="hover:text-white transition-colors"
-                  >
-                    Espace Pro
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Autres Villes</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <a href="https://bas-rhin.pro" className="hover:text-white transition-colors font-bold text-yellow-400" rel="nofollow">
-                    ⭐ Bas-Rhin
-                  </a>
-                </li>
-                <li>
-                  <a href="https://bischwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Bischwiller
-                  </a>
-                </li>
-                <li>
-                  <a href="https://bouxwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Bouxwiller
-                  </a>
-                </li>
-                <li>
-                  <a href="https://brumath.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Brumath
-                  </a>
-                </li>
-                <li>
-                  <a href="https://erstein.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Erstein
-                  </a>
-                </li>
-                <li>
-                  <a href="https://geispolsheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Geispolsheim
-                  </a>
-                </li>
-                <li>
-                  <a href="https://haguenau.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Haguenau
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          {/* Second row of cities */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-8">
-            <div>
-              <h5 className="font-semibold mb-4">Plus de Villes</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <a href="https://hoerdt.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Hœrdt
-                  </a>
-                </li>
-                <li>
-                  <a href="https://illkirch.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Illkirch
-                  </a>
-                </li>
-                <li>
-                  <a href="https://ingwiller.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Ingwiller
-                  </a>
-                </li>
-                <li>
-                  <a href="https://ittenheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Ittenheim
-                  </a>
-                </li>
-                <li>
-                  <a href="https://mutzig.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Mutzig
-                  </a>
-                </li>
-                <li>
-                  <a href="https://ostwald.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Ostwald
-                  </a>
-                </li>
-                <li>
-                  <a href="https://saverne.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Saverne
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div className="md:col-start-2">
-              <h5 className="font-semibold mb-4 invisible">Plus</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <a href="https://schiltigheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Schiltigheim
-                  </a>
-                </li>
-                <li>
-                  <a href="https://schweighouse.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Schweighouse
-                  </a>
-                </li>
-                <li>
-                  <a href="https://souffelweyersheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Souffelweyersheim
-                  </a>
-                </li>
-                <li>
-                  <a href="https://soufflenheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Soufflenheim
-                  </a>
-                </li>
-                <li>
-                  <a href="https://vendenheim.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Vendenheim
-                  </a>
-                </li>
-                <li>
-                  <a href="https://wissembourg.pro" className="hover:text-white transition-colors" rel="nofollow">
-                    Wissembourg
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Contact</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <Link href="/contact" className="hover:text-white transition-colors">
-                    Nous Contacter
-                  </Link>
-                </li>
-                <li>03 67 31 07 70</li>
-                <li>pro@{displayName.toLowerCase()}.pro</li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Légal</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <Link href="/mentions-legales" className="hover:text-white transition-colors">
-                    Mentions Légales
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/politique-de-confidentialite" className="hover:text-white transition-colors">
-                    Politique de Confidentialité
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/cgu" className="hover:text-white transition-colors">
-                    CGU
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Suivez-nous</h5>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Facebook
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    LinkedIn
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Instagram
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-            © 2025 {displayName}.PRO - Tous droits réservés | Annuaire des Professionnels en Alsace
-          </div>
-        </div>
-      </footer>
-
-      {/* Structured Data (JSON-LD) */}
+      {/* Structured Data */}
+      <StructuredData
+        domain={domainData}
+        stats={stats}
+      />
 
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
-      </div>
-    </>
-    );
-  } catch (error) {
-    logger.error('Homepage error:', error);
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Error</h1>
-          <p className="text-gray-600 mt-2">An error occurred loading the homepage</p>
-          {error instanceof Error && <p className="text-sm text-gray-500 mt-2">{error.message}</p>}
-        </div>
-      </div>
-    );
-  }
+    </div>
+  );
 }
-
