@@ -50,7 +50,7 @@ async function getCategories(domainId: number) {
     const categoryRelations = await prisma.$queryRaw<Array<{ companyId: number; categoryId: number }>>`
       SELECT cc."companyId", cc."categoryId"
       FROM company_categories cc
-      INNER JOIN company_contents cont ON cont."companyId" = cc."companyId"
+      INNER JOIN company_content cont ON cont."companyId" = cc."companyId"
       INNER JOIN companies c ON c.id = cc."companyId"
       WHERE cont."domainId" = ${domainId}
         AND cont."isVisible" = true
