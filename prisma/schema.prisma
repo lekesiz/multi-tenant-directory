@@ -1457,10 +1457,10 @@ model Category {
 // Junction table for many-to-many relationship between Company and Category
 model CompanyCategory {
   id         Int      @id @default(autoincrement())
-  companyId  Int      @map("companyId")
-  categoryId Int      @map("categoryId")
-  isPrimary  Boolean  @default(false) @map("isPrimary") // Mark one category as primary
-  createdAt  DateTime @default(now()) @map("createdAt")
+  companyId  Int      @map("companyid")
+  categoryId Int      @map("categoryid")
+  isPrimary  Boolean  @default(false) @map("isprimary") // Mark one category as primary
+  createdAt  DateTime @default(now()) @map("createdat")
 
   // Relations
   company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
