@@ -2,7 +2,6 @@ import { headers } from 'next/headers';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { getCategoryIcon } from '@/lib/category-icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,73 +16,43 @@ async function getDomainInfo() {
   return { domain, cityName, displayName };
 }
 
-async function getCategories(domain: string) {
-  // Get domain from database
-  const domainData = await prisma.domain.findUnique({
-    where: { name: domain },
-  });
-
-  if (!domainData) {
-    return [];
-  }
-
-  // Get all visible companies for this domain
-  const companyContents = await prisma.companyContent.findMany({
+async function getCategories() {
+  // Get all active categories with their company count
+  const categories = await prisma.category.findMany({
     where: {
-      domainId: domainData.id,
-      isVisible: true,
+      isActive: true,
     },
     include: {
-      company: {
+      _count: {
         select: {
-          categories: true,
+          companies: true,
+        },
+      },
+      children: {
+        where: {
+          isActive: true,
+        },
+        include: {
+          _count: {
+            select: {
+              companies: true,
+            },
+          },
+        },
+        orderBy: {
+          order: 'asc',
         },
       },
     },
-  });
-
-  // Count companies per category
-  const categoryCount: Record<string, number> = {};
-  companyContents.forEach((content) => {
-    content.company.categories.forEach((category) => {
-      categoryCount[category] = (categoryCount[category] || 0) + 1;
-    });
-  });
-
-  // Get French names and icons from business_categories table
-  const allCategories = Object.keys(categoryCount);
-  const categoryMappings = await prisma.businessCategory.findMany({
-    where: {
-      googleCategory: { in: allCategories },
-      isActive: true,
-    },
-    select: {
-      googleCategory: true,
-      frenchName: true,
-      icon: true,
-      order: true,
+    orderBy: {
+      order: 'asc',
     },
   });
 
-  const mappingDict: Record<string, { frenchName: string; icon: string; order: number }> = {};
-  categoryMappings.forEach((mapping) => {
-    mappingDict[mapping.googleCategory] = {
-      frenchName: mapping.frenchName,
-      icon: mapping.icon || '',
-      order: mapping.order,
-    };
-  });
+  // Filter to only show parent categories (no parentId)
+  const parentCategories = categories.filter((cat) => !cat.parentId);
 
-  // Convert to array with French names and sort by count
-  return Object.entries(categoryCount)
-    .map(([category, count]) => ({
-      googleCategory: category,
-      frenchName: mappingDict[category]?.frenchName || category,
-      icon: mappingDict[category]?.icon || getCategoryIcon(category),
-      count,
-      order: mappingDict[category]?.order || 999,
-    }))
-    .sort((a, b) => b.count - a.count);
+  return parentCategories;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -105,7 +74,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function CategoriesPage() {
   const { domain, displayName } = await getDomainInfo();
-  const categories = await getCategories(domain);
+  const categories = await getCategories();
+
+  // Calculate total categories (parent + children)
+  const totalCategories = categories.reduce(
+    (acc, cat) => acc + 1 + cat.children.length,
+    0
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -121,6 +96,9 @@ export default async function CategoriesPage() {
                 <h1 className="text-xl font-bold text-gray-900">
                   {displayName}.PRO
                 </h1>
+                <p className="text-xs text-gray-600">
+                  Les Professionnels de {displayName}
+                </p>
               </div>
             </Link>
             <nav className="flex space-x-6">
@@ -162,44 +140,84 @@ export default async function CategoriesPage() {
             Toutes les Catégories
           </h1>
           <p className="text-lg text-gray-600">
-            Explorez {categories.length} catégories de professionnels à {displayName}
+            Explorez {totalCategories} catégories de professionnels à {displayName}
           </p>
         </div>
 
         {/* Categories Grid */}
         {categories.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {categories.map((item) => (
-              <Link
-                key={item.googleCategory}
-                href={`/categories/${encodeURIComponent(item.googleCategory)}`}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 flex items-center justify-between group"
-              >
-                <div className="flex items-center flex-1">
-                  <div className="text-4xl mr-4">{item.icon}</div>
-                  <div>
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {item.frenchName}
-                  </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {item.count} professionnel{item.count > 1 ? 's' : ''}
-                    </p>
-                  </div>
-                </div>
-                <svg
-                  className="w-6 h-6 text-gray-400 group-hover:text-blue-600 transition-colors"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          <div className="space-y-8">
+            {categories.map((category) => (
+              <div key={category.id} className="bg-white rounded-lg shadow-md p-6">
+                {/* Parent Category */}
+                <Link
+                  href={`/categories/${category.slug}`}
+                  className="flex items-center justify-between group mb-4 hover:bg-gray-50 p-4 rounded-lg transition-colors"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </Link>
+                  <div className="flex items-center flex-1">
+                    <div className="text-4xl mr-4">{category.icon || '📁'}</div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {category.nameFr}
+                      </h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {category._count.companies} professionnel{category._count.companies > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <svg
+                    className="w-6 h-6 text-gray-400 group-hover:text-blue-600 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </Link>
+
+                {/* Child Categories */}
+                {category.children.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ml-12">
+                    {category.children.map((child) => (
+                      <Link
+                        key={child.id}
+                        href={`/categories/${child.slug}`}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 hover:shadow-md transition-all group"
+                      >
+                        <div className="flex items-center flex-1">
+                          <div className="text-2xl mr-3">{child.icon || '📄'}</div>
+                          <div>
+                            <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                              {child.nameFr}
+                            </h3>
+                            <p className="text-xs text-gray-600">
+                              {child._count.companies} professionnel{child._count.companies > 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <svg
+                          className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         ) : (
@@ -246,4 +264,3 @@ export default async function CategoriesPage() {
     </div>
   );
 }
-

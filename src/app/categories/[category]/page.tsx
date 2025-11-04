@@ -27,7 +27,7 @@ async function getDomainInfo() {
   return { domain, cityName, displayName };
 }
 
-async function getCompaniesInCategory(category: string, domain: string) {
+async function getCompaniesInCategory(categorySlug: string, domain: string) {
   // Get domain from database
   const domainData = await prisma.domain.findUnique({
     where: { name: domain },
@@ -37,18 +37,40 @@ async function getCompaniesInCategory(category: string, domain: string) {
     return [];
   }
 
-  // Decode category from URL
-  const decodedCategory = decodeURIComponent(category);
+  // Get category from database
+  const category = await prisma.category.findUnique({
+    where: { slug: categorySlug },
+  });
 
-  // Get companies in this category
+  if (!category) {
+    return [];
+  }
+
+  // Get all companies in this category (including through junction table)
+  const companyCategories = await prisma.companyCategory.findMany({
+    where: {
+      categoryId: category.id,
+    },
+    include: {
+      company: {
+        include: {
+          _count: {
+            select: {
+              reviews: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Filter by domain visibility
   const companyContents = await prisma.companyContent.findMany({
     where: {
       domainId: domainData.id,
       isVisible: true,
-      company: {
-        categories: {
-          has: decodedCategory,
-        },
+      companyId: {
+        in: companyCategories.map((cc) => cc.companyId),
       },
     },
     include: {
@@ -78,8 +100,17 @@ async function getCompaniesInCategory(category: string, domain: string) {
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { domain } = await getDomainInfo();
   const { category } = await params;
-  const decodedCategory = decodeURIComponent(category);
-  const metaTags = generateMetaTags(domain, 'category', { category: decodedCategory });
+  
+  // Normalize slug to lowercase
+  const categorySlug = decodeURIComponent(category).toLowerCase();
+  
+  // Get category from database
+  const categoryData = await prisma.category.findUnique({
+    where: { slug: categorySlug },
+  });
+
+  const categoryName = categoryData?.nameFr || categorySlug;
+  const metaTags = generateMetaTags(domain, 'category', { category: categoryName });
 
   return {
     title: metaTags.title,
@@ -112,26 +143,51 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { domain, displayName } = await getDomainInfo();
   const { category } = await params;
-  const decodedCategory = decodeURIComponent(category);
+  
+  // Normalize slug to lowercase
+  const categorySlug = decodeURIComponent(category).toLowerCase();
 
   // Check if category exists in database
-  const categoryExists = await prisma.category.findUnique({
-    where: { slug: decodedCategory },
+  const categoryData = await prisma.category.findUnique({
+    where: { slug: categorySlug },
+    include: {
+      parent: true,
+      children: {
+        where: {
+          isActive: true,
+        },
+        orderBy: {
+          order: 'asc',
+        },
+      },
+    },
   });
 
-  if (!categoryExists) {
+  if (!categoryData) {
     notFound();
   }
 
-  const companies = await getCompaniesInCategory(category, domain);
+  const companies = await getCompaniesInCategory(categorySlug, domain);
 
   // Generate structured data
-  const breadcrumbSchema = generateBreadcrumbSchema([
+  const breadcrumbItems = [
     { name: 'Accueil', url: `https://${domain}` },
-    { name: 'Annuaire', url: `https://${domain}/annuaire` },
-    { name: decodedCategory, url: `https://${domain}/categories/${category}` },
-  ]);
+    { name: 'Catégories', url: `https://${domain}/categories` },
+  ];
 
+  if (categoryData.parent) {
+    breadcrumbItems.push({
+      name: categoryData.parent.nameFr,
+      url: `https://${domain}/categories/${categoryData.parent.slug}`,
+    });
+  }
+
+  breadcrumbItems.push({
+    name: categoryData.nameFr,
+    url: `https://${domain}/categories/${categoryData.slug}`,
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbItems);
   const itemListSchema = generateItemListSchema(companies, domain);
 
   return (
@@ -139,13 +195,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <StructuredData
         domain={domain}
         type="category"
-        categoryName={decodedCategory}
+        categoryName={categoryData.nameFr}
         companies={companies}
-        breadcrumbs={[
-          { name: 'Accueil', url: `https://${domain}` },
-          { name: 'Annuaire', url: `https://${domain}/annuaire` },
-          { name: decodedCategory, url: `https://${domain}/categories/${category}` }
-        ]}
+        breadcrumbs={breadcrumbItems}
       />
       <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -160,6 +212,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 <h1 className="text-xl font-bold text-gray-900">
                   {displayName}.PRO
                 </h1>
+                <p className="text-xs text-gray-600">
+                  Les Professionnels de {displayName}
+                </p>
               </div>
             </Link>
             <nav className="flex space-x-6">
@@ -175,6 +230,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               >
                 Annuaire
               </Link>
+              <Link
+                href="/categories"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Catégories
+              </Link>
             </nav>
           </div>
         </div>
@@ -188,11 +249,22 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               Accueil
             </Link>
             <span className="mx-2">/</span>
-            <Link href="/annuaire" className="hover:text-blue-600">
-              Annuaire
+            <Link href="/categories" className="hover:text-blue-600">
+              Catégories
             </Link>
+            {categoryData.parent && (
+              <>
+                <span className="mx-2">/</span>
+                <Link
+                  href={`/categories/${categoryData.parent.slug}`}
+                  className="hover:text-blue-600"
+                >
+                  {categoryData.parent.nameFr}
+                </Link>
+              </>
+            )}
             <span className="mx-2">/</span>
-            <span className="text-gray-900">{decodedCategory}</span>
+            <span className="text-gray-900">{categoryData.nameFr}</span>
           </nav>
         </div>
       </div>
@@ -201,13 +273,57 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {decodedCategory}
-          </h1>
+          <div className="flex items-center mb-4">
+            <div className="text-5xl mr-4">{categoryData.icon || '📁'}</div>
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">
+                {categoryData.nameFr}
+              </h1>
+              {categoryData.nameEn && (
+                <p className="text-lg text-gray-500 mt-1">{categoryData.nameEn}</p>
+              )}
+            </div>
+          </div>
           <p className="text-lg text-gray-600">
             {companies.length} professionnel{companies.length > 1 ? 's' : ''} trouvé{companies.length > 1 ? 's' : ''} à {displayName}
           </p>
         </div>
+
+        {/* Child Categories */}
+        {categoryData.children.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Sous-catégories</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categoryData.children.map((child) => (
+                <Link
+                  key={child.id}
+                  href={`/categories/${child.slug}`}
+                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 flex items-center group"
+                >
+                  <div className="text-3xl mr-3">{child.icon || '📄'}</div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {child.nameFr}
+                    </h3>
+                  </div>
+                  <svg
+                    className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Companies Grid */}
         {companies.length === 0 ? (
@@ -230,147 +346,145 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 Aucune entreprise trouvée
               </h2>
               <p className="text-gray-600 mb-6">
-                Il n&apos;y a pas encore de professionnels dans la catégorie &quot;{decodedCategory}&quot; à {displayName}.
+                Il n&apos;y a pas encore de professionnels dans la catégorie &quot;{categoryData.nameFr}&quot; à {displayName}.
               </p>
-              <Link
-                href="/annuaire"
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Parcourir toutes les entreprises
-              </Link>
+              <div className="flex gap-4 justify-center">
+                <Link
+                  href="/categories"
+                  className="inline-flex items-center px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Toutes les catégories
+                </Link>
+                <Link
+                  href="/annuaire"
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Parcourir l&apos;annuaire
+                </Link>
+              </div>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {companies.map((company) => (
-            <Link
-              key={company.id}
-              href={`/companies/${company.slug}`}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
-            >
-              {/* Cover Image */}
-              {company.coverImageUrl && (
-                <div className="h-48 bg-gray-200 relative">
-                  <Image
-                    src={company.coverImageUrl}
-                    alt={company.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
-              )}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Professionnels</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {companies.map((company) => (
+              <Link
+                key={company.id}
+                href={`/companies/${company.slug}`}
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+              >
+                {/* Cover Image */}
+                {company.coverImageUrl && (
+                  <div className="h-48 bg-gray-200 relative">
+                    <Image
+                      src={company.coverImageUrl}
+                      alt={company.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover"
+                    />
+                  </div>
+                )}
 
-              <div className="p-6">
-                {/* Logo and Name */}
-                <div className="flex items-start mb-4">
-                  {company.logoUrl ? (
-                    <div className="relative w-16 h-16 mr-4">
-                      <Image
-                        src={company.logoUrl}
-                        alt={company.name}
-                        fill
-                        sizes="64px"
-                        className="object-contain"
-                      />
+                <div className="p-6">
+                  {/* Logo and Name */}
+                  <div className="flex items-start mb-4">
+                    {company.logoUrl ? (
+                      <div className="relative w-16 h-16 mr-4 flex-shrink-0">
+                        <Image
+                          src={company.logoUrl}
+                          alt={company.name}
+                          fill
+                          sizes="64px"
+                          className="object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xl mr-4 flex-shrink-0">
+                        {company.name.charAt(0)}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-bold text-gray-900 mb-1 truncate">
+                        {company.name}
+                      </h3>
+                      {company.city && (
+                        <p className="text-sm text-gray-600">
+                          📍 {company.city}
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xl mr-4">
-                      {company.name.charAt(0)}
-                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {company.customDescription && (
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {company.customDescription}
+                    </p>
                   )}
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {company.name}
-                    </h3>
-                    {company.city && (
-                      <p className="text-sm text-gray-600">
-                        📍 {company.city}
-                      </p>
+
+                  {/* Contact Info */}
+                  <div className="space-y-2 text-sm">
+                    {company.phone && (
+                      <div className="flex items-center text-gray-600">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
+                        </svg>
+                        {company.phone}
+                      </div>
+                    )}
+
+                    {company.rating && (
+                      <div className="flex items-center">
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <svg
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < Math.round(company.rating!)
+                                  ? 'text-yellow-400'
+                                  : 'text-gray-300'
+                              }`}
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                        <span className="ml-2 text-gray-600">
+                          {company.rating.toFixed(1)}
+                        </span>
+                        {company._count.reviews > 0 && (
+                          <span className="ml-1 text-gray-500">
+                            ({company._count.reviews})
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Categories */}
-                {company.categories && company.categories.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {company.categories.slice(0, 3).map((cat) => (
-                      <span
-                        key={cat}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-                      >
-                        {cat}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Description */}
-                {company.customDescription && (
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {company.customDescription}
-                  </p>
-                )}
-
-                {/* Contact Info */}
-                <div className="space-y-2 text-sm">
-                  {company.phone && (
-                    <div className="flex items-center text-gray-600">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                      {company.phone}
-                    </div>
-                  )}
-                  {company.website && (
-                    <div className="flex items-center text-blue-600">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                        />
-                      </svg>
-                      Visiter le site
-                    </div>
-                  )}
-                </div>
-
-                {/* Reviews Count */}
-                {company._count && company._count.reviews > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <span className="text-yellow-500 mr-1">⭐</span>
-                      {company._count.reviews} avis
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+            </div>
           </div>
         )}
 
-        {/* Back to Directory */}
+        {/* Back to Categories */}
         <div className="mt-12 text-center">
           <Link
-            href="/annuaire"
+            href="/categories"
             className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
           >
             <svg
@@ -383,23 +497,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M15 19l-7-7 7-7"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Retour à l&apos;annuaire complet
+            Retour aux catégories
           </Link>
         </div>
       </main>
-
-      {/* Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema),
-        }}
-      />
-      </div>
+    </div>
     </>
   );
 }
-
