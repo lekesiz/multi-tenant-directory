@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BusinessHoursForm from './BusinessHoursForm';
 import AIDescriptionGenerator from './AIDescriptionGenerator';
-import RichTextEditor from './RichTextEditor';
+// import RichTextEditor from './RichTextEditor'; // Temporarily disabled - missing tiptap dependency
 import KeywordSuggestions from './KeywordSuggestions';
 import { slugify } from '@/lib/utils';
 
@@ -802,18 +802,20 @@ export default function CompanyEditForm({
                           }
                         />
                       </div>
-                      <RichTextEditor
-                        content={settings.customDescription}
-                        onChange={(html) =>
+                      <textarea
+                        value={settings.customDescription}
+                        onChange={(e) =>
                           setDomainSettings({
                             ...domainSettings,
                             [domain.id]: {
                               ...settings,
-                              customDescription: html,
+                              customDescription: e.target.value,
                             },
                           })
                         }
-                        placeholder={`${domain.name} için özel açıklama... (Resim, link ve zengin metin formatı ekleyebilirsiniz)`}
+                        placeholder={`${domain.name} için özel açıklama...`}
+                        rows={4}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
