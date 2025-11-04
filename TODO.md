@@ -5,26 +5,21 @@
 ### Category System Migration
 - [x] Create migration script for 336 companies
 - [x] Fix Prisma schema @map directives
-- [x] Migrate all companies to new hierarchical system
+- [x] Migrate all companies to new hierarchical system (460 mappings)
 - [x] Update homepage to show 7 main categories
 - [x] Redesign annuaire page with hierarchical sidebar
 - [x] Add revalidation API endpoint
+- [x] Update getFeaturedCompanies query
+- [x] Clean up page.tsx (remove getCategoryFrenchName)
+- [x] Fix TypeScript errors (popularCategories → mainCategories)
 
 ## 🔄 In Progress
 
-### Category System (Remaining)
-- [ ] Update admin panel company add/edit forms
-  - [ ] Replace old category selection with new system
-  - [ ] Use hierarchical category picker
-  - [ ] Update validation logic
-- [ ] Update all components using categories
-  - [ ] FilterBar component
-  - [ ] SearchBar component
-  - [ ] Company card components
-- [ ] Update API endpoints
-  - [ ] `/api/companies` - filter by new categories
-  - [ ] `/api/search` - search in new categories
-  - [ ] `/api/categories` - return hierarchical structure
+### Deployment
+- [ ] Wait for Vercel deployment to complete
+- [ ] Test homepage category display
+- [ ] Test annuaire page with new categories
+- [ ] Test featured companies section
 
 ## 🐛 Bugs to Fix
 
@@ -43,7 +38,7 @@
 - **Error:** "Application error: a server-side exception has occurred"
 - **Digest:** 3048464563
 - **Next Steps:**
-  - Check Vercel logs
+  - Check Vercel logs after deployment
   - Verify NEXTAUTH_SECRET is set correctly
   - Test after deployment
 
@@ -51,9 +46,10 @@
 - **URL:** `haguenau.pro/admin/companies/new`
 - **Error:** "The column `companies.siret` does not exist in the current database"
 - **Solution:** 
-  - Option A: Add `siret` column to database
+  - Check if `siret` column exists in database
+  - Option A: Add `siret` column via migration
   - Option B: Remove `siret` from Prisma schema
-  - **Recommended:** Check if SIRET is needed, then add migration
+  - **Recommended:** Make `siret` optional in schema
 
 ### 4. Vercel Environment Variables
 - **Issue:** Duplicate environment variables
@@ -63,6 +59,53 @@
   - NEXTAUTH_SECRET
   - NEXTAUTH_URL
 
+## 📋 Remaining Category System Updates
+
+### Admin Panel
+- [ ] Update company add form (`/admin/companies/new`)
+  - [ ] Replace old category selection with new system
+  - [ ] Use hierarchical category picker
+  - [ ] Update validation logic
+- [ ] Update company edit form (`/admin/companies/[id]`)
+  - [ ] Same as add form
+
+### Components
+- [ ] FilterBar component
+  - [ ] Update to use new category structure
+  - [ ] Show hierarchical categories
+- [ ] SearchBar component
+  - [ ] Update category suggestions
+- [ ] Company card components
+  - [ ] Already updated in annuaire page
+  - [ ] Check other pages
+
+### API Endpoints
+- [ ] `/api/companies` - filter by new categories
+- [ ] `/api/search` - search in new categories
+- [ ] `/api/categories` - return hierarchical structure (already done)
+
+## 🚀 Deployment Status
+
+**Latest Commit:** `ad07af0` - "fix: Complete migration to new category system"
+**Status:** Deploying to Vercel...
+**ETA:** 2-3 minutes
+
+**Previous Failed Deployments:**
+- `5ggiA4jhr` - Error: Cannot find name 'popularCategories' ❌
+- `7e2y5HApA` - Error: Type error with category.nameFr ❌
+- `1b85a8d` - Error: Cannot find name 'popularCategories' ❌
+
+**Expected:** This deployment should succeed ✅
+
+## 📊 Statistics
+
+- **Companies migrated:** 336/336 (100%)
+- **Category mappings:** 460
+- **Main categories:** 7
+- **Sub categories:** 20+
+- **Files modified:** 15+
+- **Lines changed:** 1,000+
+
 ## 📝 Documentation Needed
 
 - [ ] Category system architecture
@@ -70,17 +113,13 @@
 - [ ] API documentation for new category endpoints
 - [ ] Admin panel user guide
 
-## 🚀 Deployment Status
+## 🎯 Next Steps (After Deployment)
 
-**Latest Commit:** `702e159` - "feat: Complete category system migration"
-**Status:** Deploying to Vercel...
-**ETA:** 2-3 minutes
-
-## 📊 Statistics
-
-- **Companies migrated:** 336/336 (100%)
-- **Category mappings:** 460
-- **Main categories:** 7
-- **Sub categories:** 20
-- **Files modified:** 12
-- **Lines added:** 1,582
+1. **Test deployment** - Verify all pages work
+2. **Test gries.pro** - Use revalidation API
+3. **Fix SIRET issue** - Make optional or add column
+4. **Update admin panel** - Category pickers
+5. **Update remaining components** - FilterBar, SearchBar
+6. **Clean Vercel env vars** - Remove duplicates
+7. **Final testing** - E2E tests
+8. **Documentation** - Update README
