@@ -56,7 +56,7 @@ async function getMainCategories(domainId: number) {
       parentId: null,
     },
     orderBy: {
-      nameFr: 'asc',
+      name: 'asc',
     },
   });
 
@@ -81,7 +81,7 @@ async function getMainCategories(domainId: number) {
       return {
         id: category.id,
         slug: category.slug,
-        name: category.nameFr,
+        name: category.name,
         icon: category.icon,
         count,
       };
