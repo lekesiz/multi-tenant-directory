@@ -46,6 +46,7 @@ async function getCategories(domainId: number) {
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
   // Step 1: Get all visible company IDs for this domain
+  console.log('[DEBUG] Getting visible companies for domainId:', domainId);
   const visibleCompanyContent = await prisma.companyContent.findMany({
     where: {
       domainId: domainId,
@@ -60,8 +61,10 @@ async function getCategories(domainId: number) {
   });
 
   const visibleCompanyIds = visibleCompanyContent.map((c) => c.companyId);
+  console.log('[DEBUG] Found', visibleCompanyIds.length, 'visible companies:', visibleCompanyIds);
 
   // Step 2: Get all category relations for these companies
+  console.log('[DEBUG] Getting category relations for', visibleCompanyIds.length, 'companies');
   const categoryRelations = await prisma.companyCategory.findMany({
     where: {
       companyId: {
@@ -73,6 +76,8 @@ async function getCategories(domainId: number) {
       categoryId: true,
     },
   });
+  console.log('[DEBUG] Found', categoryRelations.length, 'category relations');
+  console.log('[DEBUG] Sample relations:', categoryRelations.slice(0, 5));
 
   // Build a map of categoryId -> company count
   const categoryCountMap = new Map<number, Set<number>>();
