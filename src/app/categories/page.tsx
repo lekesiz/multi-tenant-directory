@@ -22,7 +22,6 @@ async function getDomainInfo() {
 }
 
 async function getCategories(domainId: number) {
-  console.log('[DEBUG getCategories] Starting with domainId:', domainId);
   // Get all active categories
   const categories = await prisma.category.findMany({
     where: {
@@ -46,45 +45,36 @@ async function getCategories(domainId: number) {
   // Filter to only show parent categories (no parentId)
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
-  // For each category (parent and children), count companies in this domain
+  // For each category (parent and children), count companies in this domain using raw SQL
   const categoriesWithCounts = await Promise.all(
     parentCategories.map(async (category) => {
-      // Count companies for parent category
-      const parentCount = await prisma.company.count({
-        where: {
-          companyCategories: {
-            some: {
-              categoryId: category.id,
-            },
-          },
-          content: {
-            some: {
-              domainId: domainId,
-              isVisible: true,
-            },
-          },
-        },
-      });
-      console.log('[DEBUG] Category:', category.nameFr, 'ID:', category.id, 'Count:', parentCount);
+      // Count companies for parent category using raw SQL
+      const parentCountResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(DISTINCT c.id)::bigint as count
+        FROM companies c
+        INNER JOIN company_categories cc ON cc."companyId" = c.id
+        INNER JOIN company_content content ON content."companyId" = c.id
+        WHERE cc."categoryId" = ${category.id}
+          AND content."domainId" = ${domainId}
+          AND content."isVisible" = true
+          AND c."isActive" = true
+      `;
+      const parentCount = Number(parentCountResult[0]?.count || 0);
 
       // Count companies for each child category
       const childrenWithCounts = await Promise.all(
         category.children.map(async (child) => {
-          const childCount = await prisma.company.count({
-            where: {
-              companyCategories: {
-                some: {
-                  categoryId: child.id,
-                },
-              },
-              content: {
-                some: {
-                  domainId: domainId,
-                  isVisible: true,
-                },
-              },
-            },
-          });
+          const childCountResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
+            SELECT COUNT(DISTINCT c.id)::bigint as count
+            FROM companies c
+            INNER JOIN company_categories cc ON cc."companyId" = c.id
+            INNER JOIN company_content content ON content."companyId" = c.id
+            WHERE cc."categoryId" = ${child.id}
+              AND content."domainId" = ${domainId}
+              AND content."isVisible" = true
+              AND c."isActive" = true
+          `;
+          const childCount = Number(childCountResult[0]?.count || 0);
 
           return {
             ...child,
@@ -132,12 +122,7 @@ export default async function CategoriesPage() {
     return <div>Domain not found</div>;
   }
   
-  console.log('[DEBUG] Domain ID:', domainData.id, 'Domain Name:', domainData.name);
   const categories = await getCategories(domainData.id);
-  console.log('[DEBUG] Categories loaded:', categories.length);
-  if (categories.length > 0) {
-    console.log('[DEBUG] First category:', categories[0].nameFr, 'Count:', categories[0]._count.companyCategories);
-  }
 
   // Calculate total categories (parent + children)
   const totalCategories = categories.reduce(
