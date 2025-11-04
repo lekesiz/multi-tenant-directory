@@ -22,6 +22,7 @@ async function getDomainInfo() {
 }
 
 async function getCategories(domainId: number) {
+  console.log('[DEBUG getCategories] Starting with domainId:', domainId);
   // Get all active categories
   const categories = await prisma.category.findMany({
     where: {
@@ -64,6 +65,7 @@ async function getCategories(domainId: number) {
           },
         },
       });
+      console.log('[DEBUG] Category:', category.nameFr, 'ID:', category.id, 'Count:', parentCount);
 
       // Count companies for each child category
       const childrenWithCounts = await Promise.all(
@@ -130,7 +132,12 @@ export default async function CategoriesPage() {
     return <div>Domain not found</div>;
   }
   
+  console.log('[DEBUG] Domain ID:', domainData.id, 'Domain Name:', domainData.name);
   const categories = await getCategories(domainData.id);
+  console.log('[DEBUG] Categories loaded:', categories.length);
+  if (categories.length > 0) {
+    console.log('[DEBUG] First category:', categories[0].nameFr, 'Count:', categories[0]._count.companyCategories);
+  }
 
   // Calculate total categories (parent + children)
   const totalCategories = categories.reduce(
