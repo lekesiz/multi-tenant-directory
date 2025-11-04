@@ -45,49 +45,51 @@ async function getCategories(domainId: number) {
   // Filter to only show parent categories (no parentId)
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
-  // Get all companies with content for this domain
-  console.log('[DEBUG] Fetching companies for domainId:', domainId);
-  const companiesWithContent = await prisma.company.findMany({
+  // Step 1: Get all visible company IDs for this domain
+  const visibleCompanyContent = await prisma.companyContent.findMany({
     where: {
-      isActive: true,
-      content: {
-        some: {
-          domainId: domainId,
-          isVisible: true,
-        },
+      domainId: domainId,
+      isVisible: true,
+      company: {
+        isActive: true,
       },
     },
     select: {
-      id: true,
-      companyCategories: {
-        select: {
-          categoryId: true,
-        },
-      },
+      companyId: true,
     },
   });
 
-  console.log('[DEBUG] Found companies:', companiesWithContent.length);
-  if (companiesWithContent.length > 0) {
-    console.log('[DEBUG] First company:', companiesWithContent[0]);
-  }
-  
+  const visibleCompanyIds = visibleCompanyContent.map((c) => c.companyId);
+
+  // Step 2: Get all category relations for these companies
+  const categoryRelations = await prisma.companyCategory.findMany({
+    where: {
+      companyId: {
+        in: visibleCompanyIds,
+      },
+    },
+    select: {
+      companyId: true,
+      categoryId: true,
+    },
+  });
+
   // Build a map of categoryId -> company count
-  const categoryCountMap = new Map<number, number>();
+  const categoryCountMap = new Map<number, Set<number>>();
   
-  companiesWithContent.forEach((company) => {
-    company.companyCategories.forEach((cc) => {
-      const currentCount = categoryCountMap.get(cc.categoryId) || 0;
-      categoryCountMap.set(cc.categoryId, currentCount + 1);
-    });
+  categoryRelations.forEach((relation) => {
+    if (!categoryCountMap.has(relation.categoryId)) {
+      categoryCountMap.set(relation.categoryId, new Set());
+    }
+    categoryCountMap.get(relation.categoryId)!.add(relation.companyId);
   });
 
   // For each category, assign the count from the map
   const categoriesWithCounts = parentCategories.map((category) => {
-    const parentCount = categoryCountMap.get(category.id) || 0;
+    const parentCount = categoryCountMap.get(category.id)?.size || 0;
 
     const childrenWithCounts = category.children.map((child) => {
-      const childCount = categoryCountMap.get(child.id) || 0;
+      const childCount = categoryCountMap.get(child.id)?.size || 0;
       return {
         ...child,
         _count: {
