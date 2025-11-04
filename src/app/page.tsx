@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { generateMetaTags } from '@/lib/seo';
 import StructuredData from '@/components/StructuredData';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
 import BenefitsSection from '@/components/BenefitsSection';
 import HowItWorksSection from '@/components/HowItWorksSection';
@@ -311,6 +312,9 @@ export default async function HomePage() {
 
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
+
+      {/* Footer */}
+      <Footer domainName={domainData.name} primaryColor={domainData.primaryColor || undefined} />
     </div>
   );
 }

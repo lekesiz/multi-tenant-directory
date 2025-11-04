@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import Footer from '@/components/Footer';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,10 +11,14 @@ async function getDomainInfo() {
   let domain = headersList.get('x-tenant-domain') || 'bas-rhin.pro';
   domain = domain.replace('www.', '');
   
+  const domainData = await prisma.domain.findUnique({
+    where: { name: domain },
+  });
+  
   const cityName = domain.split('.')[0];
   const displayName = cityName.charAt(0).toUpperCase() + cityName.slice(1);
   
-  return { domain, cityName, displayName };
+  return { domain, cityName, displayName, domainData };
 }
 
 async function getCategories() {
@@ -73,7 +78,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CategoriesPage() {
-  const { domain, displayName } = await getDomainInfo();
+  const { domain, displayName, domainData } = await getDomainInfo();
   const categories = await getCategories();
 
   // Calculate total categories (parent + children)
@@ -261,6 +266,9 @@ export default async function CategoriesPage() {
           </Link>
         </div>
       </main>
+
+      {/* Footer */}
+      <Footer domainName={domainData?.name || domain} primaryColor={domainData?.primaryColor || undefined} />
     </div>
   );
 }

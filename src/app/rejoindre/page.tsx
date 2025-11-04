@@ -1,8 +1,13 @@
 import { headers } from 'next/headers';
+import Footer from '@/components/Footer';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 import { Metadata } from 'next';
+import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
+import Footer from '@/components/Footer';
 import { redirect } from 'next/navigation';
+import Footer from '@/components/Footer';
 
 // Force dynamic rendering because this page uses headers() for domain detection
 export const dynamic = 'force-dynamic';

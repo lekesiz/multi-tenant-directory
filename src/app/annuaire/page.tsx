@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { Star, MapPin, Phone, ExternalLink, Building2 } from 'lucide-react';
+import Footer from '@/components/Footer';
 
 // ISR: Revalidate every 5 minutes
 // Force dynamic rendering because this page uses headers() for domain detection
@@ -507,6 +508,9 @@ export default async function AnnuairePage({
           </main>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer domainName={domainData.name} primaryColor={domainData.primaryColor || undefined} />
     </div>
   );
 }

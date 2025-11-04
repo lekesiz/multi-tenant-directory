@@ -17,6 +17,7 @@ import RelatedCompanies from '@/components/RelatedCompanies';
 import MobileActions from '@/components/MobileActions';
 import SafeHTML from '@/components/SafeHTML';
 import CompanyActivities from '@/components/CompanyActivities';
+import Footer from '@/components/Footer';
 import { Metadata } from 'next';
 
 // Force dynamic rendering to avoid build-time database queries
@@ -641,6 +642,9 @@ export default async function CompanyDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer domainName={domainData.name} primaryColor={domainData.primaryColor || undefined} />
     </div>
     </>
   );

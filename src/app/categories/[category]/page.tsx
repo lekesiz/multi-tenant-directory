@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { generateMetaTags, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 import StructuredData from '@/components/StructuredData';
+import Footer from '@/components/Footer';
 
 export const dynamic = 'force-dynamic';
 
@@ -504,6 +505,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </Link>
         </div>
       </main>
+
+      {/* Footer */}
+      <Footer domainName={domainData.name} primaryColor={domainData.primaryColor || undefined} />
     </div>
     </>
   );
