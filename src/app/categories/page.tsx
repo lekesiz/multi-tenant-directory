@@ -25,7 +25,7 @@ async function getCategories() {
     include: {
       _count: {
         select: {
-          companies: true,
+          companyCategories: true,
         },
       },
       children: {
@@ -35,7 +35,7 @@ async function getCategories() {
         include: {
           _count: {
             select: {
-              companies: true,
+              companyCategories: true,
             },
           },
         },
@@ -161,7 +161,7 @@ export default async function CategoriesPage() {
                         {category.nameFr}
                       </h2>
                       <p className="text-sm text-gray-600 mt-1">
-                        {category._count.companies} professionnel{category._count.companies > 1 ? 's' : ''}
+                        {category._count.companyCategories} professionnel{category._count.companyCategories > 1 ? 's' : ''}
                       </p>
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export default async function CategoriesPage() {
                               {child.nameFr}
                             </h3>
                             <p className="text-xs text-gray-600">
-                              {child._count.companies} professionnel{child._count.companies > 1 ? 's' : ''}
+                              {child._count.companyCategories} professionnel{child._count.companyCategories > 1 ? 's' : ''}
                             </p>
                           </div>
                         </div>
