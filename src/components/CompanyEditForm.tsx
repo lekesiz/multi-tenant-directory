@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BusinessHoursForm from './BusinessHoursForm';
@@ -74,6 +74,15 @@ export default function CompanyEditForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [availableCategories, setAvailableCategories] = useState<Array<{
+    id: number;
+    slug: string;
+    name: string;
+    nameFr: string | null;
+    icon: string | null;
+    parentId: number | null;
+  }>>([]);
+  const [siretLoading, setSiretLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: company.name,
@@ -120,6 +129,76 @@ export default function CompanyEditForm({
       return acc;
     }, {} as any)
   );
+
+  // Fetch available categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/admin/categories/list');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableCategories(data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Fetch company data from SIRET
+  const handleFetchFromSiret = async () => {
+    if (!formData.siret || formData.siret.length !== 14) {
+      setError('SIRET doit contenir exactement 14 chiffres');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    setSiretLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('/api/companies/from-siret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siret: formData.siret }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la récupération des données');
+      }
+
+      const data = await response.json();
+
+      // Update form with fetched data (ADD to existing data, don't replace)
+      setFormData(prev => ({
+        ...prev,
+        name: data.company.name || prev.name,
+        address: data.company.address || prev.address,
+        city: data.company.city || prev.city,
+        postalCode: data.company.postalCode || prev.postalCode,
+        phone: data.company.phone || prev.phone,
+        website: data.company.website || prev.website,
+        siren: data.company.siren || prev.siren,
+        siret: data.company.siret || prev.siret,
+        legalForm: data.company.legalForm || prev.legalForm,
+        // Keep existing categories, don't overwrite
+        categories: prev.categories,
+        logoUrl: data.company.logoUrl || prev.logoUrl,
+        coverImageUrl: prev.coverImageUrl,
+      }));
+
+      setSuccess('✅ Données SIRET récupérées avec succès! Vérifiez et sauvegardez.');
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la récupération des données SIRET');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setSiretLoading(false);
+    }
+  };
 
   const handleBasicInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -506,6 +585,102 @@ export default function CompanyEditForm({
                 />
               </div>
 
+              {/* SIRET Section */}
+              <div className="md:col-span-2">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-green-900 mb-2 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Identification Française (SIRET)
+                  </h3>
+                  <p className="text-xs text-green-700 mb-3">
+                    Remplissez le SIRET pour récupérer automatiquement les informations officielles de l'entreprise depuis l'Annuaire des Entreprises.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SIREN (9 chiffres)
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.siren}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 9);
+                          setFormData({ ...formData, siren: value });
+                        }}
+                        placeholder="123456789"
+                        maxLength={9}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SIRET (14 chiffres) *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.siret}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 14);
+                          setFormData({ ...formData, siret: value });
+                        }}
+                        placeholder="12345678900001"
+                        maxLength={14}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Forme Juridique
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.legalForm}
+                        onChange={(e) =>
+                          setFormData({ ...formData, legalForm: e.target.value })
+                        }
+                        placeholder="SARL, SAS, EURL..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleFetchFromSiret}
+                    disabled={siretLoading || !formData.siret || formData.siret.length !== 14}
+                    className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
+                  >
+                    {siretLoading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Récupération en cours...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Récupérer les données depuis l'Annuaire des Entreprises
+                      </>
+                    )}
+                  </button>
+
+                  {formData.siret && formData.siret.length !== 14 && (
+                    <p className="text-xs text-red-600 mt-2">
+                      ⚠️ Le SIRET doit contenir exactement 14 chiffres
+                    </p>
+                  )}
+                </div>
+              </div>
+
               {/* Coordinates Section */}
               <div className="md:col-span-2">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -617,91 +792,100 @@ export default function CompanyEditForm({
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
-                    Kategoriler
+                    Catégories
                   </h3>
                   <p className="text-xs text-purple-700 mb-3">
-                    Şirketin kategorilerini yönetin. Kategori eklemek veya çıkartmak için aşağıdaki alanları kullanın.
+                    Sélectionnez une ou plusieurs catégories pour cette entreprise. Les catégories permettent aux clients de trouver facilement l'entreprise.
                   </p>
-                  
+
                   {/* Current Categories */}
                   <div className="mb-3">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Mevcut Kategoriler
+                      Catégories Actuelles
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {formData.categories.length === 0 ? (
-                        <span className="text-sm text-gray-500 italic">Henüz kategori eklenmemiş</span>
+                        <span className="text-sm text-gray-500 italic">Aucune catégorie ajoutée</span>
                       ) : (
-                        formData.categories.map((category, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800"
-                          >
-                            {category}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newCategories = formData.categories.filter((_, i) => i !== index);
-                                setFormData({ ...formData, categories: newCategories });
-                              }}
-                              className="ml-2 text-purple-600 hover:text-purple-900"
+                        formData.categories.map((categorySlug, index) => {
+                          const categoryInfo = availableCategories.find(c => c.slug === categorySlug);
+                          return (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </span>
-                        ))
+                              {categoryInfo?.icon && <span className="mr-1">{categoryInfo.icon}</span>}
+                              {categoryInfo?.nameFr || categoryInfo?.name || categorySlug}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newCategories = formData.categories.filter((_, i) => i !== index);
+                                  setFormData({ ...formData, categories: newCategories });
+                                }}
+                                className="ml-2 text-purple-600 hover:text-purple-900"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </span>
+                          );
+                        })
                       )}
                     </div>
                   </div>
 
-                  {/* Add New Category */}
+                  {/* Add Category from Dropdown */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Yeni Kategori Ekle
+                      Ajouter une Catégorie
                     </label>
                     <div className="flex gap-2">
-                      <input
-                        type="text"
-                        id="newCategory"
-                        placeholder="Kategori adı girin (örn: restaurant, bakery)"
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const input = e.currentTarget;
-                            const value = input.value.trim();
-                            if (value && !formData.categories.includes(value)) {
-                              setFormData({
-                                ...formData,
-                                categories: [...formData.categories, value],
-                              });
-                              input.value = '';
-                            }
-                          }
-                        }}
-                      />
+                      <select
+                        id="categorySelect"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white"
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Sélectionnez une catégorie...</option>
+                        {availableCategories
+                          .filter(cat => cat.parentId === null)
+                          .map(parent => (
+                            <optgroup key={parent.id} label={`${parent.icon || '📁'} ${parent.nameFr || parent.name}`}>
+                              <option value={parent.slug}>
+                                {parent.nameFr || parent.name}
+                              </option>
+                              {availableCategories
+                                .filter(child => child.parentId === parent.id)
+                                .map(child => (
+                                  <option key={child.id} value={child.slug}>
+                                    ↳ {child.nameFr || child.name}
+                                  </option>
+                                ))}
+                            </optgroup>
+                          ))}
+                      </select>
                       <button
                         type="button"
                         onClick={() => {
-                          const input = document.getElementById('newCategory') as HTMLInputElement;
-                          const value = input.value.trim();
+                          const select = document.getElementById('categorySelect') as HTMLSelectElement;
+                          const value = select.value;
                           if (value && !formData.categories.includes(value)) {
                             setFormData({
                               ...formData,
                               categories: [...formData.categories, value],
                             });
-                            input.value = '';
+                            select.value = '';
                           }
                         }}
                         className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                       >
-                        Ekle
+                        Ajouter
                       </button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Enter tuşuna basarak veya "Ekle" butonuna tıklayarak kategori ekleyebilirsiniz.
+                      {availableCategories.length > 0
+                        ? `${availableCategories.length} catégories disponibles`
+                        : 'Chargement des catégories...'}
                     </p>
                   </div>
                 </div>
