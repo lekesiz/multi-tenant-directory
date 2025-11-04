@@ -45,49 +45,77 @@ async function getCategories(domainId: number) {
   // Filter to only show parent categories (no parentId)
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
-  // Use raw SQL to get category counts (workaround for Prisma mapping issue)
-  const categoryRelations = await prisma.$queryRaw<Array<{ companyId: number; categoryId: number }>>`
-      SELECT cc."companyId", cc."categoryId"
-      FROM company_categories cc
-      INNER JOIN company_content cont ON cont."companyId" = cc."companyId"
-      INNER JOIN companies c ON c.id = cc."companyId"
-      WHERE cont."domainId" = ${domainId}
-        AND cont."isVisible" = true
-        AND c."isActive" = true
-    `;
+  // Get all visible company IDs for this domain
+  const visibleCompanies = await prisma.companyContent.findMany({
+    where: {
+      domainId: domainId,
+      isVisible: true,
+      company: {
+        isActive: true,
+      },
+    },
+    select: {
+      companyId: true,
+    },
+  });
 
-    // Build a map of categoryId -> company count
-    const categoryCountMap = new Map<number, Set<number>>();
-    
-    categoryRelations.forEach((relation) => {
-      if (!categoryCountMap.has(relation.categoryId)) {
-        categoryCountMap.set(relation.categoryId, new Set());
-      }
-      categoryCountMap.get(relation.categoryId)!.add(relation.companyId);
-    });
+  const visibleCompanyIds = visibleCompanies.map((c) => c.companyId);
 
-    // For each category, assign the count from the map
-    const categoriesWithCounts = parentCategories.map((category) => {
-      const parentCount = categoryCountMap.get(category.id)?.size || 0;
-
-      const childrenWithCounts = category.children.map((child) => {
-        const childCount = categoryCountMap.get(child.id)?.size || 0;
-        return {
-          ...child,
-          _count: {
-            companyCategories: childCount,
-          },
-        };
-      });
-
-      return {
-        ...category,
+  if (visibleCompanyIds.length === 0) {
+    // No visible companies, return categories with 0 counts
+    return parentCategories.map((category) => ({
+      ...category,
+      _count: {
+        companyCategories: 0,
+      },
+      children: category.children.map((child) => ({
+        ...child,
         _count: {
-          companyCategories: parentCount,
+          companyCategories: 0,
         },
-        children: childrenWithCounts,
+      })),
+    }));
+  }
+
+  // Get all category relations for visible companies using $queryRawUnsafe
+  // This avoids the Prisma mapping issue
+  const categoryRelations = await prisma.$queryRawUnsafe<Array<{ companyId: number; categoryId: number }>>(
+    `SELECT "companyId", "categoryId" FROM company_categories WHERE "companyId" = ANY($1::int[])`,
+    visibleCompanyIds
+  );
+
+  // Build a map of categoryId -> Set of company IDs
+  const categoryCountMap = new Map<number, Set<number>>();
+  
+  categoryRelations.forEach((relation) => {
+    if (!categoryCountMap.has(relation.categoryId)) {
+      categoryCountMap.set(relation.categoryId, new Set());
+    }
+    categoryCountMap.get(relation.categoryId)!.add(relation.companyId);
+  });
+
+  // Assign counts to categories
+  const categoriesWithCounts = parentCategories.map((category) => {
+    const parentCount = categoryCountMap.get(category.id)?.size || 0;
+
+    const childrenWithCounts = category.children.map((child) => {
+      const childCount = categoryCountMap.get(child.id)?.size || 0;
+      return {
+        ...child,
+        _count: {
+          companyCategories: childCount,
+        },
       };
     });
+
+    return {
+      ...category,
+      _count: {
+        companyCategories: parentCount,
+      },
+      children: childrenWithCounts,
+    };
+  });
 
   return categoriesWithCounts;
 }
