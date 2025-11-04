@@ -175,7 +175,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     { name: 'Catégories', url: `https://${domain}/categories` },
   ];
 
-  if (categoryData.parent) {
+  if (categoryData.parent && categoryData.parent.nameFr) {
     breadcrumbItems.push({
       name: categoryData.parent.nameFr,
       url: `https://${domain}/categories/${categoryData.parent.slug}`,
@@ -183,7 +183,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   }
 
   breadcrumbItems.push({
-    name: categoryData.nameFr,
+    name: categoryData.nameFr || categoryData.slug,
     url: `https://${domain}/categories/${categoryData.slug}`,
   });
 
@@ -195,7 +195,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <StructuredData
         domain={domain}
         type="category"
-        categoryName={categoryData.nameFr}
+        categoryName={categoryData.nameFr || undefined}
         companies={companies}
         breadcrumbs={breadcrumbItems}
       />
