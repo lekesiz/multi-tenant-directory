@@ -45,74 +45,68 @@ async function getCategories(domainId: number) {
   // Filter to only show parent categories (no parentId)
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
-  // Step 1: Get all visible company IDs for this domain
-  console.log('[DEBUG] Getting visible companies for domainId:', domainId);
-  const visibleCompanyContent = await prisma.companyContent.findMany({
-    where: {
-      domainId: domainId,
-      isVisible: true,
-      company: {
-        isActive: true,
-      },
-    },
-    select: {
-      companyId: true,
-    },
-  });
+  // Use raw SQL to get category counts (workaround for Prisma mapping issue)
+  try {
+    const categoryRelations = await prisma.$queryRaw<Array<{ companyId: number; categoryId: number }>>`
+      SELECT cc."companyId", cc."categoryId"
+      FROM company_categories cc
+      INNER JOIN company_contents cont ON cont."companyId" = cc."companyId"
+      INNER JOIN companies c ON c.id = cc."companyId"
+      WHERE cont."domainId" = ${domainId}
+        AND cont."isVisible" = true
+        AND c."isActive" = true
+    `;
 
-  const visibleCompanyIds = visibleCompanyContent.map((c) => c.companyId);
-  console.log('[DEBUG] Found', visibleCompanyIds.length, 'visible companies:', visibleCompanyIds);
+    // Build a map of categoryId -> company count
+    const categoryCountMap = new Map<number, Set<number>>();
+    
+    categoryRelations.forEach((relation) => {
+      if (!categoryCountMap.has(relation.categoryId)) {
+        categoryCountMap.set(relation.categoryId, new Set());
+      }
+      categoryCountMap.get(relation.categoryId)!.add(relation.companyId);
+    });
 
-  // Step 2: Get all category relations for these companies
-  console.log('[DEBUG] Getting category relations for', visibleCompanyIds.length, 'companies');
-  const categoryRelations = await prisma.companyCategory.findMany({
-    where: {
-      companyId: {
-        in: visibleCompanyIds,
-      },
-    },
-    select: {
-      companyId: true,
-      categoryId: true,
-    },
-  });
-  console.log('[DEBUG] Found', categoryRelations.length, 'category relations');
-  console.log('[DEBUG] Sample relations:', categoryRelations.slice(0, 5));
+    // For each category, assign the count from the map
+    const categoriesWithCounts = parentCategories.map((category) => {
+      const parentCount = categoryCountMap.get(category.id)?.size || 0;
 
-  // Build a map of categoryId -> company count
-  const categoryCountMap = new Map<number, Set<number>>();
-  
-  categoryRelations.forEach((relation) => {
-    if (!categoryCountMap.has(relation.categoryId)) {
-      categoryCountMap.set(relation.categoryId, new Set());
-    }
-    categoryCountMap.get(relation.categoryId)!.add(relation.companyId);
-  });
+      const childrenWithCounts = category.children.map((child) => {
+        const childCount = categoryCountMap.get(child.id)?.size || 0;
+        return {
+          ...child,
+          _count: {
+            companyCategories: childCount,
+          },
+        };
+      });
 
-  // For each category, assign the count from the map
-  const categoriesWithCounts = parentCategories.map((category) => {
-    const parentCount = categoryCountMap.get(category.id)?.size || 0;
-
-    const childrenWithCounts = category.children.map((child) => {
-      const childCount = categoryCountMap.get(child.id)?.size || 0;
       return {
-        ...child,
+        ...category,
         _count: {
-          companyCategories: childCount,
+          companyCategories: parentCount,
         },
+        children: childrenWithCounts,
       };
     });
 
-    return {
+    return categoriesWithCounts;
+  } catch (error) {
+    console.error('Error fetching category counts:', error);
+    // Return categories with 0 counts on error
+    return parentCategories.map((category) => ({
       ...category,
       _count: {
-        companyCategories: parentCount,
+        companyCategories: 0,
       },
-      children: childrenWithCounts,
-    };
-  });
-
-  return categoriesWithCounts;
+      children: category.children.map((child) => ({
+        ...child,
+        _count: {
+          companyCategories: 0,
+        },
+      })),
+    }));
+  }
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -199,23 +193,6 @@ export default async function CategoriesPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Debug Info */}
-        <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <h2 className="text-xl font-bold text-yellow-900 mb-2">🐛 Debug Info</h2>
-          <pre className="text-xs text-yellow-800 overflow-auto">
-            {JSON.stringify({
-              domainId: domainData.id,
-              totalCategories: categories.length,
-              sampleCategory: categories[0] ? {
-                id: categories[0].id,
-                name: categories[0].nameFr,
-                count: categories[0]._count.companyCategories,
-                childrenCount: categories[0].children.length,
-              } : null,
-            }, null, 2)}
-          </pre>
-        </div>
-
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
