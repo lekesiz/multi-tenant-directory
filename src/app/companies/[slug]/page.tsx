@@ -389,7 +389,7 @@ export default async function CompanyDetailPage({
                   </h2>
                   <SafeHTML
                     html={content.customDescription}
-                    className="text-gray-700"
+                    className="text-gray-900 leading-relaxed"
                   />
                 </div>
               )}
