@@ -47,30 +47,48 @@ async function getStats(domainId: number) {
 }
 
 /**
- * Get popular categories for a domain with French names
+ * Get main categories (parent categories only) with company counts
  */
-async function getPopularCategories(domainId: number) {
-  const categories = await getCompaniesByCategoryCount(domainId);
-  const topCategories = categories.slice(0, 8);
-  
-  // Get French names for each category
-  const categoriesWithFrenchNames = await Promise.all(
-    topCategories.map(async (cat) => {
-      // Get category ID from database
-      const categoryRecord = await prisma.businessCategory.findFirst({
-        where: { googleCategory: cat.name }
+async function getMainCategories(domainId: number) {
+  // Get all parent categories (7 main categories)
+  const mainCategories = await prisma.category.findMany({
+    where: {
+      parentId: null,
+    },
+    orderBy: {
+      nameFr: 'asc',
+    },
+  });
+
+  // For each main category, count companies (including subcategories)
+  const categoriesWithCounts = await Promise.all(
+    mainCategories.map(async (category) => {
+      // Get all child category IDs
+      const childCategories = await prisma.category.findMany({
+        where: { parentId: category.id },
+        select: { id: true },
       });
-      
+
+      const allCategoryIds = [category.id, ...childCategories.map(c => c.id)];
+
+      // Count companies in this category and its children
+      const count = await prisma.companyCategory.count({
+        where: {
+          categoryId: { in: allCategoryIds },
+        },
+      });
+
       return {
-        id: categoryRecord?.id || 0,
-        slug: cat.name,
-        name: await getCategoryFrenchName(cat.name),
-        count: cat.count,
+        id: category.id,
+        slug: category.slug,
+        name: category.nameFr,
+        icon: category.icon,
+        count,
       };
     })
   );
-  
-  return categoriesWithFrenchNames;
+
+  return categoriesWithCounts;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -109,54 +127,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const categoryIcons: Record<string, string> = {
-  Restaurant: '🍽️',
-  Boulangerie: '🥖',
-  Pâtisserie: '🍰',
-  Pharmacie: '💊',
-  Garage: '🚗',
-  Coiffure: '💇',
-  Beauté: '💄',
-  Santé: '⚕️',
-  Médecin: '🩺',
-  Dentiste: '🦷',
-  Kinésithérapie: '🏥',
-  Fleuriste: '🌸',
-  Pizzeria: '🍕',
-  Tabac: '🚬',
-  Presse: '📰',
-  Immobilier: '🏠',
-  Banque: '🏦',
-  Supermarché: '🛒',
-  Café: '☕',
-  Bar: '🍺',
-  Plomberie: '🔧',
-  Chauffage: '🔥',
-  Optique: '👓',
-  'Auto-École': '🚦',
-  Vétérinaire: '🐾',
-  Librairie: '📚',
-  Papeterie: '✏️',
-  Menuiserie: '🪚',
-  Électricité: '⚡',
-  Boucherie: '🥩',
-  Charcuterie: '🥓',
-  Traiteur: '🍱',
-  Épicerie: '🏪',
-  Commerce: '🛍️',
-  Services: '🔧',
-  Loisirs: '🎨',
-  Éducation: '📚',
-  Formation: '🎓',
-  Artisan: '🔨',
-  Poterie: '🏺',
-  Brasserie: '🍺',
-  Musée: '🏛️',
-};
-
-function getCategoryIcon(categoryName: string): string {
-  return categoryIcons[categoryName] || '📍';
-}
+// Category icons are now stored in the database (categories.icon field)
+// No need for hardcoded mapping anymore
 
 export default async function Home() {
   try {
@@ -172,19 +144,20 @@ export default async function Home() {
       getFeaturedCompanies(domainData.id),
     ]);
 
-    // Get popular categories for LeadForm (with error handling)
-    let popularCategories: Array<{
+    // Get main categories (7 parent categories) with error handling
+    let mainCategories: Array<{
       id: number;
       slug: string;
       name: string;
+      icon: string | null;
       count: number;
     }> = [];
     try {
-      popularCategories = await getPopularCategories(domainData.id);
+      mainCategories = await getMainCategories(domainData.id);
     } catch (error) {
-      logger.error('Error fetching popular categories:', error);
+      logger.error('Error fetching main categories:', error);
       // Fallback to empty array if database is not available
-      popularCategories = [];
+      mainCategories = [];
     }
 
   return (
@@ -305,38 +278,42 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Categories Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-          Catégories Populaires
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {popularCategories.map((category) => (
+      {/* Categories Section - Main Categories Only */}
+      {mainCategories.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            Catégories Populaires
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {mainCategories.map((category) => (
+              <Link
+                key={category.slug}
+                href={`/categories/${encodeURIComponent(category.slug)}`}
+                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1 cursor-pointer group"
+              >
+                <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
+                  {category.icon || '📁'}
+                </div>
+                <div className="font-semibold text-gray-900 mb-2 text-lg">
+                  {category.name}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {category.count} entreprise{category.count > 1 ? 's' : ''}
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-8">
             <Link
-              key={category.slug}
-              href={`/categories/${encodeURIComponent(category.slug)}`}
-              className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all hover:-translate-y-1 cursor-pointer"
+              href="/categories"
+              className="inline-block text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition-all"
+              style={{ background: domainData.primaryColor || '#2563EB' }}
             >
-              <div className="text-4xl mb-3">{getCategoryIcon(category.name)}</div>
-              <div className="font-semibold text-gray-900 mb-1">
-                {category.name}
-              </div>
-              <div className="text-sm text-gray-500">
-                {category.count} entreprise{category.count > 1 ? 's' : ''}
-              </div>
+              Voir Toutes les Catégories
             </Link>
-          ))}
-        </div>
-        <div className="text-center mt-8">
-          <Link
-            href="/categories"
-            className="inline-block text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition-all"
-            style={{ background: domainData.primaryColor || '#2563EB' }}
-          >
-            Voir Toutes les Catégories
-          </Link>
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">

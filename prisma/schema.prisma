@@ -1430,18 +1430,18 @@ model Category {
   id          Int      @id @default(autoincrement())
   slug        String   @unique
   name        String
-  nameFr      String?  @map("namefr") // French name
-  nameEn      String?  @map("nameen") // English name
-  nameDe      String?  @map("namede") // German name
+  nameFr      String? // French name
+  nameEn      String? // English name
+  nameDe      String? // German name
   description String?
   icon        String? // Icon name or emoji
   color       String? // Hex color code
-  parentId    Int?     @map("parentid") // Parent category ID for hierarchical structure
-  googleTypes String[] @map("googletypes") // Google Place types that map to this category
-  isActive    Boolean  @default(true) @map("isactive")
+  parentId    Int? // Parent category ID for hierarchical structure
+  googleTypes String[] // Google Place types that map to this category
+  isActive    Boolean  @default(true)
   order       Int      @default(0) // Display order
-  createdAt   DateTime @default(now()) @map("createdat")
-  updatedAt   DateTime @updatedAt @map("updatedat")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
   parent            Category?         @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
@@ -1457,10 +1457,10 @@ model Category {
 // Junction table for many-to-many relationship between Company and Category
 model CompanyCategory {
   id         Int      @id @default(autoincrement())
-  companyId  Int      @map("companyid")
-  categoryId Int      @map("categoryid")
-  isPrimary  Boolean  @default(false) @map("isprimary") // Mark one category as primary
-  createdAt  DateTime @default(now()) @map("createdat")
+  companyId  Int
+  categoryId Int
+  isPrimary  Boolean  @default(false) // Mark one category as primary
+  createdAt  DateTime @default(now())
 
   // Relations
   company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
