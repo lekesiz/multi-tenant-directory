@@ -304,10 +304,7 @@ export default async function HomePage() {
       )}
 
       {/* Structured Data */}
-      <StructuredData
-        domain={domainData}
-        stats={stats}
-      />
+      <StructuredData domain={domainData.name} />
 
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
