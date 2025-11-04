@@ -25,6 +25,9 @@ interface Company {
   categories: string[];
   logoUrl: string | null;
   coverImageUrl: string | null;
+  siren: string | null;
+  siret: string | null;
+  legalForm: string | null;
   content: Array<{
     id: number;
     domainId: number;
@@ -86,6 +89,9 @@ export default function CompanyEditForm({
     categories: company.categories,
     logoUrl: company.logoUrl || '',
     coverImageUrl: company.coverImageUrl || '',
+    siren: company.siren || '',
+    siret: company.siret || '',
+    legalForm: company.legalForm || '',
   });
 
   const [domainSettings, setDomainSettings] = useState<
