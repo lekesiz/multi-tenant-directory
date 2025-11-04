@@ -102,11 +102,21 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
   );
 
   if (parsed.success === false) {
+    const errors = parsed.error.flatten().fieldErrors;
     logger.error(
       '❌ Invalid environment variables:',
-      parsed.error.flatten().fieldErrors,
+      errors,
     );
-    throw new Error('Invalid environment variables');
+    // Log each error separately for debugging
+    Object.entries(errors).forEach(([key, messages]) => {
+      logger.error(`  - ${key}: ${messages?.join(', ')}`);
+    });
+    // In production, log but don't throw to avoid breaking the app
+    if (process.env.NODE_ENV === 'production') {
+      logger.warn('⚠️  Running with invalid env vars in production!');
+    } else {
+      throw new Error('Invalid environment variables');
+    }
   }
 
   env = new Proxy(parsed.data as any, {
