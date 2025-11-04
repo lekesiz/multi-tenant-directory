@@ -45,55 +45,59 @@ async function getCategories(domainId: number) {
   // Filter to only show parent categories (no parentId)
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
-  // For each category (parent and children), count companies in this domain using raw SQL
-  const categoriesWithCounts = await Promise.all(
-    parentCategories.map(async (category) => {
-      // Count companies for parent category using raw SQL
-      const parentCountResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
-        SELECT COUNT(DISTINCT c.id)::bigint as count
-        FROM companies c
-        INNER JOIN company_categories cc ON cc."companyId" = c.id
-        INNER JOIN company_content content ON content."companyId" = c.id
-        WHERE cc."categoryId" = ${category.id}
-          AND content."domainId" = ${domainId}
-          AND content."isVisible" = true
-          AND c."isActive" = true
-      `;
-      const parentCount = Number(parentCountResult[0]?.count || 0);
-
-      // Count companies for each child category
-      const childrenWithCounts = await Promise.all(
-        category.children.map(async (child) => {
-          const childCountResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
-            SELECT COUNT(DISTINCT c.id)::bigint as count
-            FROM companies c
-            INNER JOIN company_categories cc ON cc."companyId" = c.id
-            INNER JOIN company_content content ON content."companyId" = c.id
-            WHERE cc."categoryId" = ${child.id}
-              AND content."domainId" = ${domainId}
-              AND content."isVisible" = true
-              AND c."isActive" = true
-          `;
-          const childCount = Number(childCountResult[0]?.count || 0);
-
-          return {
-            ...child,
-            _count: {
-              companyCategories: childCount,
-            },
-          };
-        })
-      );
-
-      return {
-        ...category,
-        _count: {
-          companyCategories: parentCount,
+  // Get all companies with content for this domain
+  const companiesWithContent = await prisma.company.findMany({
+    where: {
+      isActive: true,
+      content: {
+        some: {
+          domainId: domainId,
+          isVisible: true,
         },
-        children: childrenWithCounts,
+      },
+    },
+    select: {
+      id: true,
+      companyCategories: {
+        select: {
+          categoryId: true,
+        },
+      },
+    },
+  });
+
+  // Build a map of categoryId -> company count
+  const categoryCountMap = new Map<number, number>();
+  
+  companiesWithContent.forEach((company) => {
+    company.companyCategories.forEach((cc) => {
+      const currentCount = categoryCountMap.get(cc.categoryId) || 0;
+      categoryCountMap.set(cc.categoryId, currentCount + 1);
+    });
+  });
+
+  // For each category, assign the count from the map
+  const categoriesWithCounts = parentCategories.map((category) => {
+    const parentCount = categoryCountMap.get(category.id) || 0;
+
+    const childrenWithCounts = category.children.map((child) => {
+      const childCount = categoryCountMap.get(child.id) || 0;
+      return {
+        ...child,
+        _count: {
+          companyCategories: childCount,
+        },
       };
-    })
-  );
+    });
+
+    return {
+      ...category,
+      _count: {
+        companyCategories: parentCount,
+      },
+      children: childrenWithCounts,
+    };
+  });
 
   return categoriesWithCounts;
 }
