@@ -160,10 +160,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <HeroSection
-        domain={domainData}
-        stats={stats}
-      />
+      <HeroSection domain={domainData.name} />
 
       {/* Benefits Section */}
       <BenefitsSection />
