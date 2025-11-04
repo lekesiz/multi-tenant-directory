@@ -46,8 +46,7 @@ async function getCategories(domainId: number) {
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
   // Use raw SQL to get category counts (workaround for Prisma mapping issue)
-  try {
-    const categoryRelations = await prisma.$queryRaw<Array<{ companyId: number; categoryId: number }>>`
+  const categoryRelations = await prisma.$queryRaw<Array<{ companyId: number; categoryId: number }>>`
       SELECT cc."companyId", cc."categoryId"
       FROM company_categories cc
       INNER JOIN company_content cont ON cont."companyId" = cc."companyId"
@@ -90,23 +89,7 @@ async function getCategories(domainId: number) {
       };
     });
 
-    return categoriesWithCounts;
-  } catch (error) {
-    console.error('Error fetching category counts:', error);
-    // Return categories with 0 counts on error
-    return parentCategories.map((category) => ({
-      ...category,
-      _count: {
-        companyCategories: 0,
-      },
-      children: category.children.map((child) => ({
-        ...child,
-        _count: {
-          companyCategories: 0,
-        },
-      })),
-    }));
-  }
+  return categoriesWithCounts;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
