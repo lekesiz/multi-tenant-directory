@@ -21,28 +21,16 @@ async function getDomainInfo() {
   return { domain, cityName, displayName, domainData };
 }
 
-async function getCategories() {
-  // Get all active categories with their company count
+async function getCategories(domainId: number) {
+  // Get all active categories
   const categories = await prisma.category.findMany({
     where: {
       isActive: true,
     },
     include: {
-      _count: {
-        select: {
-          companyCategories: true,
-        },
-      },
       children: {
         where: {
           isActive: true,
-        },
-        include: {
-          _count: {
-            select: {
-              companyCategories: true,
-            },
-          },
         },
         orderBy: {
           order: 'asc',
@@ -57,7 +45,65 @@ async function getCategories() {
   // Filter to only show parent categories (no parentId)
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
-  return parentCategories;
+  // For each category (parent and children), count companies in this domain
+  const categoriesWithCounts = await Promise.all(
+    parentCategories.map(async (category) => {
+      // Count companies for parent category
+      const parentCount = await prisma.company.count({
+        where: {
+          companyCategories: {
+            some: {
+              categoryId: category.id,
+            },
+          },
+          content: {
+            some: {
+              domainId: domainId,
+              isVisible: true,
+            },
+          },
+        },
+      });
+
+      // Count companies for each child category
+      const childrenWithCounts = await Promise.all(
+        category.children.map(async (child) => {
+          const childCount = await prisma.company.count({
+            where: {
+              companyCategories: {
+                some: {
+                  categoryId: child.id,
+                },
+              },
+              content: {
+                some: {
+                  domainId: domainId,
+                  isVisible: true,
+                },
+              },
+            },
+          });
+
+          return {
+            ...child,
+            _count: {
+              companyCategories: childCount,
+            },
+          };
+        })
+      );
+
+      return {
+        ...category,
+        _count: {
+          companyCategories: parentCount,
+        },
+        children: childrenWithCounts,
+      };
+    })
+  );
+
+  return categoriesWithCounts;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -79,7 +125,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function CategoriesPage() {
   const { domain, displayName, domainData } = await getDomainInfo();
-  const categories = await getCategories();
+  
+  if (!domainData) {
+    return <div>Domain not found</div>;
+  }
+  
+  const categories = await getCategories(domainData.id);
 
   // Calculate total categories (parent + children)
   const totalCategories = categories.reduce(
