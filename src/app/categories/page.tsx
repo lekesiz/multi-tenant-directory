@@ -59,9 +59,9 @@ async function getCategories(domainId: number) {
     },
   });
 
-  const visibleCompanyIds = visibleCompanies.map((c) => c.companyId);
+  const visibleCompanyIds = new Set(visibleCompanies.map((c) => c.companyId));
 
-  if (visibleCompanyIds.length === 0) {
+  if (visibleCompanyIds.size === 0) {
     // No visible companies, return categories with 0 counts
     return parentCategories.map((category) => ({
       ...category,
@@ -77,29 +77,37 @@ async function getCategories(domainId: number) {
     }));
   }
 
-  // Get all category relations for visible companies using $queryRawUnsafe
-  // This avoids the Prisma mapping issue
-  const categoryRelations = await prisma.$queryRawUnsafe<Array<{ companyId: number; categoryId: number }>>(
-    `SELECT "companyId", "categoryId" FROM company_categories WHERE "companyId" = ANY($1::int[])`,
-    visibleCompanyIds
-  );
-
-  // Build a map of categoryId -> Set of company IDs
-  const categoryCountMap = new Map<number, Set<number>>();
-  
-  categoryRelations.forEach((relation) => {
-    if (!categoryCountMap.has(relation.categoryId)) {
-      categoryCountMap.set(relation.categoryId, new Set());
-    }
-    categoryCountMap.get(relation.categoryId)!.add(relation.companyId);
+  // Get ALL category relations (we'll filter in memory)
+  // This avoids the Prisma mapping bug with companyCategories
+  const allCategories = await prisma.category.findMany({
+    where: {
+      isActive: true,
+    },
+    include: {
+      companyCategories: {
+        select: {
+          companyId: true,
+        },
+      },
+    },
   });
 
-  // Assign counts to categories
+  // Build a map of categoryId -> count of visible companies
+  const categoryCountMap = new Map<number, number>();
+  
+  allCategories.forEach((category) => {
+    const visibleCompaniesInCategory = category.companyCategories.filter((cc) =>
+      visibleCompanyIds.has(cc.companyId)
+    );
+    categoryCountMap.set(category.id, visibleCompaniesInCategory.length);
+  });
+
+  // Assign counts to parent categories
   const categoriesWithCounts = parentCategories.map((category) => {
-    const parentCount = categoryCountMap.get(category.id)?.size || 0;
+    const parentCount = categoryCountMap.get(category.id) || 0;
 
     const childrenWithCounts = category.children.map((child) => {
-      const childCount = categoryCountMap.get(child.id)?.size || 0;
+      const childCount = categoryCountMap.get(child.id) || 0;
       return {
         ...child,
         _count: {
