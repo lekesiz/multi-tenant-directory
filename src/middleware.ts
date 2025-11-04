@@ -14,6 +14,7 @@ const SUPPORTED_DOMAINS = [
   'brumath.pro',
   'erstein.pro',
   'geispolsheim.pro',
+  'gries.pro',
   'haguenau.pro',
   'hoerdt.pro',
   'illkirch.pro',
