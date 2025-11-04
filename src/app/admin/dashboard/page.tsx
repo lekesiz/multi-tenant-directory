@@ -48,16 +48,25 @@ async function getDashboardStats() {
       where: { isActive: true },
     });
 
-    // Get total reviews
-    stats.totalReviews = await prisma.review.count();
+    // Get total reviews (sum of Google reviewCount)
+    const companiesWithReviews = await prisma.company.findMany({
+      select: { reviewCount: true },
+      where: { reviewCount: { not: null } },
+    });
+    stats.totalReviews = companiesWithReviews.reduce(
+      (sum, c) => sum + (c.reviewCount || 0),
+      0
+    );
 
-    // Get average rating
-    const reviews = await prisma.review.findMany({
+    // Get average rating from companies
+    const companiesWithRating = await prisma.company.findMany({
       select: { rating: true },
+      where: { rating: { not: null } },
     });
     stats.avgRating =
-      reviews.length > 0
-        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      companiesWithRating.length > 0
+        ? companiesWithRating.reduce((sum, c) => sum + (c.rating || 0), 0) /
+          companiesWithRating.length
         : 0;
 
     // Get total company content links
