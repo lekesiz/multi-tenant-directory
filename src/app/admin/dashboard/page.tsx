@@ -51,7 +51,7 @@ async function getDashboardStats() {
     // Get total reviews (sum of Google reviewCount)
     const companiesWithReviews = await prisma.company.findMany({
       select: { reviewCount: true },
-      where: { reviewCount: { not: null } },
+      where: { reviewCount: { gt: 0 } },
     });
     stats.totalReviews = companiesWithReviews.reduce(
       (sum, c) => sum + (c.reviewCount || 0),
@@ -61,7 +61,7 @@ async function getDashboardStats() {
     // Get average rating from companies
     const companiesWithRating = await prisma.company.findMany({
       select: { rating: true },
-      where: { rating: { not: null } },
+      where: { rating: { gt: 0 } },
     });
     stats.avgRating =
       companiesWithRating.length > 0
