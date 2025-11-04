@@ -171,6 +171,8 @@ export default async function AnnuairePage({
         city: true,
         phone: true,
         businessHours: true,
+        rating: true,
+        reviewCount: true,
         content: {
           where: {
             domainId: currentDomain.id,
