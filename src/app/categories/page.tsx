@@ -46,6 +46,7 @@ async function getCategories(domainId: number) {
   const parentCategories = categories.filter((cat) => !cat.parentId);
 
   // Get all companies with content for this domain
+  console.log('[DEBUG] Fetching companies for domainId:', domainId);
   const companiesWithContent = await prisma.company.findMany({
     where: {
       isActive: true,
@@ -66,6 +67,11 @@ async function getCategories(domainId: number) {
     },
   });
 
+  console.log('[DEBUG] Found companies:', companiesWithContent.length);
+  if (companiesWithContent.length > 0) {
+    console.log('[DEBUG] First company:', companiesWithContent[0]);
+  }
+  
   // Build a map of categoryId -> company count
   const categoryCountMap = new Map<number, number>();
   
