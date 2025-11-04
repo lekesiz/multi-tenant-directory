@@ -199,6 +199,23 @@ export default async function CategoriesPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Debug Info */}
+        <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h2 className="text-xl font-bold text-yellow-900 mb-2">🐛 Debug Info</h2>
+          <pre className="text-xs text-yellow-800 overflow-auto">
+            {JSON.stringify({
+              domainId: domainData.id,
+              totalCategories: categories.length,
+              sampleCategory: categories[0] ? {
+                id: categories[0].id,
+                name: categories[0].nameFr,
+                count: categories[0]._count.companyCategories,
+                childrenCount: categories[0].children.length,
+              } : null,
+            }, null, 2)}
+          </pre>
+        </div>
+
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
