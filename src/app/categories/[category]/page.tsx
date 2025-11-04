@@ -145,6 +145,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const { domain, displayName } = await getDomainInfo();
   const { category } = await params;
   
+  // Get domain data for Footer
+  const domainData = await prisma.domain.findUnique({
+    where: { name: domain },
+  });
+  
   // Normalize slug to lowercase
   const categorySlug = decodeURIComponent(category).toLowerCase();
 
@@ -507,7 +512,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </main>
 
       {/* Footer */}
-      <Footer domainName={domainData.name} primaryColor={domainData.primaryColor || undefined} />
+      <Footer domainName={domainData?.name || domain} primaryColor={domainData?.primaryColor || undefined} />
     </div>
     </>
   );

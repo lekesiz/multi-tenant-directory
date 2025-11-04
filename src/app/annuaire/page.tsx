@@ -510,7 +510,7 @@ export default async function AnnuairePage({
       </div>
 
       {/* Footer */}
-      <Footer domainName={domainData.name} primaryColor={domainData.primaryColor || undefined} />
+      <Footer domainName={currentDomain.name} primaryColor={currentDomain.primaryColor || undefined} />
     </div>
   );
 }
