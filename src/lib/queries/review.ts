@@ -49,22 +49,27 @@ export async function getCompanyAverageRating(companyId: number) {
 
 /**
  * Get total review count for companies in a domain
+ * Uses Google review counts if available, otherwise local reviews
  * @param domainId - Domain ID
  */
 export async function getReviewsCountByDomain(domainId: number) {
-  return prisma.review.count({
+  // Get all companies in the domain
+  const companies = await prisma.company.findMany({
     where: {
-      company: {
-        content: {
-          some: {
-            domainId,
-            isVisible: true,
-          },
+      content: {
+        some: {
+          domainId,
+          isVisible: true,
         },
       },
-      isApproved: true,
+    },
+    select: {
+      reviewCount: true,
     },
   });
+
+  // Sum up all review counts (Google counts)
+  return companies.reduce((total, company) => total + (company.reviewCount || 0), 0);
 }
 
 /**

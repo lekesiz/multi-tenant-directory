@@ -293,7 +293,7 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
                 onChange={(e) => setFilterBy(e.target.value as FilterOption)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
-                <option value="all">Tous les avis ({reviews.length})</option>
+                <option value="all">Tous les avis ({totalReviews || reviews.length})</option>
                 <option value="google">
                   Google ({reviews.filter((r) => r.source === 'google').length})
                 </option>

@@ -270,15 +270,21 @@ export default async function AnnuairePage({
 
   // Calculate average rating for each company
   let companiesWithRating = companies.map((company) => {
-    const avgRating = company.reviews.length > 0
-      ? company.reviews.reduce((sum, r) => sum + r.rating, 0) / company.reviews.length
-      : 0;
+    // Use Google rating if available, otherwise calculate from local reviews
+    const avgRating = company.rating || (
+      company.reviews.length > 0
+        ? company.reviews.reduce((sum, r) => sum + r.rating, 0) / company.reviews.length
+        : 0
+    );
+
+    // Use Google review count if available, otherwise use local reviews count
+    const reviewCount = company.reviewCount || company.reviews.length;
 
     return {
       ...company,
       categories: company.companyCategories.map(cc => cc.category),
       avgRating,
-      reviewCount: company.reviews.length,
+      reviewCount,
     };
   });
 
