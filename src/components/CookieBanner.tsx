@@ -75,8 +75,8 @@ export default function CookieBanner() {
             </p>
             <p className="text-xs text-gray-500 mt-2">
               Pour plus d'informations, consultez notre{' '}
-              <a 
-                href="/politique-confidentialite" 
+              <a
+                href="/politique-de-confidentialite"
                 className="text-blue-600 hover:text-blue-800 underline"
                 target="_blank"
               >

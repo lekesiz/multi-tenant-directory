@@ -280,7 +280,7 @@ export default function BusinessRegisterPage() {
                 </Link>{' '}
                 et la{' '}
                 <Link
-                  href="/politique-confidentialite"
+                  href="/politique-de-confidentialite"
                   target="_blank"
                   className="text-blue-600 hover:underline"
                 >
