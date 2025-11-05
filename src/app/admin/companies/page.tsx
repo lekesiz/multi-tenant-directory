@@ -55,13 +55,6 @@ export default async function AdminCompaniesPage() {
         <div className="flex gap-3">
           <SyncReviewsButton />
           <Link
-            href="/admin/fix-slugs"
-            className="bg-amber-600 text-white px-4 py-3 rounded-lg hover:bg-amber-700 transition-colors text-sm"
-            title="Corriger les slugs invalides"
-          >
-            Corriger URLs
-          </Link>
-          <Link
             href="/admin/companies/new"
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
           >
