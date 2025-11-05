@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 // import { requireAdmin } from '@/lib/auth-guard'; // Removed: Frontend already has auth
-import { createCompanyFromSiret } from '@/lib/google-places';
+import { createCompanyFromSiret, mapGoogleTypesToCategory } from '@/lib/google-places';
 import { generateCompanyProfile } from '@/lib/gemini';
 import { slugify } from '@/lib/utils';
 
@@ -163,6 +163,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Step 5.5: Map Google types to category
+    let categoryId: number | null = null;
+    if (google?.types) {
+      try {
+        categoryId = await mapGoogleTypesToCategory(google.types);
+        if (categoryId) {
+          logger.info('Category mapped from Google types', {
+            siret,
+            googleTypes: google.types,
+            categoryId,
+          });
+        }
+      } catch (error) {
+        logger.warn('Failed to map Google types to category', { error, types: google?.types });
+      }
+    }
+
     // Step 6: Create company in database
     const company = await prisma.company.create({
       data: {
@@ -198,6 +215,7 @@ export async function POST(request: NextRequest) {
 
         // Categories
         categories: annuaire.categories,
+        ...(categoryId && { categoryId }),
 
         // AI-generated content
         ...(aiProfile && {

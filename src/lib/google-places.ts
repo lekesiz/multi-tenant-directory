@@ -121,6 +121,8 @@ interface PlaceDetails {
     height: number;
     width: number;
   }>;
+  types?: string[];
+  business_status?: string;
 }
 
 interface GoogleReview {
@@ -174,7 +176,7 @@ export async function searchPlace(
  */
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=place_id,name,formatted_address,formatted_phone_number,website,geometry,rating,user_ratings_total,reviews,opening_hours,photos&key=${GOOGLE_MAPS_API_KEY}`;
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=place_id,name,formatted_address,formatted_phone_number,website,geometry,rating,user_ratings_total,reviews,opening_hours,photos,types,business_status&key=${GOOGLE_MAPS_API_KEY}`;
 
     const response = await fetch(url);
     const data = await response.json();
@@ -569,3 +571,74 @@ export async function createCompanyFromSiret(siret: string): Promise<{
   }
 }
 
+
+/**
+ * Map Google Place types to database category
+ * Google returns types like: ["restaurant", "food", "point_of_interest"]
+ * We need to find the matching category in our database by googleBusinessCategory field
+ */
+export async function mapGoogleTypesToCategory(googleTypes: string[] | undefined): Promise<number | null> {
+  if (!googleTypes || googleTypes.length === 0) {
+    return null;
+  }
+
+  try {
+    // Try to find a category that matches one of the Google types
+    // Google types use underscores (e.g., "beauty_salon"), our slugs use hyphens (e.g., "beauty-salon")
+    const normalizedTypes = googleTypes.map(type => 
+      type.toLowerCase().replace(/_/g, '-')
+    );
+
+    logger.info('Mapping Google types to category', { 
+      googleTypes, 
+      normalizedTypes 
+    });
+
+    // Try to find by googleBusinessCategory field first (exact match)
+    for (const type of normalizedTypes) {
+      const category = await prisma.category.findFirst({
+        where: {
+          googleBusinessCategory: type,
+          isActive: true,
+        },
+        select: { id: true, name: true, slug: true },
+      });
+
+      if (category) {
+        logger.info('Found category by googleBusinessCategory', {
+          type,
+          categoryId: category.id,
+          categoryName: category.name,
+        });
+        return category.id;
+      }
+    }
+
+    // Fallback: try to find by slug (for backward compatibility)
+    for (const type of normalizedTypes) {
+      const category = await prisma.category.findFirst({
+        where: {
+          slug: type,
+          isActive: true,
+        },
+        select: { id: true, name: true, slug: true },
+      });
+
+      if (category) {
+        logger.info('Found category by slug', {
+          type,
+          categoryId: category.id,
+          categoryName: category.name,
+        });
+        return category.id;
+      }
+    }
+
+    logger.warn('No matching category found for Google types', { googleTypes });
+    return null;
+
+  } catch (error) {
+    logger.error('Error mapping Google types to category', { error, googleTypes });
+    return null;
+  }
+}
