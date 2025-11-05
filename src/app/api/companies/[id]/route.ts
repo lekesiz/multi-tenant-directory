@@ -167,6 +167,41 @@ export async function PUT(
       }
     }
 
+    // If categories are being updated, sync the CompanyCategory junction table
+    if (validation.data.categories !== undefined) {
+      // First, get all category IDs from slugs
+      const categoryRecords = await prisma.category.findMany({
+        where: {
+          slug: {
+            in: validation.data.categories || [],
+          },
+        },
+        select: {
+          id: true,
+          slug: true,
+        },
+      });
+
+      // Delete existing category associations
+      await prisma.companyCategory.deleteMany({
+        where: {
+          companyId: companyId,
+        },
+      });
+
+      // Create new category associations
+      if (categoryRecords.length > 0) {
+        await prisma.companyCategory.createMany({
+          data: categoryRecords.map((cat, index) => ({
+            companyId: companyId,
+            categoryId: cat.id,
+            isPrimary: index === 0, // First category is primary
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
     const company = await prisma.company.update({
       where: { id: companyId },
       data: updateData,
