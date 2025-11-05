@@ -113,7 +113,7 @@ model Company {
   @@index([subscriptionStatus, subscriptionEnd])
   @@index([isFeatured])
   @@index([siren])
-  // @@index([siret]) - TODO: Add when siret column is added to database
+  @@index([siret])
   @@index([isVerified])
   @@index([nafCode])
   @@map("companies")

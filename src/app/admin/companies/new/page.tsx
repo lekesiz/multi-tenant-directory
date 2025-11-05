@@ -268,8 +268,8 @@ export default function NewCompanyPage() {
                 </div>
               </div>
 
-              {/* SIRET Entry - Temporarily disabled until database column is added */}
-              {/* <button
+              {/* SIRET Entry - Optional method for adding companies */}
+              <button
                 onClick={handleSiretEntry}
                 className="w-full border-2 border-gray-200 rounded-lg p-6 hover:border-purple-500 transition-colors text-left"
               >
@@ -301,7 +301,7 @@ export default function NewCompanyPage() {
                     </p>
                   </div>
                 </div>
-              </button> */}
+              </button>
 
               {/* Manual Entry */}
               <button
