@@ -1008,7 +1008,7 @@ const categories: CategoryData[] = [
     nameFr: 'Éducation',
     nameEn: 'Education',
     nameDe: 'Bildung',
-    description: 'Établissements d'enseignement et formation',
+    description: 'Établissements d\'enseignement et formation',
     icon: '📚',
     color: '#06B6D4',
     googleBusinessCategory: 'Education',
@@ -1348,7 +1348,11 @@ async function seedCategory(
       description: categoryData.description,
       icon: categoryData.icon,
       color: categoryData.color,
-      parentId: parentId,
+      ...(parentId !== null && {
+        parent: {
+          connect: { id: parentId },
+        },
+      }),
       googleTypes: categoryData.googleTypes || [],
       googleBusinessCategory: categoryData.googleBusinessCategory,
       isActive: true,
