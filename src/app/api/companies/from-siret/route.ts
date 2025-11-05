@@ -90,7 +90,30 @@ export async function POST(request: NextRequest) {
       siren: annuaire.siren,
       name: annuaire.name,
       hasGoogle: !!google,
+      googlePlaceId,
     });
+
+    // Step 2.5: Check if company with this Google Place ID already exists
+    if (googlePlaceId) {
+      const existingByPlaceId = await prisma.company.findUnique({
+        where: { googlePlaceId },
+        select: { id: true, name: true, slug: true, siret: true },
+      });
+
+      if (existingByPlaceId) {
+        return NextResponse.json(
+          {
+            error: 'Company with same Google Place ID exists',
+            message: `Une entreprise avec le même emplacement Google existe déjà: ${existingByPlaceId.name}${existingByPlaceId.siret ? ` (SIRET: ${existingByPlaceId.siret})` : ''}. Cette entreprise partage le même emplacement Google Maps.`,
+            companyId: existingByPlaceId.id,
+            slug: existingByPlaceId.slug,
+            existingSiret: existingByPlaceId.siret,
+            newSiret: siret,
+          },
+          { status: 409 }
+        );
+      }
+    }
 
     // Step 3: Generate AI profile
     let aiProfile = null;
