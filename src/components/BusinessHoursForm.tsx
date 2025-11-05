@@ -155,9 +155,12 @@ export default function BusinessHoursForm({ companyId }: Props) {
         setSuccess("Horaires d'ouverture enregistrés avec succès");
         setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError("Erreur lors de l'enregistrement");
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', errorData);
+        setError(errorData.error || "Erreur lors de l'enregistrement");
       }
     } catch (err) {
+      console.error('Submit error:', err);
       setError('Une erreur est survenue');
     } finally {
       setLoading(false);

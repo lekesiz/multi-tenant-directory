@@ -18,7 +18,7 @@ const dayHoursSchema = z.union([
   // New format: multiple shifts (split shifts)
   z.object({
     closed: z.boolean(),
-    shifts: z.array(shiftSchema).min(1).max(3).optional(), // Max 3 shifts per day
+    shifts: z.array(shiftSchema).max(3).optional(), // Max 3 shifts per day, empty array allowed for closed days
   }),
   // Legacy format: single shift (backwards compatible)
   z.object({
