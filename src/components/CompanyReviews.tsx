@@ -166,25 +166,6 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
           Avis Clients ({totalReviews || reviews.length})
         </h2>
-        <div className="flex flex-col items-end gap-1">
-          <button
-            onClick={syncGoogleReviews}
-            disabled={syncing}
-            className="bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 text-sm whitespace-nowrap"
-          >
-            {syncing ? '⏳ Sync...' : '🔄 Sync Google'}
-          </button>
-          {lastSyncedAt && (
-            <span className="text-xs text-gray-500">
-              Dernière sync: {new Date(lastSyncedAt).toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </span>
-          )}
-        </div>
       </div>
 
       {reviews.length === 0 ? (
@@ -211,43 +192,17 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Average Rating */}
-                <div className="text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                    <span className="text-5xl font-bold text-gray-900">
-                      {googleRating?.toFixed(1) || stats.avgRating.toFixed(1)}
-                    </span>
-                    <span className="text-4xl text-yellow-500">★</span>
-                  </div>
-                  <p className="text-gray-600 text-sm">
-                    Basé sur {totalReviews || stats.total} avis
-                  </p>
+              {/* Average Rating */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <span className="text-5xl font-bold text-gray-900">
+                    {googleRating?.toFixed(1) || stats.avgRating.toFixed(1)}
+                  </span>
+                  <span className="text-4xl text-yellow-500">★</span>
                 </div>
-
-                {/* Rating Distribution */}
-                <div className="space-y-2">
-                  {stats.distribution.map(({ star, count, percentage }) => (
-                    <div key={star} className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-700 font-medium w-8">{star}★</span>
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-yellow-500 transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                      <span className="text-gray-600 w-12 text-right">
-                        {count > 0 ? count : ''}
-                      </span>
-                    </div>
-                  ))}
-                  {/* Warning if distribution is calculated from few reviews */}
-                  {!ratingDistribution && stats.total < 10 && (
-                    <p className="text-xs text-gray-500 mt-2 italic">
-                      * Distribution calculée à partir des avis affichés
-                    </p>
-                  )}
-                </div>
+                <p className="text-gray-600 text-sm">
+                  Basé sur {totalReviews || stats.total} avis
+                </p>
               </div>
 
               {/* Google Business Profile Link */}
