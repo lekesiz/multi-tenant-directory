@@ -40,9 +40,12 @@ input[type="number"],
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="color"],
 textarea,
 select,
-input,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
 .form-input,
 .form-control,
 [class*="input"] {
@@ -171,8 +174,12 @@ select:focus {
 /* TipTap Editor Content */
 .prose {
   max-width: none;
-  color: inherit;
+  color: #111827 !important; /* gray-900 - Force dark text */
   caret-color: #2563eb; /* blue-600 - Visible cursor in editor */
+}
+
+.prose * {
+  color: #111827 !important; /* Force all prose children to be dark */
 }
 
 .prose p {

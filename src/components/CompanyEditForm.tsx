@@ -708,7 +708,7 @@ export default function CompanyEditForm({
                           setFormData({ ...formData, latitude: e.target.value })
                         }
                         placeholder="48.8156"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                       />
                     </div>
                     <div>
@@ -723,7 +723,7 @@ export default function CompanyEditForm({
                           setFormData({ ...formData, longitude: e.target.value })
                         }
                         placeholder="7.7889"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                       />
                     </div>
                   </div>
@@ -754,7 +754,7 @@ export default function CompanyEditForm({
                           setFormData({ ...formData, logoUrl: e.target.value })
                         }
                         placeholder="https://example.com/logo.png"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                       />
                       {formData.logoUrl && (
                         <div className="mt-2">
@@ -773,7 +773,7 @@ export default function CompanyEditForm({
                           setFormData({ ...formData, coverImageUrl: e.target.value })
                         }
                         placeholder="https://example.com/cover.jpg"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                       />
                       {formData.coverImageUrl && (
                         <div className="mt-2">
@@ -1017,7 +1017,7 @@ export default function CompanyEditForm({
                           })
                         }
                         rows={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                         placeholder="Özel teklifler, indirimler..."
                       />
                     </div>
@@ -1074,7 +1074,7 @@ export default function CompanyEditForm({
                                   },
                                 })
                               }
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                               placeholder="0"
                             />
                             <p className="text-xs text-gray-500 mt-1">
@@ -1098,7 +1098,7 @@ export default function CompanyEditForm({
                                   },
                                 })
                               }
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
                             />
                             <p className="text-xs text-gray-500 mt-1">
                               Laissez vide pour illimité
