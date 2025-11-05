@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-6.17-2D3748)](https://www.prisma.io/)
 
-> **🔴 STATUS UPDATE (2025-11-04):** Project has unresolved runtime errors. See [`MANUS_AI_HANDOVER.md`](./MANUS_AI_HANDOVER.md) for complete handover documentation including current issues, recent changes, and credentials setup.
+> **🟢 STATUS UPDATE (2025-11-05):** Site 100% fonctionnel. Dernières améliorations: 315 catégories Google Business, 238 entreprises catégorisées, UX optimisée. Voir [`TODO_NOUVELLES_TACHES.md`](./TODO_NOUVELLES_TACHES.md) pour les prochaines tâches et [`RESUME_JOURNEE_5NOV2025.md`](./RESUME_JOURNEE_5NOV2025.md) pour le résumé complet.
 
 ---
 
