@@ -25,18 +25,14 @@ interface CompanyReviewsProps {
   lastSyncedAt?: Date | string | null;
 }
 
-type SortOption = 'recent' | 'oldest' | 'highest' | 'lowest';
-type FilterOption = 'all' | 'google' | 'manual';
+
 
 export default function CompanyReviews({ companyId, companyName, totalReviews, googleRating, googlePlaceId, ratingDistribution, lastSyncedAt }: CompanyReviewsProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('recent');
-  const [filterBy, setFilterBy] = useState<FilterOption>('all');
-  const [currentPage, setCurrentPage] = useState(1);
+
   const [showStats, setShowStats] = useState(true);
-  const reviewsPerPage = 5;
 
   useEffect(() => {
     fetchReviews();
@@ -105,45 +101,12 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
     return { total, avgRating, distribution };
   }, [reviews, ratingDistribution]);
 
-  // Filter and sort reviews
-  const filteredAndSortedReviews = useMemo(() => {
-    let filtered = reviews;
-
-    // Apply filter
-    if (filterBy !== 'all') {
-      filtered = reviews.filter((r) => r.source === filterBy);
-    }
-
-    // Apply sort
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case 'recent':
-          return new Date(b.reviewDate).getTime() - new Date(a.reviewDate).getTime();
-        case 'oldest':
-          return new Date(a.reviewDate).getTime() - new Date(b.reviewDate).getTime();
-        case 'highest':
-          return b.rating - a.rating;
-        case 'lowest':
-          return a.rating - b.rating;
-        default:
-          return 0;
-      }
-    });
-
-    return sorted;
-  }, [reviews, sortBy, filterBy]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredAndSortedReviews.length / reviewsPerPage);
-  const paginatedReviews = filteredAndSortedReviews.slice(
-    (currentPage - 1) * reviewsPerPage,
-    currentPage * reviewsPerPage
-  );
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [sortBy, filterBy]);
+  // Sort reviews by most recent and limit to 5
+  const displayedReviews = useMemo(() => {
+    return [...reviews]
+      .sort((a, b) => new Date(b.reviewDate).getTime() - new Date(a.reviewDate).getTime())
+      .slice(0, 5);
+  }, [reviews]);
 
   if (loading) {
     return (
@@ -236,55 +199,17 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
             </button>
           )}
 
-          {/* Filters and Sort */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6 pb-4 border-b border-gray-200">
-            {/* Filter by source */}
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Filtrer par
-              </label>
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              >
-                <option value="all">Tous les avis ({totalReviews || reviews.length})</option>
-                <option value="google">
-                  Google ({reviews.filter((r) => r.source === 'google').length})
-                </option>
-                <option value="manual">
-                  Manuel ({reviews.filter((r) => r.source === 'manual').length})
-                </option>
-              </select>
-            </div>
 
-            {/* Sort */}
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Trier par
-              </label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              >
-                <option value="recent">Plus récents</option>
-                <option value="oldest">Plus anciens</option>
-                <option value="highest">Note la plus haute</option>
-                <option value="lowest">Note la plus basse</option>
-              </select>
-            </div>
-          </div>
 
           {/* Reviews List */}
-          {filteredAndSortedReviews.length === 0 ? (
+          {displayedReviews.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               Aucun avis ne correspond à vos critères
             </div>
           ) : (
             <>
               <div className="space-y-6">
-                {paginatedReviews.map((review) => (
+                {displayedReviews.map((review) => (
                   <div
                     key={review.id}
                     className="border-b border-gray-200 pb-6 last:border-0"
@@ -397,71 +322,10 @@ export default function CompanyReviews({ companyId, companyName, totalReviews, g
                 ))}
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    aria-label="Page précédente"
-                  >
-                    ← Précédent
-                  </button>
-
-                  <div className="flex gap-1">
-                    {[...Array(totalPages)].map((_, i) => {
-                      const page = i + 1;
-                      // Show first, last, current, and adjacent pages
-                      if (
-                        page === 1 ||
-                        page === totalPages ||
-                        Math.abs(page - currentPage) <= 1
-                      ) {
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                              currentPage === page
-                                ? 'bg-blue-600 text-white'
-                                : 'border border-gray-300 hover:bg-gray-50'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        );
-                      } else if (
-                        page === currentPage - 2 ||
-                        page === currentPage + 2
-                      ) {
-                        return (
-                          <span key={page} className="px-2 py-2 text-gray-400">
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    })}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    aria-label="Page suivante"
-                  >
-                    Suivant →
-                  </button>
-                </div>
-              )}
-
-              {/* Results info with Google link */}
+              {/* Google link */}
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <p className="text-sm text-gray-500">
-                  Affichage de {(currentPage - 1) * reviewsPerPage + 1} à{' '}
-                  {Math.min(currentPage * reviewsPerPage, filteredAndSortedReviews.length)} sur{' '}
-                  {filteredAndSortedReviews.length} avis
+                  Affichage des {displayedReviews.length} avis les plus récents
                 </p>
                 {googlePlaceId && (
                   <a
