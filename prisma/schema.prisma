@@ -1427,21 +1427,22 @@ model CommunicationLog {
 
 // Category system with parent-child hierarchy
 model Category {
-  id          Int      @id @default(autoincrement())
-  slug        String   @unique
-  name        String
-  nameFr      String?  @map("namefr") // French name
-  nameEn      String?  @map("nameen") // English name
-  nameDe      String?  @map("namede") // German name
-  description String?
-  icon        String? // Icon name or emoji
-  color       String? // Hex color code
-  parentId    Int?     @map("parentid") // Parent category ID for hierarchical structure
-  googleTypes String[] @map("googletypes") // Google Place types that map to this category
-  isActive    Boolean  @default(true) @map("isactive")
-  order       Int      @default(0) // Display order
-  createdAt   DateTime @default(now()) @map("createdat")
-  updatedAt   DateTime @updatedAt @map("updatedat")
+  id                    Int      @id @default(autoincrement())
+  slug                  String   @unique
+  name                  String
+  nameFr                String?  @map("namefr") // French name
+  nameEn                String?  @map("nameen") // English name
+  nameDe                String?  @map("namede") // German name
+  description           String?
+  icon                  String? // Icon name or emoji
+  color                 String? // Hex color code
+  parentId              Int?     @map("parentid") // Parent category ID for hierarchical structure
+  googleTypes           String[] @map("googletypes") // Google Place types that map to this category (deprecated, use googleBusinessCategory)
+  googleBusinessCategory String? @map("googlebusinesscategory") // Official Google Business Profile category name
+  isActive              Boolean  @default(true) @map("isactive")
+  order                 Int      @default(0) // Display order
+  createdAt             DateTime @default(now()) @map("createdat")
+  updatedAt             DateTime @updatedAt @map("updatedat")
 
   // Relations
   parent            Category?         @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)

@@ -41,6 +41,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:business": "tsx prisma/seed-business-owners.ts",
+    "db:seed:categories:enhanced": "tsx prisma/seed-categories-enhanced.ts",
     "db:studio": "prisma studio",
     "db:optimize": "tsx scripts/apply-database-optimization.ts",
     "import:process": "tsx scripts/process-businesses.ts",
