@@ -54,3 +54,4 @@ CREDENTIALS_LOCAL.md
 MANUS_AI_HANDOVER_COMPLETE.md
 PROJE_DURUM_RAPORU.md
 .env.ai-keys
+.env.production
