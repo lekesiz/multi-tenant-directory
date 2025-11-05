@@ -33,6 +33,9 @@ async function getDashboardStats() {
     newLeads: 0,
     assignedLeads: 0,
     wonLeads: 0,
+    totalMessages: 0,
+    newMessages: 0,
+    repliedMessages: 0,
   };
 
   // Block 1: Base stats (always available)
@@ -167,6 +170,27 @@ async function getDashboardStats() {
       error: error instanceof Error ? error.message : String(error)
     });
     // Leads stats remain at default values (0)
+  }
+
+  // Block 3: Contact Messages stats (may fail if tables don't exist yet)
+  try {
+    stats.totalMessages = await prisma.contactInquiry.count();
+    stats.newMessages = await prisma.contactInquiry.count({
+      where: { status: 'new' }
+    });
+    stats.repliedMessages = await prisma.contactInquiry.count({
+      where: { status: 'replied' }
+    });
+
+    logger.info('✅ Contact messages stats retrieved successfully', {
+      totalMessages: stats.totalMessages,
+      newMessages: stats.newMessages,
+    });
+  } catch (error) {
+    logger.warn('⚠️ Contact messages stats not available (tables may not exist yet)', {
+      error: error instanceof Error ? error.message : String(error)
+    });
+    // Messages stats remain at default values (0)
   }
 
   return stats;
@@ -335,6 +359,35 @@ export default async function AdminDashboard() {
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Messages de Contact</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {stats.totalMessages}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {stats.newMessages} nouveaux
+              </p>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-lg">
+              <svg
+                className="w-8 h-8 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
             </div>
