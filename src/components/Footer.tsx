@@ -15,6 +15,7 @@ const NETWORK_DOMAINS = [
   { name: 'Brumath', url: 'https://brumath.pro' },
   { name: 'Erstein', url: 'https://erstein.pro' },
   { name: 'Geispolsheim', url: 'https://geispolsheim.pro' },
+  { name: 'Gries', url: 'https://gries.pro' },
   { name: 'Haguenau', url: 'https://haguenau.pro' },
   { name: 'Hoerdt', url: 'https://hoerdt.pro' },
   { name: 'Illkirch', url: 'https://illkirch.pro' },

@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Liste complète des 21 domaines actifs
 const newDomains = [
   { name: 'bas-rhin.pro', siteTitle: 'Bas-Rhin.PRO', siteDescription: 'Annuaire des Professionnels du Bas-Rhin', city: 'Bas-Rhin' },
   { name: 'bischwiller.pro', siteTitle: 'Bischwiller.PRO', siteDescription: 'Les Professionnels de Bischwiller', city: 'Bischwiller' },
@@ -9,6 +10,7 @@ const newDomains = [
   { name: 'brumath.pro', siteTitle: 'Brumath.PRO', siteDescription: 'Les Professionnels de Brumath', city: 'Brumath' },
   { name: 'erstein.pro', siteTitle: 'Erstein.PRO', siteDescription: 'Les Professionnels d\'Erstein', city: 'Erstein' },
   { name: 'geispolsheim.pro', siteTitle: 'Geispolsheim.PRO', siteDescription: 'Les Professionnels de Geispolsheim', city: 'Geispolsheim' },
+  { name: 'gries.pro', siteTitle: 'Gries.PRO', siteDescription: 'Les Professionnels de Gries', city: 'Gries' },
   { name: 'haguenau.pro', siteTitle: 'Haguenau.PRO', siteDescription: 'Les Professionnels de Haguenau', city: 'Haguenau' },
   { name: 'hoerdt.pro', siteTitle: 'Hoerdt.PRO', siteDescription: 'Les Professionnels de Hoerdt', city: 'Hoerdt' },
   { name: 'illkirch.pro', siteTitle: 'Illkirch.PRO', siteDescription: 'Les Professionnels d\'Illkirch-Graffenstaden', city: 'Illkirch-Graffenstaden' },
@@ -26,7 +28,7 @@ const newDomains = [
 ];
 
 async function main() {
-  console.log('🌱 Creating 20 new domains...\n');
+  console.log('🌱 Creating 21 new domains...\n');
 
   // Önce eski domain'leri sil
   console.log('🗑️  Deleting old domains...');
@@ -53,6 +55,7 @@ async function main() {
   }
 
   console.log(`\n✅ ${newDomains.length} domains created successfully!`);
+  console.log(`📊 Total domains: ${newDomains.length}`);
 }
 
 main()
