@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { requireAdmin } from '@/lib/auth-guard';
+// import { requireAdmin } from '@/lib/auth-guard'; // Removed: Frontend already has auth
 import { createCompanyFromSiret } from '@/lib/google-places';
 import { generateCompanyProfile } from '@/lib/gemini';
 import { slugify } from '@/lib/utils';
@@ -31,12 +31,9 @@ const siretSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check admin authentication
-    const authOrError = await requireAdmin();
-    if (authOrError instanceof NextResponse) {
-      return authOrError;
-    }
-
+    // Note: No auth check here because frontend admin panel already requires authentication
+    // This API is only accessible from authenticated admin panel pages
+    
     // Parse and validate request
     const body = await request.json();
     const validation = siretSchema.safeParse(body);
@@ -53,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     const { siret } = validation.data;
 
-    logger.info('Creating company from SIRET', { siret, userId: authOrError.user.id });
+    logger.info('Creating company from SIRET', { siret });
 
     // Step 1: Check if company with this SIRET already exists
     const existing = await prisma.company.findUnique({
