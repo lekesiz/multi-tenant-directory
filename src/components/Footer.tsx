@@ -133,7 +133,7 @@ export default function Footer({ domainName, primaryColor = '#2563EB' }: FooterP
               </li>
               <li>
                 <Link
-                  href="/conditions-generales"
+                  href="/cgu"
                   className="hover:text-white transition-colors"
                 >
                   CGU
