@@ -32,8 +32,12 @@
   ],
   "crons": [
     {
-      "path": "/api/cron/sync-google-reviews",
+      "path": "/api/cron/sync-reviews",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/sync-google-reviews",
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/cron/newsletter-digest",
