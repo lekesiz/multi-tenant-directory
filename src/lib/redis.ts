@@ -3,7 +3,7 @@ import { Redis } from '@upstash/redis';
 
 // Initialize Redis client (Upstash Redis for serverless)
 // If UPSTASH_REDIS_REST_URL is not set, use in-memory cache fallback
-const redis = process.env.UPSTASH_REDIS_REST_URL
+export const redis = process.env.UPSTASH_REDIS_REST_URL
   ? new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL!,
       token: process.env.UPSTASH_REDIS_REST_TOKEN!,
