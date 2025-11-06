@@ -7,10 +7,9 @@ import { logger } from '@/lib/logger';
 import { prisma } from './prisma';
 import { NextRequest } from 'next/server';
 import { cache } from 'react';
+import { getCache, setCache, deleteCache } from './redis';
 
-// Redis client for caching (if available)
-// Note: ioredis is not compatible with Edge Runtime
-// Use Upstash Redis or Vercel KV for Edge-compatible caching
+// Redis client for caching - now enabled via Upstash
 type RedisClient = {
   get: (key: string) => Promise<string | null>;
   set: (key: string, value: string, ex?: number) => Promise<void>;
@@ -20,7 +19,36 @@ type RedisClient = {
   expire: (key: string, seconds: number) => Promise<void>;
 } | null;
 
-const redis: RedisClient = null; // Disabled for Edge Runtime compatibility
+// Redis is now enabled via Upstash (Edge Runtime compatible)
+const redis: RedisClient = {
+  get: async (key: string) => {
+    const value = await getCache<string>(key);
+    return value;
+  },
+  set: async (key: string, value: string, ex?: number) => {
+    await setCache(key, value, { ttl: ex });
+  },
+  setex: async (key: string, seconds: number, value: string) => {
+    await setCache(key, value, { ttl: seconds });
+  },
+  del: async (...keys: string[]) => {
+    for (const key of keys) {
+      await deleteCache(key);
+    }
+  },
+  incr: async (key: string) => {
+    const current = await getCache<number>(key);
+    const newValue = (current || 0) + 1;
+    await setCache(key, newValue, { ttl: 3600 });
+    return newValue;
+  },
+  expire: async (key: string, seconds: number) => {
+    const value = await getCache(key);
+    if (value !== null) {
+      await setCache(key, value, { ttl: seconds });
+    }
+  },
+};
 
 // Tenant Context Types
 export interface TenantContext {
