@@ -57,3 +57,6 @@ PROJE_DURUM_RAPORU.md
 .env.production
 .env.production
 setup-vercel-env.sh
+
+# Handover credentials (sensitive)
+GUIDE_CREDENTIALS.md
