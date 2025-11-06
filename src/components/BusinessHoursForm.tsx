@@ -146,7 +146,7 @@ export default function BusinessHoursForm({ companyId }: Props) {
 
     try {
       const response = await fetch(`/api/companies/${companyId}/hours`, {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(hours),
       });
