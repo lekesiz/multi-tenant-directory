@@ -355,19 +355,6 @@ export default async function CompanyDetailPage({
                     </div>
                   )}
                 </div>
-                {avgRating && (
-                  <div className="text-center">
-                    <div className="flex items-center justify-center mb-1">
-                      <span className="text-yellow-500 text-xl sm:text-2xl mr-1">★</span>
-                      <span className="text-2xl sm:text-3xl font-bold">
-                        {avgRating.toFixed(1)}
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {company.reviews.length} avis
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* Share Buttons */}
