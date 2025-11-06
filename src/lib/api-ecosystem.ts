@@ -6,6 +6,7 @@
 import { logger } from '@/lib/logger';
 import { prisma } from './prisma';
 import crypto from 'crypto';
+import { redis } from './redis';
 
 // API Key Management
 export class ApiKeyService {
@@ -343,14 +344,31 @@ export class RateLimitService {
   }
 
   private static async getRateLimitCount(key: string): Promise<number> {
-    // In production, use Redis: return redis.get(key) || 0
-    // For now, simulate with database or in-memory cache
-    return 0;
+    if (!redis) {
+      logger.warn('Redis not configured, rate limiting disabled');
+      return 0;
+    }
+
+    try {
+      const count = await redis.get<number>(key);
+      return count || 0;
+    } catch (error) {
+      logger.error('Error getting rate limit count', { key, error });
+      return 0;
+    }
   }
 
   private static async incrementRateLimitCount(key: string, ttl: number): Promise<void> {
-    // In production, use Redis: redis.incr(key); redis.expire(key, ttl)
-    // For now, simulate
+    if (!redis) {
+      return;
+    }
+
+    try {
+      await redis.incr(key);
+      await redis.expire(key, ttl);
+    } catch (error) {
+      logger.error('Error incrementing rate limit count', { key, error });
+    }
   }
 }
 
