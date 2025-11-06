@@ -83,6 +83,7 @@ export default function CompanyEditForm({
     parentId: number | null;
   }>>([]);
   const [siretLoading, setSiretLoading] = useState(false);
+  const [syncingReviews, setSyncingReviews] = useState(false);
 
   const [formData, setFormData] = useState({
     name: company.name,
@@ -197,6 +198,41 @@ export default function CompanyEditForm({
       setTimeout(() => setError(''), 5000);
     } finally {
       setSiretLoading(false);
+    }
+  };
+
+  const handleSyncReviews = async () => {
+    if (!company.googlePlaceId) {
+      setError('❌ Bu işletmenin Google Place ID bilgisi yok. Önce Google Place ID ekleyin.');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
+    setSyncingReviews(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch(`/api/admin/companies/${company.id}/sync-reviews`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Yorum senkronizasyonu başarısız');
+      }
+
+      setSuccess(`✅ ${data.message || 'Yorumlar başarıyla senkronize edildi!'} ${data.reviewsAdded ? `(${data.reviewsAdded} yeni yorum eklendi)` : ''}`);
+      setTimeout(() => {
+        setSuccess('');
+        router.refresh(); // Refresh page to show new reviews
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || '❌ Yorum senkronizasyonu sırasında bir hata oluştu');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setSyncingReviews(false);
     }
   };
 
@@ -1124,13 +1160,47 @@ export default function CompanyEditForm({
 
       {activeTab === 'reviews' && (
         <div className="bg-white rounded-lg shadow p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">
-            Google Yorumları
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">
+              Google Yorumları
+            </h2>
+            <button
+              onClick={handleSyncReviews}
+              disabled={syncingReviews || !company.googlePlaceId}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                syncingReviews || !company.googlePlaceId
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+              title={!company.googlePlaceId ? 'Google Place ID gerekli' : 'Google yorumlarını senkronize et'}
+            >
+              {syncingReviews ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Senkronize ediliyor...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Sync Google Reviews
+                </>
+              )}
+            </button>
+          </div>
 
           {company.reviews.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Henüz yorum yok
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-4">Henüz yorum yok</p>
+              {company.googlePlaceId && (
+                <p className="text-sm text-gray-400">
+                  Yukarıdaki butonu kullanarak Google yorumlarını senkronize edebilirsiniz
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
