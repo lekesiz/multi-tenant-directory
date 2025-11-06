@@ -145,10 +145,24 @@ export default function BusinessHoursForm({ companyId }: Props) {
     setSuccess('');
 
     try {
+      // Prepare clean data for API (only the required fields)
+      const cleanData = {
+        monday: hours.monday,
+        tuesday: hours.tuesday,
+        wednesday: hours.wednesday,
+        thursday: hours.thursday,
+        friday: hours.friday,
+        saturday: hours.saturday,
+        sunday: hours.sunday,
+        timezone: 'Europe/Paris',
+      };
+
+      console.log('Sending business hours data:', cleanData);
+
       const response = await fetch(`/api/companies/${companyId}/hours`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(hours),
+        body: JSON.stringify(cleanData),
       });
 
       if (response.ok) {
