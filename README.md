@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-6.17-2D3748)](https://www.prisma.io/)
 
-> **🟢 STATUS UPDATE (2025-11-05):** Site 100% fonctionnel. Dernières améliorations: 315 catégories Google Business, 238 entreprises catégorisées, UX optimisée. Voir [`TODO_NOUVELLES_TACHES.md`](./TODO_NOUVELLES_TACHES.md) pour les prochaines tâches et [`RESUME_JOURNEE_5NOV2025.md`](./RESUME_JOURNEE_5NOV2025.md) pour le résumé complet.
+> **🟢 STATUS UPDATE (2025-11-06):** Site 100% fonctionnel. Dernières améliorations: Système d'heures de travail complètement révisé avec support des plages multiples (09:00-12:00, 14:00-18:00), affichage de la note supprimé de l'en-tête des profils entreprise. Voir [`TODO_NOUVELLES_TACHES.md`](./TODO_NOUVELLES_TACHES.md) pour les prochaines tâches.
 
 ---
 
@@ -52,7 +52,7 @@ hoerdt.pro, mutzig.pro, schiltigheim.pro, illkirch.pro, lingolsheim.pro, bischhe
 - ✅ **Review Management** - Reply, verify, and moderate reviews
 - ✅ **Analytics Dashboard** - Real-time business metrics
 - ✅ **Photo Gallery** - Multi-photo upload with primary selection
-- ✅ **Business Hours** - Regular and special hours management
+- ✅ **Business Hours** - Multiple time slots per day (e.g., 09:00-12:00, 14:00-18:00), special hours, timezone support
 - ✅ **Email Preferences** - Customizable notification settings
 
 ### 📊 Admin Panel

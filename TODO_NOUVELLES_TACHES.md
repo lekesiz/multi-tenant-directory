@@ -8,26 +8,27 @@
 ## 🔴 PRIORITÉ HAUTE
 
 ### 1. ⏰ Admin - Horaires Multiples (Interface)
-**Status:** ⏳ À faire  
+**Status:** ✅ TERMINÉ (2025-11-06)  
 **Description:** Activer l'interface pour ajouter plusieurs plages horaires par jour
 
-**Contexte:**
-- Le backend supporte déjà les horaires multiples (commit `70b944f`)
-- L'interface admin n'affiche qu'une seule plage horaire
-- Besoin: Ajouter des boutons "+ Ajouter une plage" pour chaque jour
+**Réalisé:**
+- ✅ Interface admin complètement révisée avec support des plages multiples
+- ✅ Boutons "+ Ajouter une plage" ajoutés pour chaque jour
+- ✅ Boutons de suppression de plages
+- ✅ Validation Zod complète
+- ✅ Support du timezone (Europe/Paris)
+- ✅ Compatibilité avec l'ancien format
+- ✅ Affichage visiteur mis à jour pour supporter les plages multiples
+- ✅ Correction de l'erreur "Invalid business hours data"
 
-**Exemple d'utilisation:**
-```
-Lundi:
-  09:00 - 12:00  [X Supprimer]
-  14:00 - 18:00  [X Supprimer]
-  [+ Ajouter une plage]
-```
+**Commits:**
+- `e7bf680` - Fix: Change BusinessHoursForm HTTP method from POST to PUT
+- `dea2ac1` - Fix: Complete business hours system - Add timezone, clean data payload, support multi-shifts in visitor display
 
-**Fichiers:**
-- `/src/app/admin/companies/[id]/page.tsx` (onglet "Horaires d'ouverture")
-
-**Estimation:** 2-3 heures
+**Fichiers modifiés:**
+- `/src/components/BusinessHoursForm.tsx`
+- `/src/components/BusinessHours.tsx`
+- `/src/app/api/companies/[id]/hours/route.ts`
 
 ---
 

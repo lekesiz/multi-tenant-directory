@@ -26,6 +26,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Text contrast issues in rich text editor
 - Build configuration for Vercel deployment
 
+## [2.1.1] - 2025-11-06
+
+### Added
+- **Business Hours System Overhaul**
+  - Multiple time slots per day support (e.g., 09:00-12:00, 14:00-18:00)
+  - Timezone support (default: Europe/Paris)
+  - Backward compatibility with legacy single-shift format
+  - Data normalization for both old and new formats
+  - Clean data payload before API submission
+
+### Changed
+- **Company Profile Page**
+  - Removed rating display (★ 5.0, X avis) from company name header
+  - Rating information remains in reviews section to avoid duplication
+
+### Fixed
+- **Business Hours Management**
+  - Fixed HTTP method (changed from POST to PUT)
+  - Added missing timezone field in API payload
+  - Fixed visitor-side display component to support multiple shifts
+  - Improved data validation and error handling
+  - Fixed "Invalid business hours data" error
+
 ## [2.1.0] - 2025-11-03
 
 ### Added
@@ -48,213 +71,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rich Text Editing**
   - TipTap WYSIWYG editor integration
   - Image support in company descriptions
-  - Link insertion
   - Improved text visibility and contrast
-  - Better SafeHTML rendering
+  - SafeHTML component for secure content rendering
+
+- **Activity System (Blog-Style Posts)**
+  - Create and manage business activities
+  - Multiple activity types: Announcements, Events, Offers, Updates, Stories, News
+  - AI-powered content generation with Gemini
+  - Image generation with Gemini Nano
+  - Video generation with Veo 3
+  - Social media sharing (Facebook, Twitter, LinkedIn, Instagram)
+  - Publishing and scheduling capabilities
+  - Engagement metrics tracking
 
 ### Changed
-- Upgraded to Next.js 15.5.4
-- Improved database query performance with better indexing
-- Enhanced slugify utility to handle French accents properly
-- Updated Prisma to version 6.18.0
+- Enhanced category management UI with better parent-child relationship display
+- Improved text readability across all rich text components
+- Updated admin panel with new category and leads management features
 
 ### Fixed
-- Text readability issues in rich text content
-- Slug generation for categories with special characters
-- Build errors with standalone output mode
+- Text contrast issues in rich text editor
 - Cursor visibility in input fields
-- Email validation in leads API
+- Build configuration for Vercel deployment
 
-## [2.0.0] - 2025-10-21
+## [2.0.0] - 2025-10-22
 
 ### Added
-- **API Documentation**
-  - 119 documented API endpoints
-  - Interactive Swagger UI at `/docs`
-  - Complete JSDoc annotations
-  - Request/response examples
-  - Authentication documentation
-
-- **AI-Powered Features**
-  - AI chat endpoint for business queries
-  - Sentiment analysis for reviews
-  - Automatic description generation
-  - SEO keyword suggestions
-  - Cover image generation
+- **Multi-Tenant Architecture**
+  - 22 active domains with single codebase
+  - Domain-specific content and SEO
+  - Dynamic routing based on host domain
 
 - **Business Owner Dashboard**
-  - Complete profile management interface
+  - Comprehensive management panel
   - Review management with reply functionality
-  - Analytics dashboard with metrics
-  - Photo gallery management
-  - Business hours configuration
+  - Analytics dashboard with real-time metrics
+  - Photo gallery with multi-upload support
+  - Business hours management
   - Email notification preferences
 
-- **Subscription System**
-  - Stripe integration for payments
-  - Multiple subscription tiers (Free, Basic, Pro, Premium)
-  - 14-day free trial period
-  - Billing portal for self-service management
-  - Webhook handling for subscription lifecycle
+- **Admin Panel**
+  - Full company CRUD operations
+  - User management (admin and business owner roles)
+  - Category management with hierarchical structure
+  - Lead management with search and export
+  - Review moderation (approve, reject, sync)
+  - Domain SEO configuration
+  - Bulk operations support
 
-- **Review System**
-  - Google Reviews integration
-  - Review reply functionality
-  - Review moderation (approve/reject)
-  - Helpful vote system
-  - Review reporting mechanism
-  - Review verification
+- **AI Features**
+  - AI-powered business descriptions
+  - Sentiment analysis for reviews
+  - Smart search with suggestions
+  - SEO content generation
+  - Cover image generation
 
-- **Mobile API**
-  - 7 mobile-specific endpoints
-  - Mobile authentication
-  - Mobile configuration
-  - Push notification support
-  - Mobile-optimized responses
+- **Subscription & Billing**
+  - Stripe integration
+  - Multiple subscription tiers (Basic, Pro, Enterprise)
+  - Self-service billing portal
+  - Automated subscription lifecycle
+  - Featured listing purchase
 
-- **Developer Tools**
+- **API & Documentation**
+  - 119 documented REST API endpoints
+  - Interactive Swagger UI at /docs
   - API key management
-  - Webhook configuration
-  - API usage tracking
+  - Webhook support
   - Rate limiting
-  - Developer account system
+
+- **SEO & Analytics**
+  - Dynamic sitemap generation
+  - Structured data (JSON-LD)
+  - Meta tags (Open Graph, Twitter Cards)
+  - Core Web Vitals monitoring
+  - Google Maps integration
 
 ### Changed
-- Complete rewrite of authentication system with NextAuth.js
-- Improved multi-tenant routing logic
-- Enhanced security with CSRF protection
-- Better error handling and logging
-- Optimized database queries with proper indexing
-
-### Security
-- Added rate limiting on all API endpoints
-- Implemented CSRF token validation
-- Enhanced input validation with Zod schemas
-- Added SQL injection prevention
-- Improved session management
-
-## [1.5.0] - 2025-10-15
-
-### Added
-- Advanced search filters in company directory
-- Split shifts support for business hours
-- Automatic Google business hours synchronization
-- Comprehensive validation for company API endpoints
-- Performance optimizations with database indexes
+- Migrated from Pages Router to App Router (Next.js 15)
+- Updated authentication to NextAuth.js v5
+- Improved mobile responsiveness
+- Enhanced accessibility (WCAG 2.1 AA)
 
 ### Fixed
-- Build errors with lazy initialization of external services
-- Prisma file tracing for Vercel deployment
-- Duplicate WHERE clause in companies API
-- TypeScript errors in dashboard components
+- Build errors related to Next.js 15 params handling
+- Authentication import issues
+- Database migration conflicts
+- Vercel deployment configuration
 
 ## [1.0.0] - 2025-09-15
 
 ### Added
-- **Multi-Tenant Architecture**
-  - 21 active domains (haguenau.pro, bas-rhin.pro, etc.)
-  - Domain-based tenant isolation
-  - Custom branding per domain
-  - Separate content per tenant
-
-- **Company Management**
-  - Complete CRUD operations for companies
-  - Google Places integration
-  - Category assignment
-  - Photo gallery
-  - Business hours management
-  - Location-based search
-
-- **Admin Dashboard**
-  - Company management interface
-  - User management (admin and business owners)
-  - Category management
-  - Domain configuration
-  - Review moderation
-  - Analytics overview
-
-- **Authentication**
-  - NextAuth integration
-  - Google OAuth login
-  - Email/password authentication
-  - Role-based access control (RBAC)
-  - Session management
-
-- **SEO Optimization**
-  - Dynamic sitemap generation
-  - Schema.org structured data
-  - Meta tags optimization
-  - Open Graph tags
-  - Twitter Cards
-  - AI crawling policy endpoint
-
-- **Search & Discovery**
-  - Full-text search
-  - Category filtering
-  - Location-based search
-  - Featured listings
-  - Autocomplete suggestions
-
-### Technical
-- Next.js 15 with App Router
-- TypeScript strict mode
-- Prisma ORM with PostgreSQL
-- Tailwind CSS for styling
-- Vercel deployment with Edge Runtime
-- Neon PostgreSQL database
-
-## Development Guidelines
-
-### Commit Message Format
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `perf`: Performance improvements
-- `test`: Test additions or changes
-- `chore`: Build process or auxiliary tool changes
-
-Examples:
-```
-feat(categories): add subcategory creation functionality
-fix(slugify): improve French character handling
-docs(readme): update setup instructions
-```
-
-### Version Numbering
-
-- **Major** (X.0.0): Breaking changes, major new features
-- **Minor** (0.X.0): New features, backwards compatible
-- **Patch** (0.0.X): Bug fixes, minor improvements
-
-### Release Process
-
-1. Update version in `package.json`
-2. Update CHANGELOG.md with changes
-3. Create git tag: `git tag -a v2.1.0 -m "Version 2.1.0"`
-4. Push changes: `git push origin main --tags`
-5. Deploy to production via Vercel
-
-## Links
-
-- [GitHub Repository](https://github.com/yourusername/multi-tenant-directory)
-- [Production Site](https://haguenau.pro)
-- [API Documentation](https://haguenau.pro/docs)
-- [Issue Tracker](https://github.com/yourusername/multi-tenant-directory/issues)
+- Initial release
+- Basic company directory functionality
+- Simple search and filtering
+- Contact form
+- Admin panel for company management
 
 ---
 
-**Note**: This changelog is maintained manually. For a complete list of all commits, see the [Git commit history](https://github.com/yourusername/multi-tenant-directory/commits/main).
+For more details on each release, see the [commit history](https://github.com/lekesiz/multi-tenant-directory/commits/main).
