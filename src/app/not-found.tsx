@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getRedirectInfo, type UrlMatch } from '@/lib/url-matcher';
+import { getRedirectInfo } from '@/lib/url-matcher';
 
-// Force dynamic rendering because this page uses headers() for domain detection
 export const dynamic = 'force-dynamic';
 
 export default async function NotFound() {
@@ -18,154 +17,115 @@ export default async function NotFound() {
     redirect(redirectInfo.redirectUrl);
   }
 
-  // Filter suggestions to show only relevant ones
-  const relevantSuggestions = redirectInfo.suggestions.filter(s => s.score > 0.5);
+  // Get top suggestion if available
+  const topSuggestion = redirectInfo.suggestions.find(s => s.score > 0.6);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center px-4 py-12">
-      <div className="max-w-4xl w-full">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-12">
+      <div className="w-full max-w-lg">
         {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12 text-center">
-          {/* 404 Icon */}
-          <div className="mb-8">
-            <div className="text-8xl md:text-9xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              404
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/50 p-8 text-center">
+          {/* Animated Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-red-100 rounded-full animate-pulse scale-125" />
+              <div className="relative flex items-center justify-center w-20 h-20 bg-red-50 rounded-full">
+                <svg
+                  className="w-10 h-10 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Page non trouvée
-          </h1>
+          {/* 404 Title */}
+          <h1 className="text-5xl font-bold text-slate-900 mb-2">404</h1>
+
+          <h2 className="text-xl font-semibold text-slate-700 mb-4">
+            Page Non Trouvée
+          </h2>
 
           {/* Description */}
-          <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-            🔍 Désolé, la page que vous cherchez n'existe pas ou a été déplacée.
+          <p className="text-slate-600 mb-6 leading-relaxed">
+            Désolé, la page que vous recherchez n'existe pas.
             <br />
-            <span className="text-sm text-gray-500 mt-2 block">
-              URL demandée: <code className="bg-gray-100 px-2 py-1 rounded">{pathname}</code>
+            <span className="text-sm text-slate-500">
+              Elle a peut-être été déplacée ou supprimée.
             </span>
           </p>
 
-          {/* Smart Suggestions */}
-          {relevantSuggestions.length > 0 && (
-            <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-100">
-              <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center justify-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          {/* URL Info */}
+          <div className="mb-6 px-4 py-3 bg-slate-50 rounded-lg">
+            <span className="text-xs text-slate-500">URL demandée</span>
+            <code className="block text-sm text-slate-700 font-mono mt-1 truncate">
+              {pathname}
+            </code>
+          </div>
+
+          {/* Suggestion */}
+          {topSuggestion && (
+            <div className="mb-6 px-4 py-4 bg-blue-50 border border-blue-100 rounded-lg">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Vouliez-vous dire ?
-              </h2>
-              <div className="flex flex-wrap gap-3 justify-center">
-                {relevantSuggestions.slice(0, 4).map((suggestion, index) => (
-                  <SuggestionLink key={index} suggestion={suggestion} />
-                ))}
+                <span className="text-sm font-medium text-blue-700">Vouliez-vous dire ?</span>
               </div>
+              <Link
+                href={topSuggestion.url}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 font-medium rounded-lg border border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+              >
+                <code className="text-sm">{topSuggestion.url}</code>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              Retour à l'accueil
+              Retour à l'Accueil
             </Link>
 
             <Link
               href="/annuaire"
-              className="inline-flex items-center justify-center px-8 py-4 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all duration-200"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-700 font-medium rounded-lg border border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Voir l'annuaire
+              Voir l'Annuaire
             </Link>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-gray-200 my-8"></div>
-
-          {/* Popular Categories */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Catégories Populaires
-            </h2>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {[
-                { name: 'Restaurant', icon: '🍽️', href: '/categories/Restaurant' },
-                { name: 'Boulangerie', icon: '🥖', href: '/categories/Boulangerie' },
-                { name: 'Pâtisserie', icon: '🍰', href: '/categories/Pâtisserie' },
-                { name: 'Garage', icon: '🚗', href: '/categories/Garage' },
-                { name: 'Santé', icon: '⚕️', href: '/categories/Santé' },
-              ].map((category) => (
-                <Link
-                  key={category.name}
-                  href={category.href}
-                  className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-600 rounded-lg transition-colors duration-200"
-                >
-                  <span className="mr-2">{category.icon}</span>
-                  {category.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Help Links */}
-          <div className="text-sm text-gray-500">
-            <p className="mb-2">Besoin d'aide ?</p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/contact" className="hover:text-blue-600 transition-colors">
-                Nous contacter
-              </Link>
-              <span>•</span>
-              <Link href="/categories" className="hover:text-blue-600 transition-colors">
-                Toutes les catégories
-              </Link>
-              <span>•</span>
-              <Link href="/business/register" className="hover:text-blue-600 transition-colors">
-                Créer un profil
-              </Link>
-            </div>
           </div>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-8 text-center text-white text-sm">
-          <p className="opacity-90">
-            Si vous pensez qu'il s'agit d'une erreur, veuillez{' '}
-            <Link href="/contact" className="underline hover:opacity-80">
-              nous contacter
+        {/* Help Link */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-slate-500">
+            Besoin d'aide ?{' '}
+            <Link href="/contact" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
+              Contactez-nous
             </Link>
-            .
           </p>
         </div>
       </div>
     </div>
-  );
-}
-
-function SuggestionLink({ suggestion }: { suggestion: UrlMatch }) {
-  const confidenceLabel = suggestion.score >= 0.9 ? 'Très probable' :
-                          suggestion.score >= 0.7 ? 'Probable' : 'Possible';
-  const confidenceColor = suggestion.score >= 0.9 ? 'bg-green-100 text-green-700' :
-                          suggestion.score >= 0.7 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700';
-
-  return (
-    <Link
-      href={suggestion.url}
-      className="group flex flex-col items-center p-4 bg-white rounded-lg border-2 border-blue-200 hover:border-blue-500 hover:shadow-md transition-all duration-200"
-    >
-      <code className="text-blue-600 font-medium group-hover:text-blue-800 mb-2">
-        {suggestion.url}
-      </code>
-      <span className={`text-xs px-2 py-1 rounded-full ${confidenceColor}`}>
-        {confidenceLabel} ({Math.round(suggestion.score * 100)}%)
-      </span>
-    </Link>
   );
 }
