@@ -2,117 +2,209 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { getRedirectInfo, similarityScore } from '@/lib/url-matcher';
+import { similarityScore } from '@/lib/url-matcher';
 
 export const dynamic = 'force-dynamic';
 
-interface CompanySuggestion {
+interface SmartMatch {
   url: string;
-  name: string;
+  label: string;
   score: number;
+  type: 'company' | 'static' | 'typo';
 }
 
-async function findSimilarCompany(slug: string): Promise<CompanySuggestion | null> {
-  try {
-    // First, try exact match with common variations
-    const variations = [
-      slug,
-      `${slug}-2`,
-      `${slug}-3`,
-      slug.replace(/-\d+$/, ''), // Remove trailing number
-    ];
+// Static routes in the application
+const STATIC_ROUTES = [
+  { path: '/', label: 'Accueil' },
+  { path: '/annuaire', label: 'Annuaire' },
+  { path: '/categories', label: 'Catégories' },
+  { path: '/contact', label: 'Contact' },
+  { path: '/tarifs', label: 'Tarifs' },
+  { path: '/pricing', label: 'Tarifs' },
+  { path: '/rejoindre', label: 'Rejoindre' },
+  { path: '/search', label: 'Recherche' },
+  { path: '/auth/login', label: 'Connexion' },
+  { path: '/auth/register', label: 'Inscription' },
+  { path: '/business/login', label: 'Connexion Pro' },
+  { path: '/business/register', label: 'Inscription Pro' },
+  { path: '/business/dashboard', label: 'Tableau de bord Pro' },
+  { path: '/admin', label: 'Administration' },
+  { path: '/admin/login', label: 'Connexion Admin' },
+  { path: '/admin/dashboard', label: 'Tableau de bord Admin' },
+  { path: '/admin/companies', label: 'Entreprises' },
+  { path: '/admin/categories', label: 'Catégories' },
+  { path: '/admin/users', label: 'Utilisateurs' },
+  { path: '/admin/reviews', label: 'Avis' },
+  { path: '/admin/settings', label: 'Paramètres' },
+  { path: '/dashboard', label: 'Tableau de bord' },
+];
 
-    const exactMatch = await prisma.company.findFirst({
-      where: {
-        slug: { in: variations },
-        isActive: true,
-      },
-      select: { slug: true, name: true },
+// Common typos mapping
+const TYPO_MAP: Record<string, string> = {
+  'contac': '/contact',
+  'contactt': '/contact',
+  'contacttt': '/contact',
+  'kontact': '/contact',
+  'contat': '/contact',
+  'annuare': '/annuaire',
+  'anuaire': '/annuaire',
+  'annnuaire': '/annuaire',
+  'categorie': '/categories',
+  'category': '/categories',
+  'tarif': '/tarifs',
+  'login': '/auth/login',
+  'signin': '/auth/login',
+  'register': '/auth/register',
+  'signup': '/auth/register',
+  'home': '/',
+  'accueil': '/',
+  'recherche': '/search',
+};
+
+async function findSmartMatch(pathname: string): Promise<SmartMatch | null> {
+  const normalizedPath = pathname.toLowerCase().replace(/\/+$/, '').trim();
+  const pathParts = normalizedPath.split('/').filter(Boolean);
+
+  const allMatches: SmartMatch[] = [];
+
+  // Extract the key part for matching
+  // For /companies/contactt -> "contactt"
+  // For /contacttt -> "contacttt"
+  const lastPart = pathParts[pathParts.length - 1] || '';
+  const isCompanyPath = pathParts[0] === 'companies';
+
+  // 1. Check direct typo corrections for the last part
+  if (TYPO_MAP[lastPart]) {
+    allMatches.push({
+      url: TYPO_MAP[lastPart],
+      label: 'Page corrigée',
+      score: 1,
+      type: 'typo'
     });
+  }
 
-    if (exactMatch) {
-      return {
-        url: `/companies/${exactMatch.slug}`,
-        name: exactMatch.name,
-        score: 1,
-      };
-    }
-
-    // Search for similar slugs using database
-    const companies = await prisma.company.findMany({
-      where: {
-        isActive: true,
-        slug: {
-          contains: slug.split('-').slice(0, 2).join('-'), // Match first 2 parts
-        },
-      },
-      select: { slug: true, name: true },
-      take: 10,
+  // 2. Check if the full path matches a typo
+  const fullPathKey = normalizedPath.replace(/^\//, '');
+  if (TYPO_MAP[fullPathKey]) {
+    allMatches.push({
+      url: TYPO_MAP[fullPathKey],
+      label: 'Page corrigée',
+      score: 1,
+      type: 'typo'
     });
+  }
 
-    if (companies.length === 0) {
-      // Broader search - just the first word
-      const firstWord = slug.split('-')[0];
-      const broadSearch = await prisma.company.findMany({
-        where: {
-          isActive: true,
-          slug: { startsWith: firstWord },
-        },
-        select: { slug: true, name: true },
-        take: 10,
+  // 3. Compare against all static routes
+  for (const route of STATIC_ROUTES) {
+    // Compare full path
+    const fullScore = similarityScore(normalizedPath, route.path);
+    if (fullScore > 0.6) {
+      allMatches.push({
+        url: route.path,
+        label: route.label,
+        score: fullScore,
+        type: 'static'
       });
-      companies.push(...broadSearch);
     }
 
-    // Find best match using similarity score
-    let bestMatch: CompanySuggestion | null = null;
-
-    for (const company of companies) {
-      const score = similarityScore(slug, company.slug);
-      if (score > 0.6 && (!bestMatch || score > bestMatch.score)) {
-        bestMatch = {
-          url: `/companies/${company.slug}`,
-          name: company.name,
-          score,
-        };
+    // Also compare just the last part against route paths
+    const routeLastPart = route.path.split('/').filter(Boolean).pop() || '';
+    if (routeLastPart && lastPart) {
+      const partScore = similarityScore(lastPart, routeLastPart);
+      if (partScore > 0.7) {
+        allMatches.push({
+          url: route.path,
+          label: route.label,
+          score: partScore * 0.95, // Slightly lower priority
+          type: 'static'
+        });
       }
     }
-
-    return bestMatch;
-  } catch (error) {
-    console.error('Error finding similar company:', error);
-    return null;
   }
+
+  // 4. Search for similar companies in database
+  if (lastPart && lastPart.length > 2) {
+    try {
+      // Try exact variations first
+      const variations = [
+        lastPart,
+        `${lastPart}-2`,
+        `${lastPart}-3`,
+        lastPart.replace(/-\d+$/, ''),
+      ];
+
+      const exactMatch = await prisma.company.findFirst({
+        where: {
+          slug: { in: variations },
+          isActive: true,
+        },
+        select: { slug: true, name: true },
+      });
+
+      if (exactMatch) {
+        allMatches.push({
+          url: `/companies/${exactMatch.slug}`,
+          label: exactMatch.name,
+          score: 1,
+          type: 'company'
+        });
+      }
+
+      // Search for similar slugs
+      const searchTerms = lastPart.split('-').slice(0, 3).join('-');
+      const companies = await prisma.company.findMany({
+        where: {
+          isActive: true,
+          OR: [
+            { slug: { contains: searchTerms } },
+            { slug: { startsWith: lastPart.split('-')[0] } },
+          ]
+        },
+        select: { slug: true, name: true },
+        take: 20,
+      });
+
+      for (const company of companies) {
+        const score = similarityScore(lastPart, company.slug);
+        if (score > 0.6) {
+          allMatches.push({
+            url: `/companies/${company.slug}`,
+            label: company.name,
+            score: score,
+            type: 'company'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Database search error:', error);
+    }
+  }
+
+  // Sort by score and return best match
+  allMatches.sort((a, b) => b.score - a.score);
+
+  // Remove duplicates (keep highest score)
+  const seen = new Set<string>();
+  const uniqueMatches = allMatches.filter(m => {
+    if (seen.has(m.url)) return false;
+    seen.add(m.url);
+    return true;
+  });
+
+  return uniqueMatches[0] || null;
 }
 
 export default async function NotFound() {
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '/';
 
-  let companySuggestion: CompanySuggestion | null = null;
+  // Find the best match
+  const bestMatch = await findSmartMatch(pathname);
 
-  // Check if this is a company page
-  const companyMatch = pathname.match(/^\/companies\/(.+)$/);
-  if (companyMatch) {
-    const requestedSlug = companyMatch[1];
-    companySuggestion = await findSimilarCompany(requestedSlug);
-
-    // Auto-redirect if very high confidence match
-    if (companySuggestion && companySuggestion.score > 0.85) {
-      redirect(companySuggestion.url);
-    }
+  // Auto-redirect if very high confidence
+  if (bestMatch && bestMatch.score >= 0.85) {
+    redirect(bestMatch.url);
   }
-
-  // Get static route suggestions
-  const redirectInfo = getRedirectInfo(pathname);
-
-  // Auto-redirect for static routes
-  if (redirectInfo.shouldRedirect && redirectInfo.redirectUrl) {
-    redirect(redirectInfo.redirectUrl);
-  }
-
-  // Determine which suggestion to show
-  const topSuggestion = companySuggestion || redirectInfo.suggestions.find(s => s.score > 0.6);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-12">
@@ -165,46 +257,50 @@ export default async function NotFound() {
             </code>
           </div>
 
-          {/* Company Suggestion */}
-          {companySuggestion && (
-            <div className="mb-6 px-4 py-4 bg-green-50 border border-green-100 rounded-lg">
+          {/* Smart Suggestion */}
+          {bestMatch && bestMatch.score > 0.6 && (
+            <div className={`mb-6 px-4 py-4 rounded-lg border ${
+              bestMatch.type === 'company'
+                ? 'bg-green-50 border-green-100'
+                : 'bg-blue-50 border-blue-100'
+            }`}>
               <div className="flex items-center justify-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <span className="text-sm font-medium text-green-700">Entreprise trouvée</span>
+                {bestMatch.type === 'company' ? (
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+                <span className={`text-sm font-medium ${
+                  bestMatch.type === 'company' ? 'text-green-700' : 'text-blue-700'
+                }`}>
+                  {bestMatch.type === 'company' ? 'Entreprise trouvée' : 'Vouliez-vous dire ?'}
+                </span>
               </div>
-              <p className="text-sm text-green-600 mb-3">{companySuggestion.name}</p>
+              <p className={`text-sm mb-3 ${
+                bestMatch.type === 'company' ? 'text-green-600' : 'text-blue-600'
+              }`}>
+                {bestMatch.label}
+              </p>
               <Link
-                href={companySuggestion.url}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-all duration-200"
+                href={bestMatch.url}
+                className={`inline-flex items-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-200 ${
+                  bestMatch.type === 'company'
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
               >
-                Voir cette entreprise
+                {bestMatch.type === 'company' ? 'Voir cette entreprise' : 'Aller à cette page'}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Link>
-            </div>
-          )}
-
-          {/* Static Route Suggestion */}
-          {!companySuggestion && topSuggestion && (
-            <div className="mb-6 px-4 py-4 bg-blue-50 border border-blue-100 rounded-lg">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-sm font-medium text-blue-700">Vouliez-vous dire ?</span>
-              </div>
-              <Link
-                href={topSuggestion.url}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 font-medium rounded-lg border border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
-              >
-                <code className="text-sm">{topSuggestion.url}</code>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
+              <p className="text-xs text-slate-400 mt-2">
+                Confiance: {Math.round(bestMatch.score * 100)}%
+              </p>
             </div>
           )}
 
