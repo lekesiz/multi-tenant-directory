@@ -1,7 +1,7 @@
 # Guide de Déploiement - Haguenau.PRO
 
-**Version:** 1.0  
-**Date:** 16 Octobre 2025  
+**Version:** 2.1
+**Date:** 25 Novembre 2025
 **Platform:** Vercel + Neon Postgres
 
 ---
@@ -405,6 +405,6 @@ vercel rollback
 
 ---
 
-**Version:** 1.0  
-**Dernière mise à jour:** 16 Octobre 2025  
+**Version:** 2.1
+**Dernière mise à jour:** 25 Novembre 2025
 **Auteur:** Équipe Technique Haguenau.PRO

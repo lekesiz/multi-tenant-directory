@@ -1,7 +1,7 @@
 # Guide Utilisateur - Haguenau.PRO
 
-**Version:** 1.0  
-**Date:** 16 Octobre 2025  
+**Version:** 2.1
+**Date:** 25 Novembre 2025
 **Public:** Utilisateurs finaux
 
 ---
@@ -492,8 +492,8 @@ Résultat : 5 entreprises informatiques à Haguenau
 **R :** Oui, copiez simplement l'**URL de la page** et partagez-la par email, SMS ou réseaux sociaux.
 
 #### Q20 : La plateforme est-elle disponible dans d'autres communes ?
-**R :** Oui, nous couvrons **21 communes du Bas-Rhin** :
-- Haguenau, Mutzig, Hoerdt, Brumath, Bischwiller, Schiltigheim, Illkirch-Graffenstaden, Ostwald, Lingolsheim, Geispolsheim, Bischheim, Souffelweyersheim, Hoenheim, Mundolsheim, Reichstett, Vendenheim, Lampertheim, Eckbolsheim, Oberhausbergen, Niederhausbergen, Mittelhausbergen
+**R :** Oui, nous couvrons **22 communes du Bas-Rhin** :
+- Haguenau, Mutzig, Hoerdt, Brumath, Bischwiller, Schiltigheim, Illkirch-Graffenstaden, Ostwald, Lingolsheim, Geispolsheim, Bischheim, Souffelweyersheim, Hoenheim, Mundolsheim, Reichstett, Bas-Rhin, Strasbourg, Obernai, Erstein, Saverne, Sélestat, Molsheim
 
 ---
 
@@ -507,12 +507,12 @@ Si vous avez d'autres questions ou rencontrez un problème, n'hésitez pas à no
 
 ---
 
-**Merci d'utiliser Haguenau.PRO !**  
+**Merci d'utiliser Haguenau.PRO !**
 **Votre annuaire local des professionnels du Bas-Rhin** 🎯
 
 ---
 
-**Version:** 1.0  
-**Dernière mise à jour:** 16 Octobre 2025  
+**Version:** 2.1
+**Dernière mise à jour:** 25 Novembre 2025
 **Auteur:** Équipe Haguenau.PRO
 
