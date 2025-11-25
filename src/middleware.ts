@@ -112,6 +112,7 @@ export async function middleware(request: NextRequest) {
     // Add headers
     const response = NextResponse.next();
     response.headers.set('x-tenant-domain', hostname);
+    response.headers.set('x-pathname', pathname);
 
     return addSecurityHeaders(request, response);
   } catch (error) {
