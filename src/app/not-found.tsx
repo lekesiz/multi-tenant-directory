@@ -1,131 +1,270 @@
-import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getRedirectInfo } from '@/lib/url-matcher';
+import { prisma } from '@/lib/prisma';
+import { similarityScore } from '@/lib/url-matcher';
 
 export const dynamic = 'force-dynamic';
+
+interface SmartMatch {
+  url: string;
+  score: number;
+}
+
+// All static routes with variations
+const STATIC_ROUTES: Record<string, string> = {
+  // Home
+  '': '/',
+  'home': '/',
+  'accueil': '/',
+  'index': '/',
+  'homee': '/',
+  'hom': '/',
+
+  // Main pages
+  'annuaire': '/annuaire',
+  'annuare': '/annuaire',
+  'anuaire': '/annuaire',
+  'annnuaire': '/annuaire',
+  'annuairee': '/annuaire',
+  'annuair': '/annuaire',
+  'directory': '/annuaire',
+
+  'categories': '/categories',
+  'categorie': '/categories',
+  'category': '/categories',
+  'categoriess': '/categories',
+  'categoris': '/categories',
+  'cat': '/categories',
+
+  'contact': '/contact',
+  'contac': '/contact',
+  'contactt': '/contact',
+  'contacttt': '/contact',
+  'kontact': '/contact',
+  'contat': '/contact',
+  'cotact': '/contact',
+  'contacts': '/contact',
+
+  'tarifs': '/tarifs',
+  'tarif': '/tarifs',
+  'tarrifs': '/tarifs',
+  'tarrif': '/tarifs',
+  'prix': '/tarifs',
+
+  'pricing': '/pricing',
+  'price': '/pricing',
+  'prices': '/pricing',
+
+  'rejoindre': '/rejoindre',
+  'rejoinder': '/rejoindre',
+  'join': '/rejoindre',
+  'inscription-pro': '/rejoindre',
+
+  'search': '/search',
+  'recherche': '/search',
+  'chercher': '/search',
+  'searchh': '/search',
+
+  // Legal pages - ALL VARIATIONS
+  'mentions-legales': '/mentions-legales',
+  'mentions-legale': '/mentions-legales',
+  'mention-legales': '/mentions-legales',
+  'mention-legale': '/mentions-legales',
+  'mentionslegales': '/mentions-legales',
+  'mentions': '/mentions-legales',
+  'legal': '/mentions-legales',
+  'legales': '/mentions-legales',
+
+  'politique-de-confidentialite': '/politique-de-confidentialite',
+  'politique-confidentialite': '/politique-de-confidentialite',
+  'politiqueconfidentialite': '/politique-de-confidentialite',
+  'politique-confidentialité': '/politique-de-confidentialite',
+  'confidentialite': '/politique-de-confidentialite',
+  'privacy': '/politique-de-confidentialite',
+  'privacy-policy': '/politique-de-confidentialite',
+  'donnees-personnelles': '/politique-de-confidentialite',
+
+  'cgu': '/cgu',
+  'conditions-generales': '/cgu',
+  'conditions-utilisation': '/cgu',
+  'terms': '/cgu',
+  'tos': '/cgu',
+
+  'cgv': '/cgv',
+  'conditions-generales-vente': '/cgv',
+  'conditions-vente': '/cgv',
+
+  // Auth
+  'login': '/auth/login',
+  'signin': '/auth/login',
+  'connexion': '/auth/login',
+  'loginn': '/auth/login',
+  'se-connecter': '/auth/login',
+
+  'register': '/auth/register',
+  'signup': '/auth/register',
+  'inscription': '/auth/register',
+  'registerr': '/auth/register',
+  's-inscrire': '/auth/register',
+
+  'auth': '/auth/login',
+  'auth/connexion': '/auth/login',
+  'auth/inscription': '/auth/register',
+
+  // Business
+  'business': '/business/dashboard',
+  'business/login': '/business/login',
+  'business/register': '/business/register',
+  'business/connexion': '/business/login',
+  'business/inscription': '/business/register',
+  'pro': '/business/dashboard',
+  'professionnel': '/business/dashboard',
+  'mon-compte': '/business/dashboard',
+  'businesss': '/business/dashboard',
+  'espace-pro': '/business/dashboard',
+
+  // Admin
+  'admin': '/admin/dashboard',
+  'admin/login': '/admin/login',
+  'admin/connexion': '/admin/login',
+  'administration': '/admin/dashboard',
+  'adminn': '/admin/dashboard',
+  'admin/home': '/admin/dashboard',
+  'admin/entreprises': '/admin/companies',
+  'admin/societes': '/admin/companies',
+  'admin/utilisateurs': '/admin/users',
+  'admin/avis': '/admin/reviews',
+  'admin/parametres': '/admin/settings',
+
+  // Dashboard
+  'dashboard': '/dashboard',
+  'tableau-de-bord': '/dashboard',
+  'mon-espace': '/dashboard',
+
+  // Unsubscribe
+  'unsubscribe': '/unsubscribe/success',
+  'desabonner': '/unsubscribe/success',
+  'desabonnement': '/unsubscribe/success',
+};
+
+// Extract the meaningful part from path
+function extractKey(pathname: string): string {
+  const normalized = pathname.toLowerCase().replace(/^\/+|\/+$/g, '').trim();
+
+  // If it starts with "companies/", extract what comes after
+  if (normalized.startsWith('companies/')) {
+    return normalized.substring('companies/'.length);
+  }
+
+  return normalized;
+}
+
+async function findBestMatch(pathname: string): Promise<SmartMatch> {
+  const key = extractKey(pathname);
+  const allMatches: SmartMatch[] = [];
+
+  // 1. Direct match in static routes
+  if (STATIC_ROUTES[key]) {
+    return { url: STATIC_ROUTES[key], score: 1 };
+  }
+
+  // 2. Check all static routes for similarity
+  for (const [routeKey, routeUrl] of Object.entries(STATIC_ROUTES)) {
+    if (!routeKey) continue;
+
+    const score = similarityScore(key, routeKey);
+    if (score > 0.5) {
+      allMatches.push({ url: routeUrl, score });
+    }
+  }
+
+  // 3. Search database for legal pages
+  try {
+    const legalPages = await prisma.legalPage.findMany({
+      where: { isActive: true },
+      select: { slug: true },
+    });
+
+    for (const page of legalPages) {
+      const score = similarityScore(key, page.slug);
+      if (score > 0.5) {
+        allMatches.push({ url: `/${page.slug}`, score });
+      }
+
+      // Also check if key directly matches
+      if (key === page.slug) {
+        return { url: `/${page.slug}`, score: 1 };
+      }
+    }
+  } catch (error) {
+    console.error('Legal pages lookup error:', error);
+  }
+
+  // 4. Search database for companies
+  try {
+    // Try exact match first with variations
+    const variations = [key, `${key}-2`, `${key}-3`, key.replace(/-\d+$/, '')];
+
+    const exactCompany = await prisma.company.findFirst({
+      where: {
+        slug: { in: variations },
+        isActive: true,
+      },
+      select: { slug: true },
+    });
+
+    if (exactCompany) {
+      return { url: `/companies/${exactCompany.slug}`, score: 1 };
+    }
+
+    // Search for similar companies
+    if (key.length > 2) {
+      const searchTerm = key.split('-').slice(0, 2).join('-');
+      const companies = await prisma.company.findMany({
+        where: {
+          isActive: true,
+          OR: [
+            { slug: { contains: searchTerm } },
+            { slug: { startsWith: key.split('-')[0] } },
+          ],
+        },
+        select: { slug: true },
+        take: 20,
+      });
+
+      for (const company of companies) {
+        const score = similarityScore(key, company.slug);
+        if (score > 0.5) {
+          allMatches.push({ url: `/companies/${company.slug}`, score });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Company lookup error:', error);
+  }
+
+  // 5. Sort and get best match
+  allMatches.sort((a, b) => b.score - a.score);
+
+  // Remove duplicates
+  const seen = new Set<string>();
+  const uniqueMatches = allMatches.filter(m => {
+    if (seen.has(m.url)) return false;
+    seen.add(m.url);
+    return true;
+  });
+
+  // Return best match or home page
+  return uniqueMatches[0] || { url: '/', score: 0 };
+}
 
 export default async function NotFound() {
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '/';
 
-  // Get smart redirect info
-  const redirectInfo = getRedirectInfo(pathname);
+  // Find the best match - ALWAYS redirect, never show 404
+  const bestMatch = await findBestMatch(pathname);
 
-  // Auto-redirect if confidence is very high
-  if (redirectInfo.shouldRedirect && redirectInfo.redirectUrl) {
-    redirect(redirectInfo.redirectUrl);
-  }
-
-  // Get top suggestion if available
-  const topSuggestion = redirectInfo.suggestions.find(s => s.score > 0.6);
-
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-12">
-      <div className="w-full max-w-lg">
-        {/* Main Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/50 p-8 text-center">
-          {/* Animated Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-red-100 rounded-full animate-pulse scale-125" />
-              <div className="relative flex items-center justify-center w-20 h-20 bg-red-50 rounded-full">
-                <svg
-                  className="w-10 h-10 text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* 404 Title */}
-          <h1 className="text-5xl font-bold text-slate-900 mb-2">404</h1>
-
-          <h2 className="text-xl font-semibold text-slate-700 mb-4">
-            Page Non Trouvée
-          </h2>
-
-          {/* Description */}
-          <p className="text-slate-600 mb-6 leading-relaxed">
-            Désolé, la page que vous recherchez n'existe pas.
-            <br />
-            <span className="text-sm text-slate-500">
-              Elle a peut-être été déplacée ou supprimée.
-            </span>
-          </p>
-
-          {/* URL Info */}
-          <div className="mb-6 px-4 py-3 bg-slate-50 rounded-lg">
-            <span className="text-xs text-slate-500">URL demandée</span>
-            <code className="block text-sm text-slate-700 font-mono mt-1 truncate">
-              {pathname}
-            </code>
-          </div>
-
-          {/* Suggestion */}
-          {topSuggestion && (
-            <div className="mb-6 px-4 py-4 bg-blue-50 border border-blue-100 rounded-lg">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-sm font-medium text-blue-700">Vouliez-vous dire ?</span>
-              </div>
-              <Link
-                href={topSuggestion.url}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 font-medium rounded-lg border border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
-              >
-                <code className="text-sm">{topSuggestion.url}</code>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Retour à l'Accueil
-            </Link>
-
-            <Link
-              href="/annuaire"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-700 font-medium rounded-lg border border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Voir l'Annuaire
-            </Link>
-          </div>
-        </div>
-
-        {/* Help Link */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-slate-500">
-            Besoin d'aide ?{' '}
-            <Link href="/contact" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
-              Contactez-nous
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  // Redirect to best match (or home if no good match)
+  redirect(bestMatch.url);
 }
