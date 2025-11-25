@@ -1,5 +1,9 @@
 # Database Schema Documentation
 
+**Version:** 2.1.0
+**Last Updated:** 25 November 2025
+**Models:** 50+
+
 ## Overview
 
 The database is designed with a **multi-tenant architecture** using PostgreSQL and Prisma ORM. The schema supports multiple directory domains with shared company data, while allowing domain-specific customization through the `CompanyContent` linking table.
