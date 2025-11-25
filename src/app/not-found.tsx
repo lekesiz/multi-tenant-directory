@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { getRedirectInfo, type UrlMatch } from '@/lib/url-matcher';
 
 // Force dynamic rendering because this page uses headers() for domain detection
 export const dynamic = 'force-dynamic';
@@ -7,6 +9,17 @@ export const dynamic = 'force-dynamic';
 export default async function NotFound() {
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '/';
+
+  // Get smart redirect info
+  const redirectInfo = getRedirectInfo(pathname);
+
+  // Auto-redirect if confidence is very high
+  if (redirectInfo.shouldRedirect && redirectInfo.redirectUrl) {
+    redirect(redirectInfo.redirectUrl);
+  }
+
+  // Filter suggestions to show only relevant ones
+  const relevantSuggestions = redirectInfo.suggestions.filter(s => s.score > 0.5);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center px-4 py-12">
@@ -26,13 +39,30 @@ export default async function NotFound() {
           </h1>
 
           {/* Description */}
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
             🔍 Désolé, la page que vous cherchez n'existe pas ou a été déplacée.
             <br />
             <span className="text-sm text-gray-500 mt-2 block">
               URL demandée: <code className="bg-gray-100 px-2 py-1 rounded">{pathname}</code>
             </span>
           </p>
+
+          {/* Smart Suggestions */}
+          {relevantSuggestions.length > 0 && (
+            <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-100">
+              <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center justify-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Vouliez-vous dire ?
+              </h2>
+              <div className="flex flex-wrap gap-3 justify-center">
+                {relevantSuggestions.slice(0, 4).map((suggestion, index) => (
+                  <SuggestionLink key={index} suggestion={suggestion} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -119,3 +149,23 @@ export default async function NotFound() {
   );
 }
 
+function SuggestionLink({ suggestion }: { suggestion: UrlMatch }) {
+  const confidenceLabel = suggestion.score >= 0.9 ? 'Très probable' :
+                          suggestion.score >= 0.7 ? 'Probable' : 'Possible';
+  const confidenceColor = suggestion.score >= 0.9 ? 'bg-green-100 text-green-700' :
+                          suggestion.score >= 0.7 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700';
+
+  return (
+    <Link
+      href={suggestion.url}
+      className="group flex flex-col items-center p-4 bg-white rounded-lg border-2 border-blue-200 hover:border-blue-500 hover:shadow-md transition-all duration-200"
+    >
+      <code className="text-blue-600 font-medium group-hover:text-blue-800 mb-2">
+        {suggestion.url}
+      </code>
+      <span className={`text-xs px-2 py-1 rounded-full ${confidenceColor}`}>
+        {confidenceLabel} ({Math.round(suggestion.score * 100)}%)
+      </span>
+    </Link>
+  );
+}
