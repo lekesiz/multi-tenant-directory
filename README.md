@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-6.17-2D3748)](https://www.prisma.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.18-2D3748)](https://www.prisma.io/)
 
-> **🟢 STATUS UPDATE (2025-11-06): Redis cache activated, security headers hardened, and test coverage increased to 4.03%.** Site 100% fonctionnel. Dernières améliorations: Système d'heures de travail complètement révisé avec support des plages multiples (09:00-12:00, 14:00-18:00), affichage de la note supprimé de l'en-tête des profils entreprise. Voir [`TODO_NOUVELLES_TACHES.md`](./TODO_NOUVELLES_TACHES.md) pour les prochaines tâches.
+> **🟢 STATUS UPDATE (2025-11-25): Production-ready platform with 22 active domains, 119+ API endpoints, 50+ database models, and 128 React components.** Redis cache activated, security headers hardened. Latest improvements: Business hours with multiple time slots, Activity System v2.1.0, AI content generation with Gemini, Google Reviews automatic sync via cron. Voir [`CHANGELOG.md`](./CHANGELOG.md) pour l'historique complet.
 
 ---
 
@@ -27,7 +27,7 @@ hoerdt.pro, mutzig.pro, schiltigheim.pro, illkirch.pro, lingolsheim.pro, bischhe
 ## ✨ Key Features
 
 ### 🏗️ Architecture
-- ✅ **Multi-Tenant Architecture** - 21 domains, single codebase
+- ✅ **Multi-Tenant Architecture** - 22 domains, single codebase
 - ✅ **Domain-Specific Content** - Customized SEO and content per domain
 - ✅ **Scalable Infrastructure** - Vercel Edge deployment with ISR
 - ✅ **Type-Safe** - Full TypeScript coverage
