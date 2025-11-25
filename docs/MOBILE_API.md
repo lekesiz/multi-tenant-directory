@@ -1,5 +1,11 @@
 # 📱 Mobile API Documentation - React Native Integration
 
+**Version:** 2.1.0
+**Last Updated:** 25 November 2025
+**Endpoints:** 7
+
+---
+
 ## 🔧 API Endpoints pour Mobile App
 
 ### 🔐 Authentication
