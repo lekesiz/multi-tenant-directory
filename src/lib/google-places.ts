@@ -47,19 +47,34 @@ export function parseGoogleBusinessHours(weekdayText: string[]) {
     }
 
     // Parse time range: "9:00 AM – 6:00 PM" or "9:00 – 18:00"
-    const timeMatch = timeStr.match(/(\d{1,2}:\d{2})\s*(?:AM|PM)?\s*[–-]\s*(\d{1,2}:\d{2})\s*(?:AM|PM)?/i);
-    if (timeMatch) {
-      let [, openTime, closeTime] = timeMatch;
+    // Also handle multiple shifts like "9:00 AM – 12:00 PM, 2:00 PM – 6:00 PM"
+    const timeRanges = timeStr.split(',').map(t => t.trim());
+    const shifts: Array<{ open: string; close: string }> = [];
 
-      // Convert 12-hour to 24-hour if needed
-      if (timeStr.includes('AM') || timeStr.includes('PM')) {
-        openTime = convertTo24Hour(openTime, timeStr.includes('AM', timeStr.indexOf(openTime)));
-        closeTime = convertTo24Hour(closeTime, timeStr.includes('PM', timeStr.indexOf(closeTime)));
+    for (const range of timeRanges) {
+      const timeMatch = range.match(/(\d{1,2}:\d{2})\s*(AM|PM)?\s*[–-]\s*(\d{1,2}:\d{2})\s*(AM|PM)?/i);
+      if (timeMatch) {
+        let [, openTime, openAmPm, closeTime, closeAmPm] = timeMatch;
+
+        // Convert 12-hour to 24-hour if AM/PM is present
+        if (openAmPm || closeAmPm) {
+          // Determine AM/PM for open time
+          const openIsPM = openAmPm?.toUpperCase() === 'PM';
+          openTime = convertTo24Hour(openTime, openIsPM);
+
+          // Determine AM/PM for close time
+          const closeIsPM = closeAmPm?.toUpperCase() === 'PM';
+          closeTime = convertTo24Hour(closeTime, closeIsPM);
+        }
+
+        shifts.push({ open: openTime, close: closeTime });
       }
+    }
 
+    if (shifts.length > 0) {
       hours[dayKey] = {
         closed: false,
-        shifts: [{ open: openTime, close: closeTime }]
+        shifts: shifts
       };
     }
   });
