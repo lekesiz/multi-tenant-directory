@@ -50,31 +50,52 @@ const STATIC_ROUTES = [
 
 // Common URL typos and their corrections
 const COMMON_TYPOS: Record<string, string> = {
-  // French typos
+  // Contact typos
+  '/contac': '/contact',
+  '/contactt': '/contact',
+  '/contacttt': '/contact',
+  '/kontact': '/contact',
+  '/contat': '/contact',
+  '/cotact': '/contact',
+
+  // Annuaire typos
   '/annnuaire': '/annuaire',
   '/annuare': '/annuaire',
   '/anuaire': '/annuaire',
+  '/annuairee': '/annuaire',
+  '/annuair': '/annuaire',
+
+  // Categories typos
   '/categorie': '/categories',
   '/category': '/categories',
   '/catégories': '/categories',
-  '/contac': '/contact',
-  '/kontact': '/contact',
+  '/categoriess': '/categories',
+  '/categoris': '/categories',
+
+  // Tarifs typos
   '/tarif': '/tarifs',
+  '/tarrifs': '/tarifs',
+  '/tarrif': '/tarifs',
   '/prix': '/tarifs',
   '/price': '/pricing',
   '/prices': '/pricing',
+
+  // Other French pages
   '/rejoinder': '/rejoindre',
   '/join': '/rejoindre',
   '/recherche': '/search',
   '/chercher': '/search',
+  '/searchh': '/search',
 
   // Auth typos
   '/login': '/auth/login',
   '/signin': '/auth/login',
   '/connexion': '/auth/login',
+  '/loginn': '/auth/login',
   '/register': '/auth/register',
   '/signup': '/auth/register',
   '/inscription': '/auth/register',
+  '/registerr': '/auth/register',
 
   // Business typos
   '/business': '/business/dashboard',
@@ -82,6 +103,7 @@ const COMMON_TYPOS: Record<string, string> = {
   '/pro': '/business/dashboard',
   '/professionnel': '/business/dashboard',
   '/mon-compte': '/business/dashboard',
+  '/businesss': '/business/dashboard',
 
   // Admin typos
   '/administration': '/admin/dashboard',
@@ -91,11 +113,13 @@ const COMMON_TYPOS: Record<string, string> = {
   '/admin/utilisateurs': '/admin/users',
   '/admin/avis': '/admin/reviews',
   '/admin/parametres': '/admin/settings',
+  '/adminn': '/admin',
 
   // Common misspellings
   '/accueil': '/',
   '/home': '/',
   '/index': '/',
+  '/homee': '/',
 };
 
 // Pattern-based redirects (regex patterns)
@@ -287,7 +311,7 @@ export function findSuggestions(requestedPath: string, additionalRoutes: string[
 
 /**
  * Determine if a URL should be auto-redirected
- * Only auto-redirect if confidence is very high
+ * Auto-redirect when confidence is reasonably high
  */
 export function shouldAutoRedirect(match: UrlMatch | null): boolean {
   if (!match) return false;
@@ -297,8 +321,9 @@ export function shouldAutoRedirect(match: UrlMatch | null): boolean {
     return true;
   }
 
-  // Auto-redirect for very high similarity (> 85%)
-  if (match.type === 'similar' && match.score > 0.85) {
+  // Auto-redirect for high similarity (> 75%)
+  // This handles cases like /contacttt -> /contact (80% similar)
+  if (match.type === 'similar' && match.score > 0.75) {
     return true;
   }
 
