@@ -1,7 +1,7 @@
 # 🏗️ System Architecture - Directory Platform
 
-**Version:** 1.0.0
-**Last Updated:** 16 Octobre 2025
+**Version:** 2.1.0
+**Last Updated:** 25 Novembre 2025
 
 ---
 
@@ -839,5 +839,5 @@ const reviewSchema = z.object({
 
 ---
 
-**Last Updated:** 16 Octobre 2025
-**Version:** 1.0.0
+**Last Updated:** 25 Novembre 2025
+**Version:** 2.1.0

@@ -1,8 +1,16 @@
 # API Documentation - Haguenau.PRO
 
-**Version:** 1.0  
-**Date:** 16 Octobre 2025  
+**Version:** 2.1
+**Date:** 25 Novembre 2025
 **Base URL:** `https://haguenau.pro/api`
+
+> **Note:** Cette documentation couvre les endpoints principaux. Pour la documentation complète et interactive, visitez [https://haguenau.pro/docs](https://haguenau.pro/docs) (Swagger UI).
+
+## 📊 Statistiques API
+
+- **119+ endpoints** documentés
+- **24 catégories** d'API
+- **Rate limiting:** 100 req/15min (public), 1000 req/15min (authentifié)
 
 ---
 
@@ -376,11 +384,46 @@ Authorization: Bearer {token}
 
 ## 📝 Rate Limiting
 
-- **Limit:** 100 requests per minute per IP
+- **Public endpoints:** 100 requests / 15 minutes per IP
+- **Authenticated endpoints:** 1000 requests / 15 minutes
 - **Header:** `X-RateLimit-Remaining`
 - **Exceeded:** HTTP 429 Too Many Requests
 
 ---
 
-**Version:** 1.0  
-**Dernière mise à jour:** 16 Octobre 2025
+## 🆕 Nouveaux Endpoints (v2.1)
+
+### Activities API
+- `GET /api/business/activities` - Liste des activités
+- `POST /api/business/activities` - Créer une activité
+- `PUT /api/business/activities/[id]` - Modifier une activité
+- `DELETE /api/business/activities/[id]` - Supprimer une activité
+- `POST /api/business/activities/[id]/publish` - Publier une activité
+- `POST /api/business/activities/generate` - Génération AI de contenu
+- `POST /api/business/activities/[id]/generate-image` - Génération d'image AI
+- `POST /api/business/activities/[id]/generate-video` - Génération vidéo AI
+
+### AI/ML API (17 endpoints)
+- `POST /api/ai/generate-description` - Description d'entreprise
+- `POST /api/ai/analyze-sentiment` - Analyse de sentiment
+- `POST /api/ai/chat` - Chatbot interactif
+- `POST /api/ai/generate-seo-content` - Contenu SEO
+- `POST /api/ai/review-response` - Réponse automatique aux avis
+- `POST /api/ai/recommendations` - Recommandations intelligentes
+- Et plus...
+
+### Mobile API (7 endpoints)
+- `POST /api/mobile/auth/login` - Connexion mobile
+- `POST /api/mobile/auth/refresh` - Refresh token
+- `GET /api/mobile/companies/[id]` - Détails entreprise
+- `GET /api/mobile/analytics/[id]` - Analytics mobile
+- `GET /api/mobile/config` - Configuration app
+- `POST /api/mobile/notifications/send` - Notifications push
+
+### Cron Jobs
+- `GET /api/cron/sync-reviews` - Synchronisation automatique des avis Google
+
+---
+
+**Version:** 2.1
+**Dernière mise à jour:** 25 Novembre 2025

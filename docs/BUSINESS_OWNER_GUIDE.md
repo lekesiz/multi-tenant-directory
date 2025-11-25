@@ -1,7 +1,7 @@
 # Guide Professionnel - Haguenau.PRO
 
-**Version:** 1.0  
-**Date:** 16 Octobre 2025  
+**Version:** 2.1
+**Date:** 25 Novembre 2025
 **Public:** Professionnels et entreprises
 
 ---
@@ -14,8 +14,10 @@
 4. [Ajouter des Photos](#ajouter-des-photos)
 5. [Définir les Horaires](#définir-les-horaires)
 6. [Gérer les Avis](#gérer-les-avis)
-7. [Consulter les Statistiques](#consulter-les-statistiques)
-8. [FAQ Professionnels](#faq-professionnels)
+7. [Système d'Activités](#système-dactivités) *(NOUVEAU!)*
+8. [Consulter les Statistiques](#consulter-les-statistiques)
+9. [Abonnements et Facturation](#abonnements-et-facturation)
+10. [FAQ Professionnels](#faq-professionnels)
 
 ---
 
@@ -441,12 +443,73 @@ Les avis clients sont **cruciaux** pour votre réputation :
 
 ---
 
-**Merci de faire confiance à Haguenau.PRO !**  
+---
+
+## 📢 Système d'Activités (NOUVEAU!)
+
+### Qu'est-ce que le Système d'Activités ?
+
+Le système d'activités vous permet de créer des publications de type blog pour engager vos clients et améliorer votre visibilité.
+
+**Accès:**
+- Tableau de bord → **"Activités"**
+- Ou URL directe : `/business/dashboard/activities`
+
+### Types d'Activités
+
+- 📢 **Annonces** : Nouvelles importantes
+- 📅 **Événements** : Événements à venir
+- 🎁 **Offres** : Promotions et réductions
+- 🔄 **Mises à jour** : Actualités de l'entreprise
+- 📖 **Histoires** : Partage d'expériences
+- 📰 **Actualités** : Nouvelles du secteur
+
+### Fonctionnalités IA
+
+- **Génération de contenu** : Créez du contenu avec l'IA Gemini
+- **Génération d'images** : Images AI avec Gemini Nano
+- **Génération de vidéos** : Vidéos AI avec Veo 3
+
+### Partage Social
+
+Partagez vos activités sur :
+- Facebook
+- Twitter/X
+- LinkedIn
+- Instagram
+
+---
+
+## 💳 Abonnements et Facturation
+
+### Plans Disponibles
+
+| Plan | Prix | Fonctionnalités |
+|------|------|-----------------|
+| **Basic** | 29€/mois | Profil de base, Analytics |
+| **Pro** | 79€/mois | + AI, Featured listing |
+| **Enterprise** | 199€/mois | + API, Support prioritaire |
+
+### Gérer Votre Abonnement
+
+**Accès:**
+- Tableau de bord → **"Facturation"**
+- Ou URL directe : `/business/dashboard/billing`
+
+**Actions:**
+- Voir l'abonnement actuel
+- Changer de plan
+- Gérer les moyens de paiement
+- Consulter les factures
+
+---
+
+**Merci de faire confiance à Haguenau.PRO !**
 **Ensemble, développons votre visibilité locale** 🚀
 
 ---
 
-**Version:** 1.0  
-**Dernière mise à jour:** 16 Octobre 2025  
+**Version:** 2.1
+**Dernière mise à jour:** 25 Novembre 2025
 **Auteur:** Équipe Haguenau.PRO
 

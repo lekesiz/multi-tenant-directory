@@ -1,7 +1,7 @@
 # 💻 Developer Guide - Directory Platform
 
-**Version:** 1.0.0
-**Last Updated:** 16 Octobre 2025
+**Version:** 2.1.0
+**Last Updated:** 25 Novembre 2025
 **Target Audience:** Developers and Contributors
 
 ---
@@ -1181,6 +1181,6 @@ npx prisma generate
 
 ---
 
-**Last Updated:** 16 Octobre 2025
-**Version:** 1.0.0
+**Last Updated:** 25 Novembre 2025
+**Version:** 2.1.0
 **Maintainers:** Development Team
