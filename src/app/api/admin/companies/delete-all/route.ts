@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyAdminSecret } from '@/lib/admin-secret';
 
 /**
  * DELETE /api/admin/companies/delete-all
@@ -9,15 +10,10 @@ import { logger } from '@/lib/logger';
  */
 export async function DELETE(request: Request) {
   try {
-    // Admin authentication check
-    const authHeader = request.headers.get('authorization');
-    const adminSecret = process.env.ADMIN_SECRET || 'your-secret-key';
-    
-    if (!authHeader || authHeader !== `Bearer ${adminSecret}`) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Admin authentication check (fail-closed, constant-time)
+    const unauthorized = verifyAdminSecret(request);
+    if (unauthorized) {
+      return unauthorized;
     }
 
     logger.info('🗑️  Tüm şirketler siliniyor...');

@@ -22,6 +22,29 @@ export interface AuthContext {
 }
 
 /**
+ * Normalize a role value coming from the database or a JWT.
+ *
+ * Historically roles have been persisted in several shapes:
+ *   - lowercase  : "admin", "super_admin"   (User.role default in Prisma)
+ *   - uppercase  : "ADMIN", "SUPER_ADMIN"   (Role enum in this file)
+ *   - mixed case : "Admin"
+ *
+ * Comparing raw strings therefore produced false negatives and locked
+ * legitimate administrators out with a 403. Always compare normalized values.
+ */
+export function normalizeRole(role: unknown): Role {
+  if (typeof role !== 'string' || role.trim() === '') {
+    return Role.USER;
+  }
+
+  const normalized = role.trim().toUpperCase().replace(/[\s-]+/g, '_');
+
+  return (Object.values(Role) as string[]).includes(normalized)
+    ? (normalized as Role)
+    : Role.USER;
+}
+
+/**
  * Get current session
  * Returns null if not authenticated
  */
@@ -38,7 +61,7 @@ export async function getCurrentSession(): Promise<AuthContext | null> {
         id: (session.user as any).id || session.user.email || '',
         email: session.user.email || '',
         name: session.user.name,
-        role: (session.user as any).role || Role.USER,
+        role: normalizeRole((session.user as any).role),
       },
       session,
     };
@@ -81,9 +104,9 @@ export async function requireRole(
     return authOrError;
   }
   
-  const userRole = authOrError.user.role || Role.USER;
-  
-  if (!allowedRoles.includes(userRole)) {
+  const userRole = normalizeRole(authOrError.user.role);
+
+  if (!allowedRoles.map((role) => normalizeRole(role)).includes(userRole)) {
     return NextResponse.json(
       {
         error: 'Forbidden',
@@ -114,17 +137,15 @@ export async function requireSuperAdmin(): Promise<AuthContext | NextResponse> {
  * Check if user has role
  */
 export function hasRole(auth: AuthContext, role: Role): boolean {
-  return auth.user.role === role;
+  return normalizeRole(auth.user.role) === normalizeRole(role);
 }
 
 /**
  * Check if user is admin
  */
 export function isAdmin(auth: AuthContext): boolean {
-  return (
-    auth.user.role === Role.SUPER_ADMIN ||
-    auth.user.role === Role.ADMIN
-  );
+  const role = normalizeRole(auth.user.role);
+  return role === Role.SUPER_ADMIN || role === Role.ADMIN;
 }
 
 /**

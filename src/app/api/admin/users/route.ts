@@ -2,9 +2,16 @@ import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { requireSuperAdmin } from '@/lib/auth-guard';
 
 export async function POST(request: NextRequest) {
   try {
+    // Creating privileged accounts must never be reachable anonymously.
+    const auth = await requireSuperAdmin();
+    if (auth instanceof NextResponse) {
+      return auth;
+    }
+
     const body = await request.json();
     const { name, email, password, role } = body;
 
@@ -54,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
     const user = await prisma.user.create({
