@@ -1,12 +1,18 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth-guard';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdmin();
+    if (auth instanceof NextResponse) {
+      return auth;
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { status } = body;
@@ -41,6 +47,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdmin();
+    if (auth instanceof NextResponse) {
+      return auth;
+    }
+
     const { id } = await params;
 
     // Delete inquiry

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { requireAdmin } from '@/lib/auth-guard';
 
 interface CategoryData {
   slug: string;
@@ -343,6 +344,11 @@ async function seedCategory(
 
 export async function POST() {
   try {
+    const auth = await requireAdmin();
+    if (auth instanceof NextResponse) {
+      return auth;
+    }
+
     logger.info('Starting category seed...');
 
     // Check if categories already exist
